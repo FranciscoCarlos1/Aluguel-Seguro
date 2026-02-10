@@ -384,6 +384,13 @@ textarea {
   margin-bottom: 16px;
 }
 
+.detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .detail-tag {
   background: #fff5e9;
   color: var(--accent-dark);

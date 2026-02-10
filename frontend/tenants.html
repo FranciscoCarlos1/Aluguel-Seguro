@@ -16,6 +16,7 @@
         <a href="register.html" data-guest-only>Cadastro</a>
         <a href="profile.html" class="button ghost" data-auth-only>Perfil do Inquilino</a>
         <a href="tenant-detail.html?id=1" data-auth-only>Perfil detalhado</a>
+        <a href="landlord-edit.html" class="button ghost" data-auth-only>Meu perfil</a>
         <div class="session-status">
           <span data-session-label>Sem sessao</span>
           <button class="button ghost session-action" type="button" data-session-action>
@@ -30,14 +31,20 @@
         <div class="tenants-header">
           <div>
             <h1>Lista de inquilinos</h1>
-            <p class="muted">Busque por nome ou email e acompanhe o status.</p>
+            <p class="muted">Busque por nome, email ou CPF e acompanhe o status.</p>
           </div>
           <div class="tenants-search">
             <input
               type="search"
-              placeholder="Buscar inquilino"
+              placeholder="Buscar por nome, email ou CPF"
               data-tenant-search
             />
+          </div>
+          <div class="tenants-search">
+            <select data-tenant-sort>
+              <option value="score_desc">Score (maior primeiro)</option>
+              <option value="recent">Mais recentes</option>
+            </select>
           </div>
         </div>
 
@@ -48,11 +55,12 @@
             <thead>
               <tr>
                 <th>Nome</th>
+                <th>Score</th>
+                <th>CPF</th>
                 <th>Email</th>
                 <th>Profissao</th>
                 <th>Renda</th>
                 <th>Status</th>
-                <th>Acoes</th>
               </tr>
             </thead>
             <tbody data-tenant-body></tbody>

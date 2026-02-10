@@ -16,6 +16,7 @@
         <a href="login.html" data-guest-only>Entrar</a>
         <a href="register.html" data-guest-only>Cadastro</a>
         <a href="profile.html" class="button ghost" data-auth-only>Novo Perfil</a>
+        <a href="landlord-edit.html" class="button ghost" data-auth-only>Meu perfil</a>
         <div class="session-status">
           <span data-session-label>Sem sessao</span>
           <button class="button ghost session-action" type="button" data-session-action>
@@ -32,7 +33,12 @@
             <h1 data-tenant-detail-header>Perfil do inquilino</h1>
             <p class="muted">Resumo consolidado para apoiar a decisao.</p>
           </div>
-          <span class="detail-tag">Perfil seguro</span>
+          <div class="detail-actions">
+            <a class="button ghost" href="tenant-edit.html" data-tenant-edit-link data-auth-only>
+              Editar perfil
+            </a>
+            <span class="detail-tag">Perfil seguro</span>
+          </div>
         </div>
 
         <p class="form-status" data-tenant-detail-status></p>

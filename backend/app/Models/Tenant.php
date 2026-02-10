@@ -19,6 +19,7 @@ class Tenant extends Model
         'phone',
         'occupation',
         'monthly_income',
+        'score',
         'address_line',
         'address_number',
         'address_complement',
@@ -36,6 +37,7 @@ class Tenant extends Model
 
     protected $casts = [
         'monthly_income' => 'decimal:2',
+        'score' => 'integer',
         'data_redacted_at' => 'datetime',
     ];
 

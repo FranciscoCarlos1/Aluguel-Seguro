@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Editar Perfil do Locador - Aluguel Seguro</title>
+    <link rel="stylesheet" href="../assets/css/styles.css" />
+  </head>
+  <body class="page-profile" data-page="landlord-edit">
+    <div class="backdrop"></div>
+    <header class="site-header">
+      <a class="brand" href="index.html">Aluguel Seguro</a>
+      <nav class="nav-links">
+        <a href="index.html">Inicio</a>
+        <a href="login.html" data-guest-only>Entrar</a>
+        <a href="register.html" data-guest-only>Cadastro</a>
+        <a href="tenants.html" data-auth-only>Inquilinos</a>
+        <a href="profile.html" class="button ghost" data-auth-only>Perfil do Inquilino</a>
+        <div class="session-status">
+          <span data-session-label>Sem sessao</span>
+          <button class="button ghost session-action" type="button" data-session-action>
+            Entrar
+          </button>
+        </div>
+      </nav>
+    </header>
+
+    <main class="panel panel-wide">
+      <section class="panel-card panel-card--wide reveal">
+        <h1>Editar perfil do locador</h1>
+        <p class="muted">Atualize seus dados de contato e identificacao.</p>
+        <form data-form="landlord-edit" class="form-grid form-grid--two">
+          <label>
+            Nome completo
+            <input type="text" name="name" required placeholder="Seu nome" />
+          </label>
+          <label>
+            Email
+            <input type="email" name="email" required placeholder="voce@email.com" />
+          </label>
+          <label>
+            Telefone
+            <input type="tel" name="phone" required placeholder="(00) 00000-0000" />
+          </label>
+          <label>
+            Empresa (opcional)
+            <input type="text" name="company_name" placeholder="Imobiliaria ou administradora" />
+          </label>
+          <label class="full">
+            Observacoes
+            <textarea name="notes" rows="3" placeholder="Preferencias, notas internas"></textarea>
+          </label>
+          <button class="button" type="submit">Salvar alteracoes</button>
+          <p class="form-status" data-status></p>
+        </form>
+      </section>
+    </main>
+
+    <script src="../assets/js/app.js"></script>
+  </body>
+</html>

@@ -19,6 +19,7 @@ class TenantReviewResource extends JsonResource
             'noise_level' => $this->noise_level,
             'would_rent_again' => $this->would_rent_again,
             'comment' => $this->comment,
+            'landlord_name' => $this->landlord?->name,
             'created_by_name' => $this->created_by_name,
             'created_by_role' => $this->created_by_role,
             'created_at' => $this->created_at,

@@ -22,11 +22,14 @@ Route::prefix('v1')->group(function () {
         Route::post('/auth/logout', [AuthController::class, 'logout']);
 
         Route::post('/landlords', [LandlordController::class, 'store']);
+        Route::get('/landlords/me', [LandlordController::class, 'showMe']);
         Route::get('/landlords/{landlord}', [LandlordController::class, 'show']);
+        Route::put('/landlords/{landlord}', [LandlordController::class, 'update']);
 
         Route::post('/tenants', [TenantController::class, 'store']);
         Route::get('/tenants', [TenantController::class, 'index']);
         Route::get('/tenants/{tenant}', [TenantController::class, 'show']);
+        Route::put('/tenants/{tenant}', [TenantController::class, 'update']);
 
         Route::get('/tenants/{tenant}/profile', [TenantProfileController::class, 'show']);
         Route::post('/tenants/{tenant}/profile', [TenantProfileController::class, 'store']);

@@ -12,6 +12,8 @@ class LandlordResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'email' => $this->email,
+            'phone' => $this->phone,
             'email_masked' => $this->maskEmail($this->email),
             'phone_masked' => $this->maskPhone($this->phone),
             'company_name' => $this->company_name,

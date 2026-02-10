@@ -21,14 +21,15 @@ O backend esta em backend/ com API REST para locadores, inquilinos, perfis e ava
 ### Como rodar
 
 1. Garanta que a extensao SQLite do PHP esteja instalada e habilitada.
-2. Navegue pelos links de Login, Cadastro e Perfil do Inquilino.
-3. Use Inquilinos para ver a listagem paginada.
+2. Rode as migracoes: php artisan migrate.
 3. Inicie o servidor: php artisan serve.
 
 ### Observacao de banco
 
 - O banco usa SQLite em database/database.sqlite.
 - Sanctum foi instalado para tokens. A tabela personal_access_tokens sera criada nas migracoes.
+
+### Autenticacao
 
 - Registre um usuario em /api/v1/auth/register.
 - Use /api/v1/auth/login para obter o token Bearer.
@@ -37,6 +38,18 @@ O backend esta em backend/ com API REST para locadores, inquilinos, perfis e ava
 ### Testes
 
 - Em backend/: php artisan test
+
+## Publicar no GitHub Pages (frontend)
+
+1. No GitHub, abra Settings > Pages.
+2. Em Source, selecione Branch: main e Folder: / (root).
+3. Acesse a URL do Pages e abra /frontend/index.html.
+4. O arquivo index.html na raiz redireciona automaticamente para /frontend/index.html.
+
+## Backend em producao
+
+- Hospede o backend em um servico que suporte PHP e SQLite (ou banco gerenciado).
+- Atualize API_BASE_URL em assets/js/app.js para a URL publica da API.
 ### Endpoints principais
 
 - POST /api/v1/landlords

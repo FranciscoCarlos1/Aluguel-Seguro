@@ -15,6 +15,17 @@ const setStatus = (status, message, isError = false) => {
   status.style.color = isError ? "#b42318" : "#d6532e";
 };
 
+const setFormValue = (form, name, value) => {
+  if (!form) {
+    return;
+  }
+  const field = form.querySelector(`[name="${name}"]`);
+  if (!field) {
+    return;
+  }
+  field.value = value ?? "";
+};
+
 const getToken = () => localStorage.getItem(AUTH_TOKEN_KEY);
 
 const setToken = (token) => {
@@ -284,6 +295,105 @@ const formHandlers = {
       summaryText.textContent = buildProfileSummary(tenant, profile);
     }
   },
+  async "tenant-edit"(form, status) {
+    if (!getToken()) {
+      setStatus(status, "Faca login antes de editar o perfil.", true);
+      return;
+    }
+
+    const tenantId = form?.dataset?.tenantId;
+    if (!tenantId) {
+      setStatus(status, "Inquilino nao informado.", true);
+      return;
+    }
+
+    const formData = new FormData(form);
+    const tenantPayload = {
+      full_name: formData.get("tenantName"),
+      cpf: formData.get("cpf"),
+      rg: formData.get("rg"),
+      email: formData.get("email") || null,
+      phone: formData.get("phone") || null,
+      occupation: formData.get("occupation"),
+      monthly_income: Number(formData.get("income")),
+      address_line: formData.get("addressLine"),
+      address_number: formData.get("addressNumber"),
+      address_complement: formData.get("addressComplement"),
+      address_neighborhood: formData.get("addressNeighborhood"),
+      address_city: formData.get("addressCity"),
+      address_state: formData.get("addressState"),
+      address_postal_code: formData.get("addressPostalCode"),
+      notes: formData.get("notes"),
+    };
+
+    const tenantResponse = await apiRequest(`/tenants/${tenantId}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(tenantPayload),
+      }
+    );
+    const tenant = tenantResponse.data || tenantResponse;
+
+    const profilePayload = {
+      summary_text: "Resumo atualizado no formulario de edicao.",
+      references_text: formData.get("references"),
+      notes: formData.get("notes"),
+      score: estimateScore(
+        formData.get("income"),
+        formData.get("references"),
+        formData.get("notes")
+      ),
+      status: "active",
+      consent_at: new Date().toISOString(),
+      consent_source: "formulario-edicao",
+    };
+
+    const profileResponse = await apiRequest(`/tenants/${tenantId}/profile`, {
+      method: "POST",
+      body: JSON.stringify(profilePayload),
+    });
+
+    setStatus(status, "Perfil atualizado com sucesso.");
+
+    const summary = document.querySelector("[data-summary]");
+    if (summary) {
+      const summaryText = summary.querySelector(".summary-text");
+      summaryText.textContent = buildProfileSummary(
+        tenant,
+        profileResponse?.data || profileResponse
+      );
+    }
+  },
+  async "landlord-edit"(form, status) {
+    if (!getToken()) {
+      setStatus(status, "Faca login antes de editar o perfil.", true);
+      return;
+    }
+
+    const landlordId = form?.dataset?.landlordId;
+    if (!landlordId) {
+      setStatus(status, "Locador nao informado.", true);
+      return;
+    }
+
+    const formData = new FormData(form);
+    const payload = {
+      name: formData.get("name"),
+      email: formData.get("email"),
+      phone: formData.get("phone"),
+      company_name: formData.get("company_name"),
+      notes: formData.get("notes"),
+    };
+
+    await apiRequest(`/landlords/${landlordId}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      }
+    );
+
+    setStatus(status, "Perfil do locador atualizado.");
+  },
 };
 
 const initTenantList = () => {
@@ -298,11 +408,13 @@ const initTenantList = () => {
   const prevBtn = document.querySelector("[data-tenant-prev]");
   const nextBtn = document.querySelector("[data-tenant-next]");
   const pageLabel = document.querySelector("[data-tenant-page]");
+  const sortSelect = document.querySelector("[data-tenant-sort]");
 
   const state = {
     page: 1,
     perPage: 10,
     search: "",
+    sort: sortSelect?.value || "score_desc",
   };
 
   const renderRows = (items) => {
@@ -315,12 +427,13 @@ const initTenantList = () => {
       const detailLink = `tenant-detail.html?id=${tenant.id}`;
       const row = document.createElement("tr");
       row.innerHTML = `
-        <td>${tenant.full_name}</td>
+        <td><a class="link" href="${detailLink}">${tenant.full_name}</a></td>
+        <td>${tenant.score ?? "-"}</td>
+        <td>${tenant.cpf_masked || "-"}</td>
         <td>${tenant.email_masked || "-"}</td>
         <td>${tenant.occupation || "-"}</td>
         <td>${formatIncomeRange(tenant.monthly_income_range)}</td>
         <td>${tenant.status}</td>
-        <td><a class="link" href="${detailLink}">Ver</a></td>
       `;
       tbody.appendChild(row);
     });
@@ -353,6 +466,7 @@ const initTenantList = () => {
       search: state.search,
       page: state.page,
       per_page: state.perPage,
+      sort: state.sort,
     }).toString();
 
     try {
@@ -373,6 +487,14 @@ const initTenantList = () => {
   if (searchInput) {
     searchInput.addEventListener("input", (event) => {
       state.search = event.target.value.trim();
+      state.page = 1;
+      loadTenants();
+    });
+  }
+
+  if (sortSelect) {
+    sortSelect.addEventListener("change", (event) => {
+      state.sort = event.target.value;
       state.page = 1;
       loadTenants();
     });
@@ -413,6 +535,7 @@ const initTenantDetail = () => {
   const reviewStatus = document.querySelector("[data-review-status]");
   const reportExport = document.querySelector("[data-report-export]");
   const reportExportCsv = document.querySelector("[data-report-export-csv]");
+  const editLink = document.querySelector("[data-tenant-edit-link]");
   const reportState = {
     tenant: null,
     profile: null,
@@ -427,7 +550,7 @@ const initTenantDetail = () => {
     return;
   }
 
-  const renderMeta = (tenant) => {
+  const renderMeta = (tenant, profile) => {
     if (!metaList) {
       return;
     }
@@ -445,6 +568,7 @@ const initTenantDetail = () => {
     const address = addressParts.length > 0 ? addressParts.join(", ") : "-";
 
     const items = [
+      { label: "Score", value: tenant?.score ?? profile?.score ?? "-" },
       { label: "CPF", value: tenant.cpf_masked || "-" },
       { label: "RG", value: tenant.rg_masked || "-" },
       { label: "Email", value: tenant.email_masked || "-" },
@@ -487,7 +611,9 @@ const initTenantDetail = () => {
             </div>
             <div>${review.comment || "Sem comentarios."}</div>
             <div class="review-meta">
-              ${review.created_by_name || ""} ${review.created_by_role || ""}
+              ${review.landlord_name ? `Locador: ${review.landlord_name}` : ""}
+              ${review.created_by_name ? ` · ${review.created_by_name}` : ""}
+              ${review.created_by_role ? ` (${review.created_by_role})` : ""}
             </div>
           </div>
         </li>
@@ -496,7 +622,7 @@ const initTenantDetail = () => {
       .join("");
   };
 
-  const renderReport = (reviews) => {
+  const renderReport = (reviews, profile) => {
     if (!reportGrid) {
       return;
     }
@@ -538,6 +664,7 @@ const initTenantDetail = () => {
     `;
 
     reportGrid.innerHTML = [
+      item("Score", reportState.tenant?.score ?? profile?.score ?? "-"),
       item("Avaliacoes", total),
       item("Nota media", avgRating),
       item("Tempo medio", `${avgStay} meses`),
@@ -779,13 +906,16 @@ const initTenantDetail = () => {
       if (header) {
         header.textContent = tenant?.full_name || "Inquilino";
       }
+      if (editLink && tenant?.id) {
+        editLink.href = `tenant-edit.html?id=${tenant.id}`;
+      }
       if (summary) {
         summary.textContent = buildProfileSummary(tenant, profile);
       }
 
-      renderMeta(tenant);
+      renderMeta(tenant, profile);
       renderReviews(reviews);
-      renderReport(reviews);
+      renderReport(reviews, profile);
       setStatus(status, "Perfil atualizado.");
     } catch (error) {
       setStatus(status, error.message, true);
@@ -825,6 +955,14 @@ const initTenantDetail = () => {
         reviewForm.reset();
         loadDetail();
       } catch (error) {
+        if (error.status === 403) {
+          setStatus(
+            reviewStatus,
+            "Para avaliar, o locador precisa estar cadastrado. Abra Cadastro e conclua o perfil.",
+            true
+          );
+          return;
+        }
         setStatus(reviewStatus, error.message, true);
       }
     });
@@ -883,11 +1021,119 @@ const initTenantDetail = () => {
   loadDetail();
 };
 
+const initTenantEdit = () => {
+  const page = document.querySelector('[data-page="tenant-edit"]');
+  if (!page) {
+    return;
+  }
+
+  const form = document.querySelector('[data-form="tenant-edit"]');
+  const status = form?.querySelector("[data-status]");
+  const summary = document.querySelector("[data-summary]");
+
+  const params = new URLSearchParams(window.location.search);
+  const tenantId = params.get("id");
+
+  if (!tenantId) {
+    setStatus(status, "Inquilino nao informado.", true);
+    return;
+  }
+
+  if (form) {
+    form.dataset.tenantId = tenantId;
+  }
+
+  const loadTenant = async () => {
+    if (!getToken()) {
+      setStatus(status, "Faca login para editar o perfil.", true);
+      return;
+    }
+
+    setStatus(status, "Carregando dados...");
+
+    try {
+      const response = await apiRequest(`/tenants/${tenantId}`);
+      const tenant = response.data || response;
+      const profile = tenant?.profile;
+
+      setFormValue(form, "tenantName", tenant?.full_name);
+      setFormValue(form, "cpf", tenant?.cpf);
+      setFormValue(form, "rg", tenant?.rg);
+      setFormValue(form, "email", tenant?.email);
+      setFormValue(form, "phone", tenant?.phone);
+      setFormValue(form, "occupation", tenant?.occupation);
+      setFormValue(form, "income", tenant?.monthly_income);
+      setFormValue(form, "addressLine", tenant?.address_line);
+      setFormValue(form, "addressNumber", tenant?.address_number);
+      setFormValue(form, "addressComplement", tenant?.address_complement);
+      setFormValue(form, "addressNeighborhood", tenant?.address_neighborhood);
+      setFormValue(form, "addressCity", tenant?.address_city);
+      setFormValue(form, "addressState", tenant?.address_state);
+      setFormValue(form, "addressPostalCode", tenant?.address_postal_code);
+      setFormValue(form, "references", profile?.references_text);
+      setFormValue(form, "notes", profile?.notes ?? tenant?.notes);
+
+      if (summary) {
+        const summaryText = summary.querySelector(".summary-text");
+        summaryText.textContent = buildProfileSummary(tenant, profile);
+      }
+
+      setStatus(status, "Dados carregados.");
+    } catch (error) {
+      setStatus(status, error.message, true);
+    }
+  };
+
+  loadTenant();
+};
+
+const initLandlordEdit = () => {
+  const page = document.querySelector('[data-page="landlord-edit"]');
+  if (!page) {
+    return;
+  }
+
+  const form = document.querySelector('[data-form="landlord-edit"]');
+  const status = form?.querySelector("[data-status]");
+
+  const loadLandlord = async () => {
+    if (!getToken()) {
+      setStatus(status, "Faca login para editar seu perfil.", true);
+      return;
+    }
+
+    setStatus(status, "Carregando dados...");
+
+    try {
+      const response = await apiRequest("/landlords/me");
+      const landlord = response.data || response;
+
+      if (form && landlord?.id) {
+        form.dataset.landlordId = landlord.id;
+      }
+
+      setFormValue(form, "name", landlord?.name);
+      setFormValue(form, "email", landlord?.email);
+      setFormValue(form, "phone", landlord?.phone);
+      setFormValue(form, "company_name", landlord?.company_name);
+      setFormValue(form, "notes", landlord?.notes);
+
+      setStatus(status, "Dados carregados.");
+    } catch (error) {
+      setStatus(status, error.message, true);
+    }
+  };
+
+  loadLandlord();
+};
+
 document.addEventListener("DOMContentLoaded", () => {
   updateSessionUI();
   initSessionActions();
   initTenantList();
   initTenantDetail();
+  initTenantEdit();
+  initLandlordEdit();
   const forms = document.querySelectorAll("[data-form]");
   forms.forEach((form) => {
     form.addEventListener("submit", async (event) => {
