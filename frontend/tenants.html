@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Inquilinos - Aluguel Seguro</title>
+    <link rel="stylesheet" href="../assets/css/styles.css" />
+  </head>
+  <body class="page-tenants" data-page="tenants">
+    <div class="backdrop"></div>
+    <header class="site-header">
+      <a class="brand" href="index.html">Aluguel Seguro</a>
+      <nav class="nav-links">
+        <a href="index.html">Inicio</a>
+        <a href="login.html" data-guest-only>Entrar</a>
+        <a href="register.html" data-guest-only>Cadastro</a>
+        <a href="profile.html" class="button ghost" data-auth-only>Perfil do Inquilino</a>
+        <a href="tenant-detail.html?id=1" data-auth-only>Perfil detalhado</a>
+        <div class="session-status">
+          <span data-session-label>Sem sessao</span>
+          <button class="button ghost session-action" type="button" data-session-action>
+            Entrar
+          </button>
+        </div>
+      </nav>
+    </header>
+
+    <main class="panel panel-wide">
+      <section class="panel-card reveal">
+        <div class="tenants-header">
+          <div>
+            <h1>Lista de inquilinos</h1>
+            <p class="muted">Busque por nome ou email e acompanhe o status.</p>
+          </div>
+          <div class="tenants-search">
+            <input
+              type="search"
+              placeholder="Buscar inquilino"
+              data-tenant-search
+            />
+          </div>
+        </div>
+
+        <p class="form-status" data-tenant-status></p>
+
+        <div class="table-wrapper">
+          <table class="tenant-table">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Email</th>
+                <th>Profissao</th>
+                <th>Renda</th>
+                <th>Status</th>
+                <th>Acoes</th>
+              </tr>
+            </thead>
+            <tbody data-tenant-body></tbody>
+          </table>
+        </div>
+
+        <div class="pagination">
+          <button class="button ghost" type="button" data-tenant-prev>Anterior</button>
+          <span data-tenant-page>Pagina 1 de 1</span>
+          <button class="button ghost" type="button" data-tenant-next>Proxima</button>
+        </div>
+      </section>
+    </main>
+
+    <script src="../assets/js/app.js"></script>
+  </body>
+</html>

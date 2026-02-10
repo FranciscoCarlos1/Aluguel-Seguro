@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aluguel Seguro</title>
+    <link rel="stylesheet" href="../assets/css/styles.css" />
+  </head>
+  <body class="page-landing">
+    <div class="backdrop"></div>
+    <header class="site-header">
+      <a class="brand" href="index.html">Aluguel Seguro</a>
+      <nav class="nav-links">
+        <a href="login.html" data-guest-only>Entrar</a>
+        <a href="register.html" data-guest-only>Cadastro</a>
+        <a href="tenants.html" data-auth-only>Inquilinos</a>
+        <a href="tenant-detail.html?id=1" data-auth-only>Perfil detalhado</a>
+        <a href="profile.html" class="button ghost" data-auth-only>Perfil do Inquilino</a>
+        <div class="session-status">
+          <span data-session-label>Sem sessao</span>
+          <button class="button ghost session-action" type="button" data-session-action>
+            Entrar
+          </button>
+        </div>
+      </nav>
+    </header>
+
+    <main class="hero">
+      <section class="hero-content">
+        <p class="eyebrow">Plataforma para locadores</p>
+        <h1>Mais seguranca para alugar, menos incerteza para decidir.</h1>
+        <p class="lead">
+          O Aluguel Seguro cria um perfil do inquilino com base em informacoes
+          declaradas, referencias e historico de pagamentos. O objetivo e apoiar
+          o locador com criterios claros e organizados.
+        </p>
+        <div class="hero-actions">
+          <a class="button" href="register.html">Quero comecar agora</a>
+          <a class="button ghost" href="profile.html">Simular perfil</a>
+        </div>
+        <div class="hero-metrics">
+          <div class="metric reveal">
+            <span class="metric-number">3x</span>
+            <span class="metric-label">mais clareza</span>
+          </div>
+          <div class="metric reveal">
+            <span class="metric-number">+80%</span>
+            <span class="metric-label">processo mais rapido</span>
+          </div>
+          <div class="metric reveal">
+            <span class="metric-number">1 painel</span>
+            <span class="metric-label">tudo organizado</span>
+          </div>
+        </div>
+      </section>
+      <aside class="hero-card reveal">
+        <h2>O que voce recebe</h2>
+        <ul class="feature-list">
+          <li>Cadastro guiado de inquilinos e referencias.</li>
+          <li>Perfil consolidado com dados essenciais.</li>
+          <li>Resumo de confianca para apoiar a decisao.</li>
+          <li>Checklist de documentos e acompanhamento.</li>
+        </ul>
+        <div class="card-note">Demo visual sem banco de dados.</div>
+      </aside>
+    </main>
+
+    <section class="highlight">
+      <div class="highlight-card reveal">
+        <h3>Como funciona no inicio</h3>
+        <p>
+          A plataforma comeca com o cadastro do inquilino e ja gera um resumo de
+          confianca. As avaliacoes podem ser adicionadas quando a base crescer.
+        </p>
+      </div>
+      <div class="highlight-card reveal">
+        <h3>Para quem e</h3>
+        <p>
+          Locadores, imobiliarias e administradoras que buscam reduzir riscos e
+          ganhar previsibilidade ao fechar contratos.
+        </p>
+      </div>
+    </section>
+
+    <footer class="site-footer">
+      <p>Projeto academico - MVP demonstrativo.</p>
+    </footer>
+
+    <script src="../assets/js/app.js"></script>
+  </body>
+</html>

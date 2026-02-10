@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cadastro - Aluguel Seguro</title>
+    <link rel="stylesheet" href="../assets/css/styles.css" />
+  </head>
+  <body class="page-auth">
+    <div class="backdrop"></div>
+    <header class="site-header">
+      <a class="brand" href="index.html">Aluguel Seguro</a>
+      <nav class="nav-links">
+        <a href="index.html">Inicio</a>
+        <a href="login.html" data-guest-only>Entrar</a>
+        <a href="tenants.html" data-auth-only>Inquilinos</a>
+        <a href="tenant-detail.html?id=1" data-auth-only>Perfil detalhado</a>
+        <a href="profile.html" class="button ghost" data-auth-only>Perfil do Inquilino</a>
+        <div class="session-status">
+          <span data-session-label>Sem sessao</span>
+          <button class="button ghost session-action" type="button" data-session-action>
+            Entrar
+          </button>
+        </div>
+      </nav>
+    </header>
+
+    <main class="panel">
+      <section class="panel-card reveal">
+        <h1>Cadastro de locador</h1>
+        <p class="muted">Crie sua conta para acompanhar perfis.</p>
+        <form data-form="register" class="form-grid">
+          <label>
+            Nome completo
+            <input type="text" name="name" required placeholder="Nome e sobrenome" />
+          </label>
+          <label>
+            Email
+            <input type="email" name="email" required placeholder="seu@email.com" />
+          </label>
+          <label>
+            Telefone
+            <input type="tel" name="phone" required placeholder="(00) 00000-0000" />
+          </label>
+          <label>
+            Senha
+            <input type="password" name="password" required placeholder="Minimo 8 caracteres" />
+          </label>
+          <label>
+            Confirmar senha
+            <input type="password" name="password_confirmation" required placeholder="Repita a senha" />
+          </label>
+          <button class="button" type="submit">Criar conta</button>
+          <p class="form-status" data-status></p>
+        </form>
+        <div class="form-footer">
+          Ja tem conta? <a href="login.html">Entrar</a>
+        </div>
+      </section>
+    </main>
+
+    <script src="../assets/js/app.js"></script>
+  </body>
+</html>

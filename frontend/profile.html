@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Perfil do Inquilino - Aluguel Seguro</title>
+    <link rel="stylesheet" href="../assets/css/styles.css" />
+  </head>
+  <body class="page-profile">
+    <div class="backdrop"></div>
+    <header class="site-header">
+      <a class="brand" href="index.html">Aluguel Seguro</a>
+      <nav class="nav-links">
+        <a href="index.html">Inicio</a>
+        <a href="login.html" data-guest-only>Entrar</a>
+        <a href="register.html" data-guest-only>Cadastro</a>
+        <a href="tenants.html" data-auth-only>Inquilinos</a>
+        <a href="tenant-detail.html?id=1" data-auth-only>Perfil detalhado</a>
+        <div class="session-status">
+          <span data-session-label>Sem sessao</span>
+          <button class="button ghost session-action" type="button" data-session-action>
+            Entrar
+          </button>
+        </div>
+      </nav>
+    </header>
+
+    <main class="panel panel-wide">
+      <section class="panel-card panel-card--wide reveal">
+        <h1>Perfil do inquilino</h1>
+        <p class="muted">
+          Preencha os dados abaixo para gerar um resumo de confianca.
+        </p>
+        <form data-form="profile" class="form-grid form-grid--two">
+          <label>
+            Nome do inquilino
+            <input type="text" name="tenantName" required placeholder="Nome completo" />
+          </label>
+          <label>
+            CPF
+            <input type="text" name="cpf" required placeholder="000.000.000-00" />
+          </label>
+          <label>
+            RG
+            <input type="text" name="rg" required placeholder="00.000.000-0" />
+          </label>
+          <label>
+            Email (opcional)
+            <input type="email" name="email" placeholder="inquilino@email.com" />
+          </label>
+          <label>
+            Telefone (opcional)
+            <input type="tel" name="phone" placeholder="(00) 00000-0000" />
+          </label>
+          <label>
+            Profissao
+            <input type="text" name="occupation" required placeholder="Ex: Analista" />
+          </label>
+          <label>
+            Renda mensal estimada
+            <input type="number" name="income" required placeholder="3500" />
+          </label>
+          <label class="full">
+            Endereco
+            <input type="text" name="addressLine" required placeholder="Rua, avenida, etc" />
+          </label>
+          <label>
+            Numero
+            <input type="text" name="addressNumber" required placeholder="123" />
+          </label>
+          <label>
+            Complemento (opcional)
+            <input type="text" name="addressComplement" placeholder="Apto, bloco" />
+          </label>
+          <label>
+            Bairro
+            <input type="text" name="addressNeighborhood" required placeholder="Centro" />
+          </label>
+          <label>
+            Cidade
+            <input type="text" name="addressCity" required placeholder="Cidade" />
+          </label>
+          <label>
+            Estado
+            <input type="text" name="addressState" required placeholder="UF" />
+          </label>
+          <label>
+            CEP
+            <input type="text" name="addressPostalCode" required placeholder="00000-000" />
+          </label>
+          <label class="full">
+            Referencias
+            <textarea name="references" rows="3" placeholder="Contato de antigos locadores"></textarea>
+          </label>
+          <label class="full">
+            Observacoes
+            <textarea name="notes" rows="3" placeholder="Historico de pagamentos, etc"></textarea>
+          </label>
+          <button class="button" type="submit">Gerar resumo</button>
+          <p class="form-status" data-status></p>
+        </form>
+        <div class="summary" data-summary>
+          <h2>Resumo gerado</h2>
+          <p class="summary-text">Preencha o formulario para ver o resumo.</p>
+        </div>
+      </section>
+    </main>
+
+    <script src="../assets/js/app.js"></script>
+  </body>
+</html>

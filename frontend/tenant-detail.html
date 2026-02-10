@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Perfil do Inquilino - Aluguel Seguro</title>
+    <link rel="stylesheet" href="../assets/css/styles.css" />
+  </head>
+  <body class="page-tenant-detail" data-page="tenant-detail">
+    <div class="backdrop"></div>
+    <header class="site-header">
+      <a class="brand" href="index.html">Aluguel Seguro</a>
+      <nav class="nav-links">
+        <a href="index.html">Inicio</a>
+        <a href="tenants.html" data-auth-only>Inquilinos</a>
+        <a href="login.html" data-guest-only>Entrar</a>
+        <a href="register.html" data-guest-only>Cadastro</a>
+        <a href="profile.html" class="button ghost" data-auth-only>Novo Perfil</a>
+        <div class="session-status">
+          <span data-session-label>Sem sessao</span>
+          <button class="button ghost session-action" type="button" data-session-action>
+            Entrar
+          </button>
+        </div>
+      </nav>
+    </header>
+
+    <main class="panel panel-wide">
+      <section class="panel-card reveal">
+        <div class="detail-header">
+          <div>
+            <h1 data-tenant-detail-header>Perfil do inquilino</h1>
+            <p class="muted">Resumo consolidado para apoiar a decisao.</p>
+          </div>
+          <span class="detail-tag">Perfil seguro</span>
+        </div>
+
+        <p class="form-status" data-tenant-detail-status></p>
+
+        <div class="detail-grid">
+          <div class="detail-card">
+            <h2>Resumo</h2>
+            <p class="summary-text" data-tenant-detail-summary>
+              Carregando informacoes...
+            </p>
+          </div>
+          <div class="detail-card">
+            <h2>Dados principais</h2>
+            <ul class="detail-meta" data-tenant-detail-meta></ul>
+          </div>
+        </div>
+
+        <div class="detail-card">
+          <h2>Avaliacoes</h2>
+          <ul class="detail-reviews" data-tenant-detail-reviews></ul>
+        </div>
+
+        <div class="detail-card report-card">
+          <h2>Relatorio do inquilino</h2>
+          <div class="report-grid" data-tenant-report></div>
+          <div class="report-actions">
+            <button class="button ghost" type="button" data-report-export>
+              Exportar PDF
+            </button>
+            <button class="button ghost" type="button" data-report-export-csv>
+              Exportar CSV
+            </button>
+          </div>
+        </div>
+
+        <div class="detail-card">
+          <h2>Nova avaliacao</h2>
+          <form class="form-grid" data-review-form>
+            <label>
+              Nota (1 a 5)
+              <input type="number" name="rating" min="1" max="5" required />
+            </label>
+            <label>
+              Historico de pagamento
+              <select name="payment_history" required>
+                <option value="">Selecione</option>
+                <option value="on_time">Em dia</option>
+                <option value="late">Com atraso</option>
+                <option value="defaulted">Inadimplente</option>
+              </select>
+            </label>
+            <label>
+              Tempo de moradia (meses)
+              <input type="number" name="stay_duration_months" min="1" required />
+            </label>
+            <label>
+              Convivencia com vizinhos
+              <select name="neighbor_relations" required>
+                <option value="">Selecione</option>
+                <option value="good">Boa</option>
+                <option value="average">Regular</option>
+                <option value="bad">Ruim</option>
+              </select>
+            </label>
+            <label>
+              Cuidado do imovel
+              <select name="property_care" required>
+                <option value="">Selecione</option>
+                <option value="good">Bom</option>
+                <option value="average">Regular</option>
+                <option value="bad">Ruim</option>
+              </select>
+            </label>
+            <label>
+              Ruido
+              <select name="noise_level" required>
+                <option value="">Selecione</option>
+                <option value="low">Baixo</option>
+                <option value="medium">Medio</option>
+                <option value="high">Alto</option>
+              </select>
+            </label>
+            <label>
+              Avaliacao geral (alugaria novamente?)
+              <select name="would_rent_again" required>
+                <option value="">Selecione</option>
+                <option value="yes">Sim</option>
+                <option value="no">Nao</option>
+              </select>
+            </label>
+            <label>
+              Comentario
+              <textarea name="comment" rows="3" placeholder="Detalhes relevantes"></textarea>
+            </label>
+            <label>
+              Seu nome (opcional)
+              <input type="text" name="created_by_name" placeholder="Nome do locador" />
+            </label>
+            <label>
+              Seu papel (opcional)
+              <input type="text" name="created_by_role" placeholder="Ex: Proprietario" />
+            </label>
+            <button class="button" type="submit">Registrar avaliacao</button>
+            <p class="form-status" data-review-status></p>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <script src="../assets/js/app.js"></script>
+  </body>
+</html>

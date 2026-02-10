@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Entrar - Aluguel Seguro</title>
+    <link rel="stylesheet" href="../assets/css/styles.css" />
+  </head>
+  <body class="page-auth">
+    <div class="backdrop"></div>
+    <header class="site-header">
+      <a class="brand" href="index.html">Aluguel Seguro</a>
+      <nav class="nav-links">
+        <a href="index.html">Inicio</a>
+        <a href="register.html" data-guest-only>Cadastro</a>
+        <a href="tenants.html" data-auth-only>Inquilinos</a>
+        <a href="tenant-detail.html?id=1" data-auth-only>Perfil detalhado</a>
+        <a href="profile.html" class="button ghost" data-auth-only>Perfil do Inquilino</a>
+        <div class="session-status">
+          <span data-session-label>Sem sessao</span>
+          <button class="button ghost session-action" type="button" data-session-action>
+            Entrar
+          </button>
+        </div>
+      </nav>
+    </header>
+
+    <main class="panel">
+      <section class="panel-card reveal">
+        <h1>Entrar</h1>
+        <p class="muted">Acesse seu painel de locador.</p>
+        <form data-form="login" class="form-grid">
+          <label>
+            Email
+            <input type="email" name="email" required placeholder="seu@email.com" />
+          </label>
+          <label>
+            Senha
+            <input type="password" name="password" required placeholder="********" />
+          </label>
+          <button class="button" type="submit">Entrar</button>
+          <p class="form-status" data-status></p>
+        </form>
+        <div class="form-footer">
+          Ainda nao tem conta? <a href="register.html">Cadastre-se</a>
+        </div>
+      </section>
+    </main>
+
+    <script src="../assets/js/app.js"></script>
+  </body>
+</html>
