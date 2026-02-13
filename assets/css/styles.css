@@ -251,6 +251,14 @@ body {
   width: min(860px, 100%);
 }
 
+.page-tenants .panel-card {
+  width: min(1100px, 100%);
+}
+
+.page-tenant-detail .panel-card {
+  width: min(1100px, 100%);
+}
+
 .panel-card h1 {
   font-size: 2rem;
   margin-bottom: 8px;
@@ -344,6 +352,14 @@ textarea {
   border: 1px solid #eee2d5;
 }
 
+.page-tenants .table-wrapper {
+  overflow-x: auto;
+}
+
+.page-tenants .tenant-table {
+  min-width: 860px;
+}
+
 .tenant-table {
   width: 100%;
   border-collapse: collapse;
@@ -373,6 +389,35 @@ textarea {
   gap: 16px;
   margin-top: 16px;
   flex-wrap: wrap;
+}
+
+@media (max-width: 720px) {
+  .page-tenants .panel-card {
+    padding: 24px 20px;
+  }
+
+  .tenants-header {
+    align-items: stretch;
+  }
+
+  .tenants-search input,
+  .tenants-search select {
+    width: 100%;
+  }
+
+  .page-tenant-detail .panel-card {
+    padding: 24px 20px;
+  }
+
+  .detail-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .report-actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
 }
 
 .detail-header {
