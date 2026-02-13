@@ -1,6 +1,7 @@
 const API_BASE_URL = "http://localhost:8000/api/v1";
 const AUTH_TOKEN_KEY = "aluguelSeguroToken";
 const SESSION_EMAIL_KEY = "aluguelSeguroEmail";
+const LAST_ROUTE_KEY = "aluguelSeguroLastRoute";
 
 const AppState = {
   profile: null,
@@ -46,6 +47,30 @@ const getSessionEmail = () => localStorage.getItem(SESSION_EMAIL_KEY);
 
 const clearSessionEmail = () => {
   localStorage.removeItem(SESSION_EMAIL_KEY);
+};
+
+const setLastRoute = (route) => {
+  if (route) {
+    localStorage.setItem(LAST_ROUTE_KEY, route);
+  }
+};
+
+const getLastRoute = () => localStorage.getItem(LAST_ROUTE_KEY);
+
+const clearLastRoute = () => {
+  localStorage.removeItem(LAST_ROUTE_KEY);
+};
+
+const isAuthPage = () =>
+  /\/(login|register)\.html$/.test(window.location.pathname);
+
+const trackLastRoute = () => {
+  if (isAuthPage()) {
+    return;
+  }
+
+  const route = `${window.location.pathname}${window.location.search}`;
+  setLastRoute(route);
 };
 
 const apiRequest = async (path, options = {}) => {
@@ -112,14 +137,18 @@ const updateSessionUI = () => {
 };
 
 const initSessionActions = () => {
-  const action = document.querySelector("[data-session-action]");
-  if (!action) {
-    return;
-  }
+  document.addEventListener("click", async (event) => {
+    const action = event.target.closest("[data-session-action]");
+    if (!action) {
+      return;
+    }
 
-  action.addEventListener("click", async () => {
     if (action.dataset.sessionMode === "login") {
       window.location.href = "login.html";
+      return;
+    }
+
+    if (!window.confirm("Deseja realmente sair?")) {
       return;
     }
 
@@ -130,7 +159,9 @@ const initSessionActions = () => {
     } finally {
       clearToken();
       clearSessionEmail();
+      clearLastRoute();
       updateSessionUI();
+      window.location.href = "index.html";
     }
   });
 };
@@ -204,6 +235,7 @@ const formHandlers = {
     setSessionEmail(response.user.email);
     setStatus(status, `Sessao iniciada para ${response.user.email}.`);
     updateSessionUI();
+    window.location.href = getLastRoute() || "tenants.html";
   },
   async register(form, status) {
     const formData = new FormData(form);
@@ -234,6 +266,7 @@ const formHandlers = {
 
     setStatus(status, "Cadastro realizado. Voce ja pode criar perfis.");
     updateSessionUI();
+    window.location.href = getLastRoute() || "tenants.html";
   },
   async profile(form, status) {
     if (!getToken()) {
@@ -1128,6 +1161,7 @@ const initLandlordEdit = () => {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
+  trackLastRoute();
   updateSessionUI();
   initSessionActions();
   initTenantList();
