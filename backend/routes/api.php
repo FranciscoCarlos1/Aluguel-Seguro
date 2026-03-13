@@ -47,6 +47,8 @@ Route::prefix('v1')->group(function () {
 
         Route::get('/tenants/{tenant}/reviews', [TenantReviewController::class, 'index']);
         Route::post('/tenants/{tenant}/reviews', [TenantReviewController::class, 'store']);
+        Route::post('/tenants/{tenant}/reviews/{review}/media', [\App\Http\Controllers\Api\TenantReviewMediaController::class, 'store']);
+        Route::delete('/tenants/{tenant}/reviews/{review}/media/{media}', [\App\Http\Controllers\Api\TenantReviewMediaController::class, 'destroy']);
 
         // Contratos digitais
         Route::post('/contracts/generate', [\App\Http\Controllers\Api\ContractController::class, 'generate']);

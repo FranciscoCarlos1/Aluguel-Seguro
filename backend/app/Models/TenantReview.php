@@ -42,4 +42,9 @@ class TenantReview extends Model
     {
         return $this->belongsTo(Landlord::class);
     }
+
+    public function media()
+    {
+        return $this->hasMany(TenantReviewMedia::class, 'tenant_review_id');
+    }
 }
