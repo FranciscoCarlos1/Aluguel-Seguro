@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\PropertyController;
 use App\Http\Controllers\Api\PropertyInterestController;
 use App\Http\Controllers\Api\ProspectProfileController;
+use App\Http\Controllers\Api\ContractController;
 use App\Http\Middleware\ApiAuditLog;
 use Illuminate\Support\Facades\Route;
 
@@ -46,5 +47,10 @@ Route::prefix('v1')->group(function () {
 
         Route::get('/tenants/{tenant}/reviews', [TenantReviewController::class, 'index']);
         Route::post('/tenants/{tenant}/reviews', [TenantReviewController::class, 'store']);
+
+        // Contratos digitais
+        Route::post('/contracts/generate', [\App\Http\Controllers\Api\ContractController::class, 'generate']);
+        Route::get('/contracts/{contract}', [\App\Http\Controllers\Api\ContractController::class, 'show']);
+        Route::post('/contracts/{contract}/sign', [\App\Http\Controllers\Api\ContractController::class, 'sign']);
     });
 });
