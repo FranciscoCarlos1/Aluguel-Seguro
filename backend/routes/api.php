@@ -52,5 +52,10 @@ Route::prefix('v1')->group(function () {
         Route::post('/contracts/generate', [\App\Http\Controllers\Api\ContractController::class, 'generate']);
         Route::get('/contracts/{contract}', [\App\Http\Controllers\Api\ContractController::class, 'show']);
         Route::post('/contracts/{contract}/sign', [\App\Http\Controllers\Api\ContractController::class, 'sign']);
+
+        // Boletos e cobrança
+        Route::post('/payment-slips/generate', [\App\Http\Controllers\Api\PaymentSlipController::class, 'generate']);
+        Route::get('/payment-slips/{slip}', [\App\Http\Controllers\Api\PaymentSlipController::class, 'show']);
+        Route::post('/payment-slips/{slip}/mark-paid', [\App\Http\Controllers\Api\PaymentSlipController::class, 'markAsPaid']);
     });
 });
