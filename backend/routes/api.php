@@ -5,6 +5,9 @@ use App\Http\Controllers\Api\TenantController;
 use App\Http\Controllers\Api\TenantProfileController;
 use App\Http\Controllers\Api\TenantReviewController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\PropertyController;
+use App\Http\Controllers\Api\PropertyInterestController;
+use App\Http\Controllers\Api\ProspectProfileController;
 use App\Http\Middleware\ApiAuditLog;
 use Illuminate\Support\Facades\Route;
 
@@ -16,6 +19,13 @@ Route::prefix('v1')->group(function () {
     Route::middleware('throttle:api')->group(function () {
         Route::post('/auth/register', [AuthController::class, 'register']);
         Route::post('/auth/login', [AuthController::class, 'login']);
+
+        Route::get('/properties', [PropertyController::class, 'index']);
+        Route::get('/properties/{property}', [PropertyController::class, 'show']);
+        Route::post('/properties/{property}/interests', [PropertyInterestController::class, 'store']);
+        Route::post('/property-interests/confirm-payment', [PropertyInterestController::class, 'confirmPayment']);
+        Route::get('/prospect-profiles/lookup', [ProspectProfileController::class, 'lookup']);
+        Route::get('/prospect-profiles/access/{token}', [ProspectProfileController::class, 'access']);
     });
 
     Route::middleware(['auth:sanctum', 'throttle:api', ApiAuditLog::class])->group(function () {

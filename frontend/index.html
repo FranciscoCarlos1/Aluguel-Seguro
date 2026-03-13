@@ -6,16 +6,14 @@
     <title>Aluguel Seguro</title>
     <link rel="stylesheet" href="../assets/css/styles.css" />
   </head>
-  <body class="page-landing">
+  <body class="page-landing" data-page="marketplace">
     <div class="backdrop"></div>
     <header class="site-header">
       <a class="brand" href="index.html">Aluguel Seguro</a>
       <nav class="nav-links">
+        <a href="index.html">Buscar imóveis</a>
         <a href="login.html" data-guest-only>Entrar</a>
         <a href="register.html" data-guest-only>Cadastro</a>
-        <a href="tenants.html" data-auth-only>Inquilinos</a>
-        <a href="tenant-detail.html?id=1" data-auth-only>Perfil detalhado</a>
-        <a href="profile.html" class="button ghost" data-auth-only>Perfil do Inquilino</a>
         <a href="landlord-edit.html" class="button ghost" data-auth-only>Meu perfil</a>
         <div class="session-status">
           <span data-session-label>Sem sessao</span>
@@ -26,67 +24,77 @@
       </nav>
     </header>
 
-    <main class="hero">
-      <section class="hero-content">
-        <p class="eyebrow">Plataforma para locadores</p>
-        <h1>Mais seguranca para alugar, menos incerteza para decidir.</h1>
-        <p class="lead">
-          O Aluguel Seguro cria um perfil do inquilino com base em informacoes
-          declaradas, referencias e historico de pagamentos. O objetivo e apoiar
-          o locador com criterios claros e organizados.
-        </p>
-        <div class="hero-actions">
-          <a class="button" href="register.html">Quero comecar agora</a>
-          <a class="button ghost" href="profile.html">Simular perfil</a>
-        </div>
-        <div class="hero-metrics">
-          <div class="metric reveal">
-            <span class="metric-number">3x</span>
-            <span class="metric-label">mais clareza</span>
-          </div>
-          <div class="metric reveal">
-            <span class="metric-number">+80%</span>
-            <span class="metric-label">processo mais rapido</span>
-          </div>
-          <div class="metric reveal">
-            <span class="metric-number">1 painel</span>
-            <span class="metric-label">tudo organizado</span>
+    <main class="panel panel-wide">
+      <section class="panel-card reveal panel-card--wide">
+        <div class="tenants-header">
+          <div>
+            <h1>Encontre seu imóvel em SC</h1>
+            <p class="muted">Filtre e selecione o imóvel do seu interesse.</p>
           </div>
         </div>
+
+        <form class="form-grid form-grid--two" data-marketplace-filters>
+          <label>
+            Estado
+            <select name="state">
+              <option value="SC">SC</option>
+            </select>
+          </label>
+          <label>
+            Cidade
+            <input type="text" name="city" placeholder="Ex: Florianopolis" />
+          </label>
+          <label>
+            Valor
+            <select name="price_range">
+              <option value="">Todos</option>
+              <option value="ate_1000">Até R$ 1.000,00</option>
+              <option value="1001_2000">R$ 1.001,00 a R$ 2.000,00</option>
+              <option value="2001_3000">R$ 2.001,00 a R$ 3.000,00</option>
+              <option value="acima_3000">Acima de R$ 3.000,00</option>
+            </select>
+          </label>
+          <label>
+            Quartos
+            <select name="bedrooms">
+              <option value="">Qualquer</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4+</option>
+            </select>
+          </label>
+          <label>
+            Garagem
+            <select name="garage">
+              <option value="">Qualquer</option>
+              <option value="1">Com garagem</option>
+              <option value="0">Sem garagem</option>
+            </select>
+          </label>
+          <label>
+            Tipo de imóvel
+            <select name="property_type">
+              <option value="">Todos</option>
+              <option value="kitnet">Kitnet</option>
+              <option value="casa">Casa</option>
+              <option value="apartamento">Apartamento</option>
+              <option value="casa_condominio">Casa em condomínio</option>
+            </select>
+          </label>
+          <button class="button" type="submit">Buscar</button>
+        </form>
+
+        <p class="form-status" data-marketplace-status></p>
+        <div class="property-results" data-property-results></div>
       </section>
-      <aside class="hero-card reveal">
-        <h2>O que voce recebe</h2>
-        <ul class="feature-list">
-          <li>Cadastro guiado de inquilinos e referencias.</li>
-          <li>Perfil consolidado com dados essenciais.</li>
-          <li>Resumo de confianca para apoiar a decisao.</li>
-          <li>Checklist de documentos e acompanhamento.</li>
-        </ul>
-        <div class="card-note">Demo visual sem banco de dados.</div>
-      </aside>
     </main>
 
-    <section class="highlight">
-      <div class="highlight-card reveal">
-        <h3>Como funciona no inicio</h3>
-        <p>
-          A plataforma comeca com o cadastro do inquilino e ja gera um resumo de
-          confianca. As avaliacoes podem ser adicionadas quando a base crescer.
-        </p>
-      </div>
-      <div class="highlight-card reveal">
-        <h3>Para quem e</h3>
-        <p>
-          Locadores, imobiliarias e administradoras que buscam reduzir riscos e
-          ganhar previsibilidade ao fechar contratos.
-        </p>
-      </div>
-    </section>
-
     <footer class="site-footer">
-      <p>Projeto academico - MVP demonstrativo.</p>
+      <p>Projeto academico - busca de imóveis e intermediação segura.</p>
     </footer>
 
+    <script src="env.js"></script>
     <script src="../assets/js/app.js"></script>
   </body>
 </html>

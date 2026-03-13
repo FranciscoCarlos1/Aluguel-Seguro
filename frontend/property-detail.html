@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Detalhe do imóvel - Aluguel Seguro</title>
+    <link rel="stylesheet" href="../assets/css/styles.css" />
+  </head>
+  <body class="page-tenant-detail" data-page="property-detail">
+    <div class="backdrop"></div>
+    <header class="site-header">
+      <a class="brand" href="index.html">Aluguel Seguro</a>
+      <nav class="nav-links">
+        <a href="index.html">Buscar imóveis</a>
+        <a href="login.html" data-guest-only>Entrar</a>
+        <a href="register.html" data-guest-only>Cadastro</a>
+        <a href="landlord-edit.html" class="button ghost" data-auth-only>Meu perfil</a>
+        <div class="session-status">
+          <span data-session-label>Sem sessao</span>
+          <button class="button ghost session-action" type="button" data-session-action>
+            Entrar
+          </button>
+        </div>
+      </nav>
+    </header>
+
+    <main class="panel panel-wide">
+      <section class="panel-card reveal panel-card--wide">
+        <div class="detail-header">
+          <div>
+            <h1 data-property-title>Carregando imóvel...</h1>
+            <p class="muted" data-property-subtitle></p>
+          </div>
+        </div>
+
+        <div class="detail-card">
+          <h2>Sobre o imóvel</h2>
+          <p class="summary-text" data-property-description></p>
+          <ul class="detail-meta" data-property-meta></ul>
+        </div>
+
+        <div class="detail-card">
+          <h2>Interesse no imóvel</h2>
+          <p class="muted">Preencha seus dados. Se o perfil já existir, o questionário é reaproveitado automaticamente.</p>
+
+          <form class="form-grid form-grid--two" data-property-interest-form>
+            <label>
+              Nome completo
+              <input type="text" name="tenant_name" required />
+            </label>
+            <label>
+              Telefone (WhatsApp)
+              <input type="text" name="tenant_phone" data-prospect-phone required />
+            </label>
+            <label>
+              E-mail
+              <input type="email" name="tenant_email" />
+            </label>
+            <label>
+              Profissão
+              <input type="text" name="occupation" />
+            </label>
+            <label>
+              Renda mensal
+              <input type="number" name="monthly_income" min="0" step="0.01" />
+            </label>
+            <label>
+              Quantas pessoas vão morar
+              <input type="number" name="household_size" min="1" max="12" />
+            </label>
+            <label>
+              Possui pet?
+              <select name="has_pet" required>
+                <option value="0">Não</option>
+                <option value="1">Sim</option>
+              </select>
+            </label>
+            <label class="full">
+              Motivo da locação
+              <textarea name="rental_reason" rows="2"></textarea>
+            </label>
+
+            <div class="detail-card full" data-questionnaire-box>
+              <h3>Perguntas de perfil (pontuação)</h3>
+              <p class="muted">Responda usando níveis de probabilidade.</p>
+              <div class="form-grid form-grid--two">
+                <label>
+                  Pagar o aluguel em dia
+                  <select name="payment_probability" data-probability>
+                    <option value="">Selecione</option>
+                    <option value="muito_provavel">Muito provável</option>
+                    <option value="provavel">Provável</option>
+                    <option value="pouco_provavel">Pouco provável</option>
+                    <option value="improvavel">Improvável</option>
+                  </select>
+                </label>
+                <label>
+                  Cuidar bem do imóvel
+                  <select name="care_probability" data-probability>
+                    <option value="">Selecione</option>
+                    <option value="muito_provavel">Muito provável</option>
+                    <option value="provavel">Provável</option>
+                    <option value="pouco_provavel">Pouco provável</option>
+                    <option value="improvavel">Improvável</option>
+                  </select>
+                </label>
+                <label>
+                  Manter renda estável
+                  <select name="income_stability_probability" data-probability>
+                    <option value="">Selecione</option>
+                    <option value="muito_provavel">Muito provável</option>
+                    <option value="provavel">Provável</option>
+                    <option value="pouco_provavel">Pouco provável</option>
+                    <option value="improvavel">Improvável</option>
+                  </select>
+                </label>
+                <label>
+                  Boa convivência com vizinhos
+                  <select name="neighbor_relation_probability" data-probability>
+                    <option value="">Selecione</option>
+                    <option value="muito_provavel">Muito provável</option>
+                    <option value="provavel">Provável</option>
+                    <option value="pouco_provavel">Pouco provável</option>
+                    <option value="improvavel">Improvável</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+
+            <label class="full">
+              Observações
+              <textarea name="additional_notes" rows="3"></textarea>
+            </label>
+            <button class="button" type="submit">Enviar interesse</button>
+            <p class="form-status full" data-interest-status></p>
+          </form>
+
+          <div class="report-actions">
+            <a class="button ghost is-hidden" data-landlord-wa-link target="_blank" rel="noreferrer">Enviar aviso no WhatsApp do locatário</a>
+            <button class="button ghost is-hidden" type="button" data-confirm-payment>Confirmar pagamento (simulação)</button>
+          </div>
+          <div class="detail-card is-hidden" data-payment-card>
+            <h3>Pagamento da taxa (R$ 5,99)</h3>
+            <p><strong>Referência:</strong> <span data-payment-reference>-</span></p>
+            <p><strong>PIX copia e cola:</strong></p>
+            <textarea rows="3" data-pix-copy readonly></textarea>
+            <p class="form-status" data-payment-status></p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="env.js"></script>
+    <script src="../assets/js/app.js"></script>
+  </body>
+</html>

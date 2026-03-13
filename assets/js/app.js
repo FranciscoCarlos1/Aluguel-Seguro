@@ -1,4 +1,7 @@
-const API_BASE_URL = "http://localhost:8000/api/v1";
+const API_BASE_URL =
+  window.ALUGUEL_API_BASE_URL ||
+  document.querySelector('meta[name="api-base-url"]')?.getAttribute("content") ||
+  "http://localhost:8000/api/v1";
 const AUTH_TOKEN_KEY = "aluguelSeguroToken";
 const SESSION_EMAIL_KEY = "aluguelSeguroEmail";
 const LAST_ROUTE_KEY = "aluguelSeguroLastRoute";
@@ -1160,6 +1163,269 @@ const initLandlordEdit = () => {
   loadLandlord();
 };
 
+const formatPropertyType = (type) => {
+  const labels = {
+    kitnet: "Kitnet",
+    casa: "Casa",
+    apartamento: "Apartamento",
+    casa_condominio: "Casa em condominio",
+  };
+
+  return labels[type] || type || "-";
+};
+
+const formatMoney = (value) => {
+  const number = Number(value || 0);
+  return number.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  });
+};
+
+const initMarketplace = () => {
+  const page = document.querySelector('[data-page="marketplace"]');
+  if (!page) {
+    return;
+  }
+
+  const filtersForm = document.querySelector("[data-marketplace-filters]");
+  const status = document.querySelector("[data-marketplace-status]");
+  const results = document.querySelector("[data-property-results]");
+
+  const renderProperties = (items) => {
+    if (!results) {
+      return;
+    }
+
+    if (!items || items.length === 0) {
+      results.innerHTML = "<p>Nenhum imovel encontrado com esses filtros.</p>";
+      return;
+    }
+
+    results.innerHTML = items
+      .map(
+        (property) => `
+          <article class="property-card">
+            <h3>${property.title}</h3>
+            <p>${property.city}/${property.state}</p>
+            <p class="property-price">${formatMoney(property.rent_price)}/mês</p>
+            <div class="property-tags">
+              <span>${formatPropertyType(property.property_type)}</span>
+              <span>${property.bedrooms} quarto(s)</span>
+              <span>${property.has_garage ? "Com garagem" : "Sem garagem"}</span>
+            </div>
+            <a class="button" href="property-detail.html?id=${property.id}">Ver imóvel</a>
+          </article>
+        `
+      )
+      .join("");
+  };
+
+  const loadProperties = async () => {
+    setStatus(status, "Buscando imóveis...");
+
+    try {
+      const params = new URLSearchParams();
+      const formData = new FormData(filtersForm);
+      for (const [key, value] of formData.entries()) {
+        if (value !== "") {
+          params.append(key, value);
+        }
+      }
+
+      const response = await apiRequest(`/properties?${params.toString()}`);
+      const items = response.data || [];
+      renderProperties(items);
+      setStatus(status, `${items.length} imóvel(is) encontrado(s).`);
+    } catch (error) {
+      setStatus(status, error.message, true);
+    }
+  };
+
+  if (filtersForm) {
+    filtersForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      loadProperties();
+    });
+  }
+
+  loadProperties();
+};
+
+const initPropertyDetail = () => {
+  const page = document.querySelector('[data-page="property-detail"]');
+  if (!page) {
+    return;
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const propertyId = params.get("id");
+
+  const title = document.querySelector("[data-property-title]");
+  const subtitle = document.querySelector("[data-property-subtitle]");
+  const description = document.querySelector("[data-property-description]");
+  const meta = document.querySelector("[data-property-meta]");
+  const form = document.querySelector("[data-property-interest-form]");
+  const phoneInput = document.querySelector("[data-prospect-phone]");
+  const questionnaireBox = document.querySelector("[data-questionnaire-box]");
+  const probabilityFields = document.querySelectorAll("[data-probability]");
+  const status = document.querySelector("[data-interest-status]");
+  const paymentCard = document.querySelector("[data-payment-card]");
+  const paymentRef = document.querySelector("[data-payment-reference]");
+  const pixCopy = document.querySelector("[data-pix-copy]");
+  const paymentStatus = document.querySelector("[data-payment-status]");
+  const landlordWaLink = document.querySelector("[data-landlord-wa-link]");
+  const confirmPaymentBtn = document.querySelector("[data-confirm-payment]");
+
+  let currentPaymentReference = null;
+
+  if (!propertyId) {
+    setStatus(status, "Imóvel não informado.", true);
+    return;
+  }
+
+  const toggleQuestionnaire = (show) => {
+    if (!questionnaireBox) {
+      return;
+    }
+
+    questionnaireBox.classList.toggle("is-hidden", !show);
+    probabilityFields.forEach((field) => {
+      field.required = show;
+    });
+  };
+
+  const lookupProfileByPhone = async () => {
+    const phone = phoneInput?.value?.trim();
+    if (!phone || phone.replace(/\D/g, "").length < 10) {
+      return;
+    }
+
+    try {
+      const response = await apiRequest(`/prospect-profiles/lookup?phone=${encodeURIComponent(phone)}`);
+      if (response.exists) {
+        toggleQuestionnaire(false);
+        setStatus(status, "Perfil já salvo. Não precisa responder o questionário novamente.");
+      } else {
+        toggleQuestionnaire(true);
+      }
+    } catch (error) {
+      toggleQuestionnaire(true);
+    }
+  };
+
+  const loadProperty = async () => {
+    setStatus(status, "Carregando imóvel...");
+    try {
+      const response = await apiRequest(`/properties/${propertyId}`);
+      const property = response.data || response;
+
+      if (title) {
+        title.textContent = property.title;
+      }
+      if (subtitle) {
+        subtitle.textContent = `${property.city}/${property.state} · ${formatMoney(property.rent_price)}/mês`;
+      }
+      if (description) {
+        description.textContent = property.description || "Sem descrição.";
+      }
+      if (meta) {
+        meta.innerHTML = `
+          <li><strong>Tipo:</strong> ${formatPropertyType(property.property_type)}</li>
+          <li><strong>Quartos:</strong> ${property.bedrooms}</li>
+          <li><strong>Garagem:</strong> ${property.has_garage ? "Sim" : "Não"}</li>
+          <li><strong>Bairro:</strong> ${property.address_neighborhood || "-"}</li>
+        `;
+      }
+
+      setStatus(status, "Pronto para registrar interesse.");
+    } catch (error) {
+      setStatus(status, error.message, true);
+    }
+  };
+
+  if (phoneInput) {
+    phoneInput.addEventListener("blur", lookupProfileByPhone);
+  }
+
+  if (form) {
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const formData = new FormData(form);
+      const payload = {
+        tenant_name: formData.get("tenant_name"),
+        tenant_phone: formData.get("tenant_phone"),
+        tenant_email: formData.get("tenant_email") || null,
+        occupation: formData.get("occupation") || null,
+        monthly_income: formData.get("monthly_income") || null,
+        household_size: formData.get("household_size") || null,
+        has_pet: formData.get("has_pet") === "1",
+        rental_reason: formData.get("rental_reason") || null,
+        additional_notes: formData.get("additional_notes") || null,
+        payment_probability: formData.get("payment_probability") || null,
+        care_probability: formData.get("care_probability") || null,
+        income_stability_probability: formData.get("income_stability_probability") || null,
+        neighbor_relation_probability: formData.get("neighbor_relation_probability") || null,
+      };
+
+      try {
+        const response = await apiRequest(`/properties/${propertyId}/interests`, {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
+
+        const interest = response.interest?.data || response.interest || {};
+        currentPaymentReference = interest.payment_reference;
+
+        if (paymentRef) {
+          paymentRef.textContent = interest.payment_reference || "-";
+        }
+        if (pixCopy) {
+          pixCopy.value = interest.pix_copy_paste || "";
+        }
+        if (paymentCard) {
+          paymentCard.classList.remove("is-hidden");
+        }
+        if (landlordWaLink && response.landlord_whatsapp_url) {
+          landlordWaLink.href = response.landlord_whatsapp_url;
+          landlordWaLink.classList.remove("is-hidden");
+        }
+        if (confirmPaymentBtn) {
+          confirmPaymentBtn.classList.remove("is-hidden");
+        }
+
+        setStatus(status, response.message || "Interesse enviado com sucesso.");
+      } catch (error) {
+        setStatus(status, error.message, true);
+      }
+    });
+  }
+
+  if (confirmPaymentBtn) {
+    confirmPaymentBtn.addEventListener("click", async () => {
+      if (!currentPaymentReference) {
+        setStatus(paymentStatus, "Nenhuma referência de pagamento disponível.", true);
+        return;
+      }
+
+      setStatus(paymentStatus, "Confirmando pagamento...");
+      try {
+        const response = await apiRequest("/property-interests/confirm-payment", {
+          method: "POST",
+          body: JSON.stringify({ payment_reference: currentPaymentReference }),
+        });
+        setStatus(paymentStatus, response.central_message || "Pagamento confirmado.");
+      } catch (error) {
+        setStatus(paymentStatus, error.message, true);
+      }
+    });
+  }
+
+  toggleQuestionnaire(true);
+  loadProperty();
+};
+
 document.addEventListener("DOMContentLoaded", () => {
   trackLastRoute();
   updateSessionUI();
@@ -1168,6 +1434,8 @@ document.addEventListener("DOMContentLoaded", () => {
   initTenantDetail();
   initTenantEdit();
   initLandlordEdit();
+  initMarketplace();
+  initPropertyDetail();
   const forms = document.querySelectorAll("[data-form]");
   forms.forEach((form) => {
     form.addEventListener("submit", async (event) => {

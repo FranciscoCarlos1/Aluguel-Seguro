@@ -26,4 +26,9 @@ class Landlord extends Model
     {
         return $this->hasMany(TenantReview::class);
     }
+
+    public function properties()
+    {
+        return $this->hasMany(Property::class);
+    }
 }

@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: aluguel-seguro-api
+    runtime: docker
+    rootDir: backend
+    plan: free
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_URL
+        sync: false
+      - key: DB_CONNECTION
+        value: sqlite
+      - key: DB_DATABASE
+        value: /var/data/database.sqlite
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+    disk:
+      name: aluguel-seguro-data
+      mountPath: /var/data
+      sizeGB: 1
+
+  - type: web
+    name: aluguel-seguro-frontend
+    runtime: static
+    rootDir: .
+    buildCommand: >-
+      sh -c "echo \"window.ALUGUEL_API_BASE_URL='${RENDER_BACKEND_URL}/api/v1';\" > frontend/env.js"
+    staticPublishPath: frontend
+    envVars:
+      - key: RENDER_BACKEND_URL
+        sync: false
