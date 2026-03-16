@@ -2,24 +2,22 @@
 
 namespace App\Providers;
 
+use App\Models\Property;
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
+use Throwable;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
         RateLimiter::for('api', function (Request $request) {
@@ -27,5 +25,24 @@ class AppServiceProvider extends ServiceProvider
 
             return Limit::perMinute(60)->by($key);
         });
+
+        $this->ensureDemoCatalogInProduction();
+    }
+
+    private function ensureDemoCatalogInProduction(): void
+    {
+        if (!$this->app->environment('production') || $this->app->runningInConsole()) {
+            return;
+        }
+
+        try {
+            if (!Schema::hasTable('properties') || Property::query()->exists()) {
+                return;
+            }
+
+            (new DatabaseSeeder())->run();
+        } catch (Throwable $exception) {
+            report($exception);
+        }
     }
 }
