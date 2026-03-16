@@ -148,13 +148,88 @@ const getAccountTypeLabel = (accountType) => {
 const getPostAuthRoute = (accountType) =>
   accountType === "tenant" ? "profile.html" : "dashboard.html";
 
+const LANDLORD_NAV_ITEMS = [
+  { href: "dashboard.html", label: "Painel" },
+  { href: "properties.html", label: "Imoveis" },
+  { href: "property-form.html", label: "Novo imovel" },
+  { href: "leads.html", label: "Interesses" },
+  { href: "visits.html", label: "Visitas" },
+  { href: "services.html", label: "Servicos" },
+  { href: "contract.html", label: "Contrato" },
+  { href: "support.html", label: "Suporte" },
+  { href: "landlord-edit.html", label: "Meu perfil", button: true },
+];
+
+const TENANT_NAV_ITEMS = [
+  { href: "profile.html", label: "Meu perfil", button: true },
+  { href: "tenants.html", label: "Inquilinos" },
+  { href: "tenant-detail.html?id=1", label: "Perfil detalhado" },
+];
+
+const getRoleNavItems = (accountType) =>
+  accountType === "tenant" ? TENANT_NAV_ITEMS : LANDLORD_NAV_ITEMS;
+
+const normalizeNavHref = (href) => String(href || "").split("?")[0];
+
+const syncRoleNavigation = (hasToken, accountType) => {
+  const nav = document.querySelector(".nav-links");
+  if (!nav) {
+    return;
+  }
+
+  nav
+    .querySelectorAll('a[data-auth-only]:not([data-role-nav-generated])')
+    .forEach((item) => {
+      item.dataset.navAuthTemplate = "true";
+      item.classList.add("is-hidden");
+    });
+
+  nav.querySelectorAll("[data-role-nav-generated]").forEach((item) => item.remove());
+
+  if (!hasToken) {
+    return;
+  }
+
+  const currentPage = normalizeNavHref(
+    window.location.pathname.split("/").pop() || "index.html"
+  );
+  const sessionStatus = nav.querySelector(".session-status");
+
+  getRoleNavItems(accountType).forEach((item) => {
+    const link = document.createElement("a");
+    link.href = item.href;
+    link.textContent = item.label;
+    link.dataset.authOnly = "";
+    link.dataset.roleNavGenerated = "true";
+
+    if (item.button) {
+      link.className = "button ghost";
+    }
+
+    if (normalizeNavHref(item.href) === currentPage) {
+      link.setAttribute("aria-current", "page");
+    }
+
+    if (sessionStatus) {
+      nav.insertBefore(link, sessionStatus);
+      return;
+    }
+
+    nav.appendChild(link);
+  });
+};
+
 const updateSessionUI = () => {
   const label = document.querySelector("[data-session-label]");
   const action = document.querySelector("[data-session-action]");
   const hasToken = Boolean(getToken());
   const email = getSessionEmail();
   const accountType = getSessionAccountType();
-  const authOnlyItems = document.querySelectorAll("[data-auth-only]");
+  syncRoleNavigation(hasToken, accountType);
+
+  const authOnlyItems = document.querySelectorAll(
+    '[data-auth-only]:not([data-nav-auth-template="true"])'
+  );
   const guestOnlyItems = document.querySelectorAll("[data-guest-only]");
 
   if (label) {
