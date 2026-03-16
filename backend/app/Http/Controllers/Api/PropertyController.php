@@ -7,12 +7,17 @@ use App\Http\Requests\PropertySearchRequest;
 use App\Http\Resources\PropertyResource;
 use App\Models\Landlord;
 use App\Models\Property;
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
+use Throwable;
 
 class PropertyController extends Controller
 {
     public function index(PropertySearchRequest $request)
     {
+        $this->ensureDemoCatalogAvailable();
+
         $data = $request->validated();
         $perPage = min((int) ($data['per_page'] ?? 12), 50);
         $prospectPhone = preg_replace('/\D+/', '', (string) ($data['prospect_phone'] ?? ''));
@@ -135,5 +140,22 @@ class PropertyController extends Controller
         abort_if(!$landlord, 404, 'Locador nao encontrado para esta sessao.');
 
         return $landlord;
+    }
+
+    private function ensureDemoCatalogAvailable(): void
+    {
+        if (!app()->environment('production')) {
+            return;
+        }
+
+        try {
+            if (!Schema::hasTable('properties') || Property::query()->exists()) {
+                return;
+            }
+
+            (new DatabaseSeeder())->run();
+        } catch (Throwable $exception) {
+            report($exception);
+        }
     }
 }
