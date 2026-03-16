@@ -30,7 +30,7 @@
           <p class="muted">Monte um anuncio claro para o publico que vem de fora de SC, busca previsibilidade e nao consegue atender exigencias excessivas de imobiliaria.</p>
         </div>
 
-        <form class="form-grid form-grid--two" data-property-form>
+        <form class="form-grid form-grid--two" data-property-form enctype="multipart/form-data">
           <label>
             Titulo do imovel
             <input type="text" name="title" required placeholder="Ex: Casa com patio e rotina silenciosa" />
@@ -88,12 +88,15 @@
             <textarea name="description" rows="4" required placeholder="Explique rotina, localizacao, perfil ideal e diferenciais do imovel."></textarea>
           </label>
           <label class="full">
-            URL da imagem principal
-            <input type="url" name="hero_image_url" placeholder="https://exemplo.com/capa-do-imovel.jpg" />
+            Fotos do imovel
+            <input type="file" name="images" accept="image/*" multiple data-property-images />
+            <span class="field-hint">Selecione fotos da galeria do celular ou arquivos salvos do WhatsApp. A primeira imagem vira a capa do anuncio.</span>
           </label>
+          <div class="full upload-preview is-hidden" data-property-image-preview></div>
           <label class="full">
-            URLs das outras imagens
-            <textarea name="image_urls" rows="4" placeholder="https://exemplo.com/foto-1.jpg&#10;https://exemplo.com/foto-2.jpg"></textarea>
+            Links das imagens, se preferir
+            <textarea name="image_urls" rows="3" placeholder="https://exemplo.com/foto-1.jpg&#10;https://exemplo.com/foto-2.jpg"></textarea>
+            <span class="field-hint">Opcional. Use apenas se as fotos ja estiverem hospedadas em outro lugar.</span>
           </label>
           <label class="full">
             Garantias e clausulas sugeridas

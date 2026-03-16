@@ -262,8 +262,9 @@ const PORTAL_API_BASE_URL =
 const PORTAL_AUTH_TOKEN_KEY = "aluguelSeguroToken";
 
 const portalApiRequest = async (path, options = {}) => {
+  const isFormData = options.body instanceof FormData;
   const headers = {
-    "Content-Type": "application/json",
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
     ...(options.headers || {})
   };
 
@@ -639,6 +640,8 @@ const initPropertyFormPage = () => {
 
   const form = document.querySelector('[data-property-form]');
   const status = document.querySelector('[data-property-form-status]');
+  const imageInput = document.querySelector('[data-property-images]');
+  const imagePreview = document.querySelector('[data-property-image-preview]');
   const feedForm = document.querySelector('[data-feed-import-form]');
   const feedStatus = document.querySelector('[data-feed-import-status]');
   const olxAuthForm = document.querySelector('[data-olx-auth-form]');
@@ -662,6 +665,48 @@ const initPropertyFormPage = () => {
   if (!form) {
     return;
   }
+
+  let previewUrls = [];
+
+  const resetImagePreview = () => {
+    previewUrls.forEach((url) => URL.revokeObjectURL(url));
+    previewUrls = [];
+
+    if (imagePreview) {
+      imagePreview.innerHTML = '';
+      imagePreview.classList.add('is-hidden');
+    }
+  };
+
+  const renderImagePreview = () => {
+    if (!imageInput || !imagePreview) {
+      return;
+    }
+
+    resetImagePreview();
+
+    const files = Array.from(imageInput.files || []);
+    if (!files.length) {
+      return;
+    }
+
+    imagePreview.classList.remove('is-hidden');
+    imagePreview.innerHTML = files
+      .map((file, index) => {
+        const previewUrl = URL.createObjectURL(file);
+        previewUrls.push(previewUrl);
+
+        return `
+          <figure class="upload-preview-card">
+            <img src="${previewUrl}" alt="Prévia ${portalEscapeHtml(file.name)}" />
+            <figcaption>${index === 0 ? 'Capa' : 'Galeria'} · ${portalEscapeHtml(file.name)}</figcaption>
+          </figure>
+        `;
+      })
+      .join('');
+  };
+
+  imageInput?.addEventListener('change', renderImagePreview);
 
   const loadOlxPropertyOptions = async () => {
     if (!olxPropertyOptions) {
@@ -694,11 +739,11 @@ const initPropertyFormPage = () => {
     event.preventDefault();
     const formData = new FormData(form);
     const state = loadPortalState();
-    const heroImageUrl = String(formData.get('hero_image_url') || '').trim();
     const imageUrls = String(formData.get('image_urls') || '')
       .split(/\r?\n|,/)
       .map((item) => item.trim())
       .filter(Boolean);
+    const selectedFiles = Array.from(imageInput?.files || []);
     const payload = {
       title: formData.get('title'),
       city: formData.get('city'),
@@ -709,22 +754,46 @@ const initPropertyFormPage = () => {
       bedrooms: Number(formData.get('bedrooms') || 1),
       has_garage: formData.get('has_garage') === '1',
       description: formData.get('description'),
-      hero_image_url: heroImageUrl || null,
       image_urls: imageUrls,
       is_active: true
     };
+
+    const apiPayload = new FormData();
+    apiPayload.append('title', String(payload.title || ''));
+    apiPayload.append('city', String(payload.city || ''));
+    apiPayload.append('state', 'SC');
+    apiPayload.append('address_neighborhood', String(formData.get('neighborhood') || ''));
+    apiPayload.append('property_type', String(formData.get('property_type') || ''));
+    apiPayload.append('rent_price', String(payload.rent_price || 0));
+    apiPayload.append('bedrooms', String(payload.bedrooms || 1));
+    apiPayload.append('has_garage', payload.has_garage ? '1' : '0');
+    apiPayload.append('description', String(payload.description || ''));
+    apiPayload.append('is_active', '1');
+    imageUrls.forEach((url) => apiPayload.append('image_urls[]', url));
+    selectedFiles.forEach((file) => apiPayload.append('images[]', file));
+
+    if (!localStorage.getItem(PORTAL_AUTH_TOKEN_KEY) && selectedFiles.length) {
+      setPortalStatus(status, 'Entre no portal para enviar fotos reais. Sem sessao, o modo local aceita apenas links de imagem.', true);
+      return;
+    }
 
     try {
       if (localStorage.getItem(PORTAL_AUTH_TOKEN_KEY)) {
         await portalApiRequest('/landlord/properties', {
           method: 'POST',
-          body: JSON.stringify(payload)
+          body: apiPayload
         });
         form.reset();
+        resetImagePreview();
         setPortalStatus(status, 'Imovel publicado no backend com sucesso.');
         return;
       }
     } catch (error) {
+      if (selectedFiles.length) {
+        setPortalStatus(status, `Falha ao publicar na API: ${error.message}. O upload de arquivos exige a API online.`, true);
+        return;
+      }
+
       setPortalStatus(status, `Falha ao publicar na API: ${error.message}. Salvando localmente.`);
     }
 
@@ -740,7 +809,7 @@ const initPropertyFormPage = () => {
       support_level: formData.get('support_level'),
       deposit_amount: Number(formData.get('deposit_amount') || 0),
       description: formData.get('description'),
-      hero_image_url: heroImageUrl || null,
+      hero_image_url: imageUrls[0] || null,
       image_urls: imageUrls,
       guarantee_notes: formData.get('guarantee_notes'),
       status: 'ativo',
@@ -750,6 +819,7 @@ const initPropertyFormPage = () => {
 
     savePortalState(state);
     form.reset();
+    resetImagePreview();
     setPortalStatus(status, 'Imovel salvo na sua carteira local. Abra o portfolio para revisar a nova tela.');
   });
 

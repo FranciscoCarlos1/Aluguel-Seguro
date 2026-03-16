@@ -1261,6 +1261,26 @@ const initMarketplace = () => {
     return params;
   };
 
+  const prioritizeImageListings = (items) => {
+    if (!Array.isArray(items) || items.length === 0) {
+      return [];
+    }
+
+    const seen = new Set();
+    const unique = items.filter((property) => {
+      const key = `${String(property.title || '').toLowerCase()}::${String(property.city || '').toLowerCase()}::${String(property.property_type || '').toLowerCase()}`;
+      if (seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    });
+
+    const withImages = unique.filter((property) => resolvePropertyImages(property).hero);
+
+    return withImages.length > 0 ? withImages : unique;
+  };
+
   const renderInternalProperties = (items) => {
     if (!results) {
       return;
@@ -1325,7 +1345,7 @@ const initMarketplace = () => {
     try {
       const params = collectFilterParams();
       const response = await apiRequest(`/properties?${params.toString()}`);
-      const items = response.data || [];
+      const items = prioritizeImageListings(response.data || []);
       renderInternalProperties(items);
       setStatus(
         status,

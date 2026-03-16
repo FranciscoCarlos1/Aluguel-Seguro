@@ -7,8 +7,11 @@ use App\Http\Requests\PropertySearchRequest;
 use App\Http\Resources\PropertyResource;
 use App\Models\Landlord;
 use App\Models\Property;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Throwable;
 
 class PropertyController extends Controller
@@ -118,13 +121,26 @@ class PropertyController extends Controller
             'hero_image_url' => ['nullable', 'url', 'max:2048'],
             'image_urls' => ['nullable', 'array'],
             'image_urls.*' => ['nullable', 'url', 'max:2048'],
+            'images' => ['nullable', 'array', 'max:12'],
+            'images.*' => ['nullable', 'image', 'max:5120'],
             'is_active' => ['nullable', 'boolean'],
         ]);
+
+        $uploadedImageUrls = $this->storeUploadedImages($request, $landlord);
+        $imageUrls = collect($data['image_urls'] ?? [])
+            ->filter()
+            ->merge($uploadedImageUrls)
+            ->unique()
+            ->values()
+            ->all();
+        $heroImageUrl = $data['hero_image_url'] ?? ($imageUrls[0] ?? null);
 
         $property = Property::create([
             ...$data,
             'landlord_id' => $landlord->id,
             'state' => strtoupper($data['state'] ?? 'SC'),
+            'hero_image_url' => $heroImageUrl,
+            'image_urls' => $imageUrls,
             'is_active' => $data['is_active'] ?? true,
         ]);
 
@@ -142,6 +158,28 @@ class PropertyController extends Controller
         abort_if(!$landlord, 404, 'Locador nao encontrado para esta sessao.');
 
         return $landlord;
+    }
+
+    private function storeUploadedImages(Request $request, Landlord $landlord): array
+    {
+        $files = $request->file('images', []);
+
+        return collect($files)
+            ->filter(fn ($file) => $file instanceof UploadedFile)
+            ->map(function (UploadedFile $file) use ($landlord) {
+                $directory = sprintf(
+                    'properties/%s/%s',
+                    $landlord->id,
+                    now()->format('Y/m')
+                );
+
+                $filename = Str::uuid()->toString() . '.' . $file->getClientOriginalExtension();
+                $path = $file->storePubliclyAs($directory, $filename, 'public');
+
+                return Storage::disk('public')->url($path);
+            })
+            ->values()
+            ->all();
     }
 
     private function ensureDemoCatalogAvailable(): void

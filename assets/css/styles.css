@@ -251,6 +251,39 @@ body {
   width: min(860px, 100%);
 }
 
+.field-hint {
+  display: block;
+  margin-top: 8px;
+  font-size: 0.9rem;
+  color: #5c5c5c;
+}
+
+.upload-preview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+}
+
+.upload-preview-card {
+  background: #fff7f0;
+  border: 1px solid rgba(214, 83, 46, 0.14);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.upload-preview-card img {
+  display: block;
+  width: 100%;
+  height: 148px;
+  object-fit: cover;
+}
+
+.upload-preview-card figcaption {
+  padding: 10px 12px;
+  font-size: 0.88rem;
+  color: #4c4c4c;
+}
+
 .page-tenants .panel-card {
   width: min(1100px, 100%);
 }
