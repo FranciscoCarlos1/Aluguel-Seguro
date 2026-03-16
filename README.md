@@ -65,20 +65,30 @@ O backend esta em backend/ com API REST para locadores, inquilinos, perfis e ava
 Este repositório já possui o arquivo render.yaml para subir:
 
 - API Laravel (Web Service): aluguel-seguro-api
-- Frontend estático (Static Site): aluguel-seguro-frontend
+- Frontend estático (Static Site): aluguel-seguro
+
+### O que fica automático
+
+- O backend cria o SQLite no disco persistente do Render.
+- O backend roda php artisan migrate --force a cada novo deploy.
+- O frontend gera frontend/env.js em build com a URL pública da API.
+- O health check da API responde em /api/health.
 
 ### Passos
 
 1. No Render, clique em New + > Blueprint.
 2. Selecione este repositório e confirme a criação dos 2 serviços.
 3. Em aluguel-seguro-api, configure:
+	- APP_KEY = gere uma chave única com php artisan key:generate --show
 	- APP_URL = URL pública da API (ex: https://aluguel-seguro-api.onrender.com)
-	- CORS_ALLOWED_ORIGINS = URL do frontend (ex: https://aluguel-seguro-frontend.onrender.com)
-4. Em aluguel-seguro-frontend, configure:
+	- CORS_ALLOWED_ORIGINS = URL do frontend (ex: https://aluguel-seguro.onrender.com)
+4. Em aluguel-seguro, configure:
 	- RENDER_BACKEND_URL = URL pública da API (sem /api/v1)
 5. Faça deploy dos dois serviços.
+6. Se quiser popular produção com a massa demo, rode uma única vez no shell do Render:
+	- php artisan db:seed --force
 
-Observação: o backend usa SQLite em disco persistente no Render (/var/data/database.sqlite).
+Observação: o backend usa SQLite em disco persistente no Render (/var/data/database.sqlite) e não executa seed automaticamente em produção.
 ### Endpoints principais
 
 - GET /api/v1/properties
