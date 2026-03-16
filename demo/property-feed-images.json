@@ -1,0 +1,174 @@
+{
+  "items": [
+    {
+      "id": "img-feed-001",
+      "title": "Casa com jardim no Centro",
+      "city": "Sao Bento do Sul",
+      "state": "SC",
+      "price": 1850,
+      "bedrooms": 2,
+      "has_garage": true,
+      "type": "casa",
+      "description": "Casa terrea com quintal, jardim frontal e garagem coberta.",
+      "neighborhood": "Centro",
+      "url": "https://aluguel-seguro.onrender.com/index.html",
+      "images": [
+        "https://images.unsplash.com/photo-1568605114967-8130f3a36994?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=1200&q=80"
+      ]
+    },
+    {
+      "id": "img-feed-002",
+      "title": "Apartamento ensolarado em Oxford",
+      "city": "Sao Bento do Sul",
+      "state": "SC",
+      "price": 1650,
+      "bedrooms": 2,
+      "has_garage": true,
+      "type": "apartamento",
+      "description": "Apartamento com boa iluminacao, sacada e vaga coberta.",
+      "neighborhood": "Oxford",
+      "url": "https://aluguel-seguro.onrender.com/index.html",
+      "images": [
+        "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1200&q=80"
+      ]
+    },
+    {
+      "id": "img-feed-003",
+      "title": "Kitnet funcional perto do Centro",
+      "city": "Sao Bento do Sul",
+      "state": "SC",
+      "price": 920,
+      "bedrooms": 1,
+      "has_garage": false,
+      "type": "kitnet",
+      "description": "Kitnet compacta com cozinha integrada e baixo custo mensal.",
+      "neighborhood": "Boehmerwald",
+      "url": "https://aluguel-seguro.onrender.com/index.html",
+      "images": [
+        "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1200&q=80"
+      ]
+    },
+    {
+      "id": "img-feed-004",
+      "title": "Casa em condominio com patio",
+      "city": "Sao Bento do Sul",
+      "state": "SC",
+      "price": 2950,
+      "bedrooms": 3,
+      "has_garage": true,
+      "type": "casa_condominio",
+      "description": "Casa segura com patio privativo, vaga coberta e area gourmet.",
+      "neighborhood": "Schramm",
+      "url": "https://aluguel-seguro.onrender.com/index.html",
+      "images": [
+        "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1448630360428-65456885c650?auto=format&fit=crop&w=1200&q=80"
+      ]
+    },
+    {
+      "id": "img-feed-005",
+      "title": "Apartamento mobiliado em Serra Alta",
+      "city": "Sao Bento do Sul",
+      "state": "SC",
+      "price": 2100,
+      "bedrooms": 2,
+      "has_garage": true,
+      "type": "apartamento",
+      "description": "Apartamento mobiliado com sala pronta e cozinha equipada.",
+      "neighborhood": "Serra Alta",
+      "url": "https://aluguel-seguro.onrender.com/index.html",
+      "images": [
+        "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=1200&q=80"
+      ]
+    },
+    {
+      "id": "img-feed-006",
+      "title": "Casa familiar em Rio Vermelho Estacao",
+      "city": "Sao Bento do Sul",
+      "state": "SC",
+      "price": 2400,
+      "bedrooms": 3,
+      "has_garage": true,
+      "type": "casa",
+      "description": "Casa ampla para familia, com quintal e area de servico separada.",
+      "neighborhood": "Rio Vermelho Estacao",
+      "url": "https://aluguel-seguro.onrender.com/index.html",
+      "images": [
+        "https://images.unsplash.com/photo-1576941089067-2de3c901e126?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1560185127-6ed189bf02f4?auto=format&fit=crop&w=1200&q=80"
+      ]
+    },
+    {
+      "id": "img-feed-007",
+      "title": "Kitnet moderna em Progresso",
+      "city": "Sao Bento do Sul",
+      "state": "SC",
+      "price": 980,
+      "bedrooms": 1,
+      "has_garage": false,
+      "type": "kitnet",
+      "description": "Unidade moderna com acabamento novo e acesso rapido ao centro.",
+      "neighborhood": "Progresso",
+      "url": "https://aluguel-seguro.onrender.com/index.html",
+      "images": [
+        "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80"
+      ]
+    },
+    {
+      "id": "img-feed-008",
+      "title": "Apartamento com sacada em Brasilia",
+      "city": "Sao Bento do Sul",
+      "state": "SC",
+      "price": 1750,
+      "bedrooms": 2,
+      "has_garage": true,
+      "type": "apartamento",
+      "description": "Apartamento com sacada, boa ventilacao e vaga de garagem.",
+      "neighborhood": "Brasilia",
+      "url": "https://aluguel-seguro.onrender.com/index.html",
+      "images": [
+        "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1200&q=80"
+      ]
+    },
+    {
+      "id": "img-feed-009",
+      "title": "Casa com varanda em Colonial",
+      "city": "Sao Bento do Sul",
+      "state": "SC",
+      "price": 1980,
+      "bedrooms": 2,
+      "has_garage": true,
+      "type": "casa",
+      "description": "Casa com varanda frontal, cozinha ampla e garagem lateral.",
+      "neighborhood": "Colonial",
+      "url": "https://aluguel-seguro.onrender.com/index.html",
+      "images": [
+        "https://images.unsplash.com/photo-1448630360428-65456885c650?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1568605114967-8130f3a36994?auto=format&fit=crop&w=1200&q=80"
+      ]
+    },
+    {
+      "id": "img-feed-010",
+      "title": "Casa em condominio premium na Serra",
+      "city": "Sao Bento do Sul",
+      "state": "SC",
+      "price": 3300,
+      "bedrooms": 3,
+      "has_garage": true,
+      "type": "casa_condominio",
+      "description": "Imovel premium com suite, espaco gourmet e condominio fechado.",
+      "neighborhood": "Serra Alta",
+      "url": "https://aluguel-seguro.onrender.com/index.html",
+      "images": [
+        "https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80"
+      ]
+    }
+  ]
+}
