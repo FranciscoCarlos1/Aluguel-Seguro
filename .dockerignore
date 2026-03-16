@@ -1,0 +1,10 @@
+.git
+.gitignore
+.vscode
+frontend
+assets
+node_modules
+backend/node_modules
+backend/vendor
+backend/storage/logs
+backend/database/*.sqlite

@@ -89,6 +89,8 @@ Este repositório já possui o arquivo render.yaml para subir:
 	- php artisan db:seed --force
 
 Observação: o backend usa SQLite em disco persistente no Render (/var/data/database.sqlite) e não executa seed automaticamente em produção.
+
+Se você criar um Web Service Docker manual no Render apontando para a raiz do repositório, o Dockerfile da raiz já encaminha corretamente para backend/.
 ### Endpoints principais
 
 - GET /api/v1/properties
