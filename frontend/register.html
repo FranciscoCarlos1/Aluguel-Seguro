@@ -27,9 +27,16 @@
 
     <main class="panel">
       <section class="panel-card reveal">
-        <h1>Cadastro de locador</h1>
-        <p class="muted">Crie sua conta para acompanhar perfis.</p>
+        <h1>Escolha seu tipo de cadastro</h1>
+        <p class="muted">Cadastre-se como inquilino ou como locador, dono do imóvel.</p>
         <form data-form="register" class="form-grid">
+          <label>
+            Tipo de conta
+            <select name="account_type" required>
+              <option value="tenant">Inquilino</option>
+              <option value="landlord">Locador, dono do imovel</option>
+            </select>
+          </label>
           <label>
             Nome completo
             <input type="text" name="name" required placeholder="Nome e sobrenome" />

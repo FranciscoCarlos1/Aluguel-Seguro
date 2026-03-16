@@ -16,6 +16,7 @@ class AuthRegisterRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email', 'max:120', 'unique:users,email'],
+            'account_type' => ['required', 'string', 'in:tenant,landlord'],
             'phone' => ['required', 'string', 'max:30'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ];

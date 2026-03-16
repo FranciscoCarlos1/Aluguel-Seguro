@@ -4,6 +4,7 @@ const API_BASE_URL =
   "http://localhost:8000/api/v1";
 const AUTH_TOKEN_KEY = "aluguelSeguroToken";
 const SESSION_EMAIL_KEY = "aluguelSeguroEmail";
+const SESSION_ACCOUNT_TYPE_KEY = "aluguelSeguroAccountType";
 const LAST_ROUTE_KEY = "aluguelSeguroLastRoute";
 const PROSPECT_PHONE_KEY = "aluguelSeguroProspectPhone";
 
@@ -47,10 +48,23 @@ const setSessionEmail = (email) => {
   }
 };
 
+const setSessionAccountType = (accountType) => {
+  if (accountType) {
+    localStorage.setItem(SESSION_ACCOUNT_TYPE_KEY, accountType);
+  }
+};
+
+const getSessionAccountType = () =>
+  localStorage.getItem(SESSION_ACCOUNT_TYPE_KEY) || "landlord";
+
 const getSessionEmail = () => localStorage.getItem(SESSION_EMAIL_KEY);
 
 const clearSessionEmail = () => {
   localStorage.removeItem(SESSION_EMAIL_KEY);
+};
+
+const clearSessionAccountType = () => {
+  localStorage.removeItem(SESSION_ACCOUNT_TYPE_KEY);
 };
 
 const setLastRoute = (route) => {
@@ -123,17 +137,29 @@ const apiRequest = async (path, options = {}) => {
   return payload;
 };
 
+const getAccountTypeLabel = (accountType) => {
+  if (accountType === "tenant") {
+    return "inquilino";
+  }
+
+  return "locador";
+};
+
+const getPostAuthRoute = (accountType) =>
+  accountType === "tenant" ? "profile.html" : "dashboard.html";
+
 const updateSessionUI = () => {
   const label = document.querySelector("[data-session-label]");
   const action = document.querySelector("[data-session-action]");
   const hasToken = Boolean(getToken());
   const email = getSessionEmail();
+  const accountType = getSessionAccountType();
   const authOnlyItems = document.querySelectorAll("[data-auth-only]");
   const guestOnlyItems = document.querySelectorAll("[data-guest-only]");
 
   if (label) {
     label.textContent = hasToken
-      ? `Sessao ativa${email ? ` · ${email}` : ""}`
+      ? `Sessao ativa${email ? ` · ${email}` : ""}${accountType ? ` · ${getAccountTypeLabel(accountType)}` : ""}`
       : "Sem sessao";
   }
 
@@ -174,6 +200,7 @@ const initSessionActions = () => {
     } finally {
       clearToken();
       clearSessionEmail();
+      clearSessionAccountType();
       clearLastRoute();
       updateSessionUI();
       window.location.href = "index.html";
@@ -248,13 +275,15 @@ const formHandlers = {
     setToken(response.token);
     AppState.session = response.user;
     setSessionEmail(response.user.email);
+    setSessionAccountType(response.user.account_type || "landlord");
     setStatus(status, `Sessao iniciada para ${response.user.email}.`);
     updateSessionUI();
-    window.location.href = getLastRoute() || "dashboard.html";
+    window.location.href = getLastRoute() || getPostAuthRoute(response.user.account_type || "landlord");
   },
   async register(form, status) {
     const formData = new FormData(form);
     const payload = {
+      account_type: formData.get("account_type"),
       name: formData.get("name"),
       email: formData.get("email"),
       phone: formData.get("phone"),
@@ -270,10 +299,16 @@ const formHandlers = {
     setToken(response.token);
     AppState.session = response.user;
     setSessionEmail(response.user.email);
+    setSessionAccountType(response.user.account_type || payload.account_type || "landlord");
 
-    setStatus(status, "Cadastro realizado. Voce ja pode criar perfis.");
+    setStatus(
+      status,
+      payload.account_type === "tenant"
+        ? "Cadastro realizado. Agora voce pode montar seu perfil de inquilino."
+        : "Cadastro realizado. Agora voce pode acessar o painel do locador."
+    );
     updateSessionUI();
-    window.location.href = getLastRoute() || "dashboard.html";
+    window.location.href = getLastRoute() || getPostAuthRoute(payload.account_type);
   },
   async profile(form, status) {
     if (!getToken()) {
@@ -1195,7 +1230,7 @@ const initMarketplace = () => {
   const filtersForm = document.querySelector("[data-marketplace-filters]");
   const status = document.querySelector("[data-marketplace-status]");
   const results = document.querySelector("[data-property-results]");
-  const internalSearchButton = document.querySelector("[data-internal-property-search]");
+  const googleSearchButton = document.querySelector("[data-google-property-search]");
   const storedProspectPhone = getProspectPhone();
 
   const collectFilterParams = () => {
@@ -1311,17 +1346,17 @@ const initMarketplace = () => {
   if (filtersForm) {
     filtersForm.addEventListener("submit", (event) => {
       event.preventDefault();
-      loadGoogleProperties();
-    });
-  }
-
-  if (internalSearchButton) {
-    internalSearchButton.addEventListener("click", () => {
       loadInternalProperties();
     });
   }
 
-  loadGoogleProperties();
+  if (googleSearchButton) {
+    googleSearchButton.addEventListener("click", () => {
+      loadGoogleProperties();
+    });
+  }
+
+  loadInternalProperties();
 };
 
 const initPropertyDetail = () => {

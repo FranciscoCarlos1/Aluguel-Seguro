@@ -20,23 +20,29 @@ class AuthController extends Controller
             $user = User::create([
                 'name' => $data['name'],
                 'email' => $data['email'],
+                'account_type' => $data['account_type'],
                 'password' => Hash::make($data['password']),
             ]);
 
-            $landlord = Landlord::firstOrNew(['email' => $data['email']]);
-            if (!$landlord->exists) {
-                $landlord->created_by = $data['email'];
+            $landlord = null;
+
+            if ($data['account_type'] === 'landlord') {
+                $landlord = Landlord::firstOrNew(['email' => $data['email']]);
+                if (!$landlord->exists) {
+                    $landlord->created_by = $data['email'];
+                }
+
+                $landlord->fill([
+                    'name' => $data['name'],
+                    'phone' => $data['phone'],
+                    'status' => $landlord->status ?: 'active',
+                    'updated_by' => $data['email'],
+                ]);
+                $landlord->save();
+                $landlord = $landlord->fresh();
             }
 
-            $landlord->fill([
-                'name' => $data['name'],
-                'phone' => $data['phone'],
-                'status' => $landlord->status ?: 'active',
-                'updated_by' => $data['email'],
-            ]);
-            $landlord->save();
-
-            return [$user, $landlord->fresh()];
+            return [$user, $landlord];
         });
 
         $token = $user->createToken('api')->plainTextToken;
