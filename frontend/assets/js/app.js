@@ -1221,6 +1221,17 @@ const formatMoney = (value) => {
   });
 };
 
+const resolvePropertyImages = (property) => {
+  const gallery = Array.isArray(property?.image_urls) ? property.image_urls.filter(Boolean) : [];
+  const hero = property?.hero_image_url || gallery[0] || null;
+  const images = hero ? [hero, ...gallery.filter((item) => item !== hero)] : gallery;
+
+  return {
+    hero,
+    images,
+  };
+};
+
 const initMarketplace = () => {
   const page = document.querySelector('[data-page="marketplace"]');
   if (!page) {
@@ -1264,6 +1275,7 @@ const initMarketplace = () => {
       .map(
         (property) => `
           <article class="property-card">
+            ${resolvePropertyImages(property).hero ? `<img class="property-card-image" src="${resolvePropertyImages(property).hero}" alt="${property.title}">` : ""}
             <h3>${property.title}</h3>
             <p>${property.city}/${property.state}</p>
             <p class="property-price">${formatMoney(property.rent_price)}/mês</p>
@@ -1372,6 +1384,8 @@ const initPropertyDetail = () => {
   const subtitle = document.querySelector("[data-property-subtitle]");
   const description = document.querySelector("[data-property-description]");
   const meta = document.querySelector("[data-property-meta]");
+  const heroImage = document.querySelector("[data-property-hero]");
+  const gallery = document.querySelector("[data-property-gallery]");
   const form = document.querySelector("[data-property-interest-form]");
   const phoneInput = document.querySelector("[data-prospect-phone]");
   const questionnaireBox = document.querySelector("[data-questionnaire-box]");
@@ -1462,6 +1476,42 @@ const initPropertyDetail = () => {
       }
       if (description) {
         description.textContent = property.description || "Sem descrição.";
+      }
+      const propertyImages = resolvePropertyImages(property);
+      if (heroImage) {
+        if (propertyImages.hero) {
+          heroImage.src = propertyImages.hero;
+          heroImage.alt = property.title;
+          heroImage.classList.remove("is-hidden");
+        } else {
+          heroImage.removeAttribute("src");
+          heroImage.classList.add("is-hidden");
+        }
+      }
+      if (gallery) {
+        gallery.innerHTML = propertyImages.images.length > 1
+          ? propertyImages.images
+              .map(
+                (imageUrl, index) => `
+                  <button class="property-gallery-item" type="button" data-gallery-image="${imageUrl}" aria-label="Ver imagem ${index + 1} do imóvel">
+                    <img src="${imageUrl}" alt="${property.title} - imagem ${index + 1}">
+                  </button>
+                `
+              )
+              .join("")
+          : "";
+
+        gallery.querySelectorAll("[data-gallery-image]").forEach((button) => {
+          button.addEventListener("click", () => {
+            if (!heroImage) {
+              return;
+            }
+
+            heroImage.src = button.dataset.galleryImage || "";
+            heroImage.alt = property.title;
+            heroImage.classList.remove("is-hidden");
+          });
+        });
       }
       if (meta) {
         meta.innerHTML = `

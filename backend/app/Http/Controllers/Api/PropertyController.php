@@ -115,6 +115,9 @@ class PropertyController extends Controller
             'address_neighborhood' => ['nullable', 'string', 'max:120'],
             'address_line' => ['nullable', 'string', 'max:160'],
             'address_number' => ['nullable', 'string', 'max:20'],
+            'hero_image_url' => ['nullable', 'url', 'max:2048'],
+            'image_urls' => ['nullable', 'array'],
+            'image_urls.*' => ['nullable', 'url', 'max:2048'],
             'is_active' => ['nullable', 'boolean'],
         ]);
 

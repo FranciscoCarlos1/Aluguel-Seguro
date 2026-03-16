@@ -694,6 +694,11 @@ const initPropertyFormPage = () => {
     event.preventDefault();
     const formData = new FormData(form);
     const state = loadPortalState();
+    const heroImageUrl = String(formData.get('hero_image_url') || '').trim();
+    const imageUrls = String(formData.get('image_urls') || '')
+      .split(/\r?\n|,/)
+      .map((item) => item.trim())
+      .filter(Boolean);
     const payload = {
       title: formData.get('title'),
       city: formData.get('city'),
@@ -704,6 +709,8 @@ const initPropertyFormPage = () => {
       bedrooms: Number(formData.get('bedrooms') || 1),
       has_garage: formData.get('has_garage') === '1',
       description: formData.get('description'),
+      hero_image_url: heroImageUrl || null,
+      image_urls: imageUrls,
       is_active: true
     };
 
@@ -733,6 +740,8 @@ const initPropertyFormPage = () => {
       support_level: formData.get('support_level'),
       deposit_amount: Number(formData.get('deposit_amount') || 0),
       description: formData.get('description'),
+      hero_image_url: heroImageUrl || null,
+      image_urls: imageUrls,
       guarantee_notes: formData.get('guarantee_notes'),
       status: 'ativo',
       whatsapp: formData.get('whatsapp'),
