@@ -1218,6 +1218,7 @@ const initMarketplace = () => {
               <span>${formatPropertyType(property.property_type)}</span>
               <span>${property.bedrooms} quarto(s)</span>
               <span>${property.has_garage ? "Com garagem" : "Sem garagem"}</span>
+              ${property.source_name ? `<span>Fonte: ${property.source_name}</span>` : ""}
             </div>
             <a class="button" href="property-detail.html?id=${property.id}">Ver imóvel</a>
           </article>
@@ -1376,6 +1377,8 @@ const initPropertyDetail = () => {
           <li><strong>Quartos:</strong> ${property.bedrooms}</li>
           <li><strong>Garagem:</strong> ${property.has_garage ? "Sim" : "Não"}</li>
           <li><strong>Bairro:</strong> ${property.address_neighborhood || "-"}</li>
+          <li><strong>Origem:</strong> ${property.source_name || "Carteira interna"}</li>
+          ${property.source_url ? `<li><strong>Anuncio original:</strong> <a href="${property.source_url}" target="_blank" rel="noreferrer">abrir fonte</a></li>` : ""}
         `;
       }
 

@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\TenantReviewController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ContractController;
 use App\Http\Controllers\Api\PropertyController;
+use App\Http\Controllers\Api\PropertyFeedImportController;
 use App\Http\Controllers\Api\PropertyInterestController;
 use App\Http\Controllers\Api\ProspectProfileController;
 use App\Http\Controllers\Api\VisitScheduleController;
@@ -42,6 +43,7 @@ Route::prefix('v1')->group(function () {
         Route::put('/landlords/{landlord}', [LandlordController::class, 'update']);
         Route::get('/landlord/properties', [PropertyController::class, 'landlordIndex']);
         Route::post('/landlord/properties', [PropertyController::class, 'store']);
+        Route::post('/landlord/properties/import-feed', PropertyFeedImportController::class);
 
         Route::get('/landlord/interests', [LandlordInterestController::class, 'index']);
         Route::post('/landlord/interests/{interest}/mark-paid', [LandlordInterestController::class, 'markPaid']);

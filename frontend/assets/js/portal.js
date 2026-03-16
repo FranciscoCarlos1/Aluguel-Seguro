@@ -631,6 +631,8 @@ const initPropertyFormPage = () => {
 
   const form = document.querySelector('[data-property-form]');
   const status = document.querySelector('[data-property-form-status]');
+  const feedForm = document.querySelector('[data-feed-import-form]');
+  const feedStatus = document.querySelector('[data-feed-import-status]');
   if (!form) {
     return;
   }
@@ -688,6 +690,38 @@ const initPropertyFormPage = () => {
     form.reset();
     setPortalStatus(status, 'Imovel salvo na sua carteira local. Abra o portfolio para revisar a nova tela.');
   });
+
+  if (feedForm) {
+    feedForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      if (!localStorage.getItem(PORTAL_AUTH_TOKEN_KEY)) {
+        setPortalStatus(feedStatus, 'Entre no portal para importar um feed autorizado.', true);
+        return;
+      }
+
+      const feedFormData = new FormData(feedForm);
+      const payload = {
+        feed_url: feedFormData.get('feed_url'),
+        source_name: feedFormData.get('source_name'),
+        format: feedFormData.get('format') || 'auto',
+        max_items: Number(feedFormData.get('max_items') || 50)
+      };
+
+      try {
+        const response = await portalApiRequest('/landlord/properties/import-feed', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+
+        feedForm.reset();
+        setPortalStatus(feedStatus, response.message || 'Feed importado com sucesso.');
+        setPortalStatus(status, 'Os imoveis importados ja estao disponiveis na API e no marketplace.');
+      } catch (error) {
+        setPortalStatus(feedStatus, `Falha ao importar o feed: ${error.message}`, true);
+      }
+    });
+  }
 };
 
 const initLeadsPage = () => {

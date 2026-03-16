@@ -11,6 +11,8 @@ class PropertyResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'source_name' => $this->source_name,
+            'source_reference' => $this->source_reference,
             'title' => $this->title,
             'city' => $this->city,
             'state' => $this->state,
@@ -20,6 +22,9 @@ class PropertyResource extends JsonResource
             'has_garage' => $this->has_garage,
             'property_type' => $this->property_type,
             'description' => $this->description,
+            'source_url' => $this->source_url,
+            'hero_image_url' => $this->hero_image_url,
+            'image_urls' => $this->image_urls,
             'address_line' => $this->address_line,
             'address_number' => $this->address_number,
             'address_neighborhood' => $this->address_neighborhood,

@@ -94,6 +94,40 @@
           <button class="button" type="submit">Salvar imovel</button>
           <p class="form-status" data-property-form-status></p>
         </form>
+
+        <div class="section-stack">
+          <div>
+            <h2>Importar anuncios de fonte autorizada</h2>
+            <p class="muted">Use um feed JSON ou XML liberado por parceiro, exportacao oficial ou integracao aprovada. Isso evita scraping e publica os imoveis direto no marketplace.</p>
+          </div>
+
+          <form class="form-grid form-grid--two" data-feed-import-form>
+            <label class="full">
+              URL do feed
+              <input type="url" name="feed_url" required placeholder="https://parceiro.exemplo/imoveis.json" />
+            </label>
+            <label>
+              Nome da fonte
+              <input type="text" name="source_name" required placeholder="olx_parceiro" />
+            </label>
+            <label>
+              Formato
+              <select name="format">
+                <option value="auto">Detectar automaticamente</option>
+                <option value="json">JSON</option>
+                <option value="xml">XML</option>
+              </select>
+            </label>
+            <label>
+              Maximo de anuncios
+              <input type="number" name="max_items" min="1" max="200" value="50" />
+            </label>
+            <div class="full">
+              <button class="button" type="submit">Importar feed</button>
+            </div>
+            <p class="form-status full" data-feed-import-status></p>
+          </form>
+        </div>
       </section>
     </main>
 

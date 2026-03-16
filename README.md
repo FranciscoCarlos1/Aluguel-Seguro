@@ -22,6 +22,28 @@ Para integrar com a API, rode o frontend em um servidor local (ex: php -S localh
 - Perfil persistente: salvo no banco, reutilizado para novos interesses e elegivel para atualizacao a cada 3 meses.
 - Pontuacao: baseada em 7 respostas de perfil comportamental com foco em cuidado com o imovel, ruido, regras, manutencao, estabilidade e risco de inadimplencia.
 - Rejeicao do locador: quando o perfil e marcado como nao apropriado, o imovel deixa de aparecer para aquele interessado nas proximas buscas.
+- Importacao externa: o backend aceita importacao de imoveis por feed JSON/XML autorizado para abastecer o marketplace sem scraping.
+
+## Importacao de imoveis por fonte autorizada
+
+O sistema agora suporta importacao por feed oficial/autorizado em JSON ou XML.
+
+Endpoint protegido do locador:
+
+- POST /api/v1/landlord/properties/import-feed
+
+Payload exemplo:
+
+```json
+{
+	"feed_url": "https://parceiro.exemplo/imoveis.json",
+	"source_name": "olx_parceiro",
+	"format": "json",
+	"max_items": 50
+}
+```
+
+Campos normalizados automaticamente quando presentes no feed: titulo, cidade, estado, preco/aluguel, quartos, garagem, tipo, descricao, bairro, link do anuncio e imagens.
 
 ## Backend (Laravel)
 

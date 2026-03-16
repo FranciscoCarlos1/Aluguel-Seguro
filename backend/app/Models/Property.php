@@ -11,6 +11,8 @@ class Property extends Model
 
     protected $fillable = [
         'landlord_id',
+        'source_name',
+        'source_reference',
         'title',
         'city',
         'state',
@@ -19,6 +21,9 @@ class Property extends Model
         'has_garage',
         'property_type',
         'description',
+        'source_url',
+        'hero_image_url',
+        'image_urls',
         'address_line',
         'address_number',
         'address_neighborhood',
@@ -29,6 +34,7 @@ class Property extends Model
         'rent_price' => 'decimal:2',
         'bedrooms' => 'integer',
         'has_garage' => 'boolean',
+        'image_urls' => 'array',
         'is_active' => 'boolean',
     ];
 
