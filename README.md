@@ -1,6 +1,6 @@
 # Aluguel Seguro
 
-MVP de plataforma de locacao com busca de imoveis (estilo e-commerce), perfil pontuado de inquilino e intermediação via WhatsApp.
+MVP de plataforma de locacao com busca de imoveis, match entre inquilinos e locatarios, perfil comportamental e intermediação via WhatsApp.
 
 ## Como abrir
 
@@ -8,19 +8,20 @@ MVP de plataforma de locacao com busca de imoveis (estilo e-commerce), perfil po
 2. Abra frontend/index.html em servidor local.
 3. Aplique filtros de busca e selecione um imovel.
 4. Registre interesse no imovel.
-5. Na primeira vez, responda o questionario de perfil por probabilidade.
-6. Nos proximos interesses, o perfil e reaproveitado automaticamente.
+5. Na primeira vez, responda o questionario de perfil comportamental com 7 perguntas.
+6. Nos proximos interesses, o perfil e reaproveitado automaticamente e pode ser atualizado a cada 3 meses.
 
 Para integrar com a API, rode o frontend em um servidor local (ex: php -S localhost:5500 -t .) e abra frontend/index.html para evitar origem "null".
 
 ## Fluxo implementado
 
 - Filtros: estado (SC), cidade, faixa de valor, quartos, garagem e tipo (kitnet, casa, apartamento, casa em condominio).
-- Interesse no imovel: gera mensagem para WhatsApp do locatario com taxa de analise de R$ 5,99.
+- Interesse no imovel: gera mensagem para WhatsApp do locatario com taxa de analise de R$ 4,99.
 - Pagamento: retorno com referencia e copia-e-cola PIX.
 - Pos-pagamento: mensagem da central com nome, contato e link do perfil do interessado.
-- Perfil persistente: salvo no banco e reutilizado para novos interesses sem novo questionario.
-- Pontuacao: baseada nas respostas "muito provavel", "provavel", "pouco provavel" e "improvavel".
+- Perfil persistente: salvo no banco, reutilizado para novos interesses e elegivel para atualizacao a cada 3 meses.
+- Pontuacao: baseada em 7 respostas de perfil comportamental com foco em cuidado com o imovel, ruido, regras, manutencao, estabilidade e risco de inadimplencia.
+- Rejeicao do locador: quando o perfil e marcado como nao apropriado, o imovel deixa de aparecer para aquele interessado nas proximas buscas.
 
 ## Backend (Laravel)
 

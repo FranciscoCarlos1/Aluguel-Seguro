@@ -333,13 +333,19 @@ const mapInterestToLead = (interest) => ({
   feePaid: interest.payment_status === "paid",
   status: interest.landlord_decision || (interest.payment_status === "paid" ? "profile_unlocked" : "pending_fee"),
   phone: interest.profile?.phone || "",
-  questionnaire: [
-    {
-      question: "Compatibilidade geral",
-      answer: `${interest.profile?.score || 0}/100`,
-      note: interest.landlord_notes || "Perfil analisado pela equipe a partir do questionario comportamental."
-    }
-  ],
+  questionnaire: (interest.profile?.behavioral_summary || []).length
+    ? interest.profile.behavioral_summary.map((item) => ({
+        question: item.evaluation,
+        answer: item.answer,
+        note: item.note,
+      }))
+    : [
+        {
+          question: "Compatibilidade geral",
+          answer: `${interest.profile?.score || 0}/100`,
+          note: interest.landlord_notes || "Perfil analisado pela equipe a partir do questionario comportamental."
+        }
+      ],
   rejectionReason: interest.landlord_decision === "rejected" ? interest.landlord_notes : "",
   contract: interest.contract || null,
   updated_at: interest.updated_at

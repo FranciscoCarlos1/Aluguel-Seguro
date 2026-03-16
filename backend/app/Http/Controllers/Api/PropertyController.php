@@ -15,6 +15,7 @@ class PropertyController extends Controller
     {
         $data = $request->validated();
         $perPage = min((int) ($data['per_page'] ?? 12), 50);
+        $prospectPhone = preg_replace('/\D+/', '', (string) ($data['prospect_phone'] ?? ''));
 
         $properties = Property::query()
             ->with('landlord')
@@ -41,16 +42,39 @@ class PropertyController extends Controller
             ->when(!empty($data['property_type']), function ($query) use ($data) {
                 $query->where('property_type', $data['property_type']);
             })
+            ->when($prospectPhone !== '', function ($query) use ($prospectPhone) {
+                $query->whereDoesntHave('interests', function ($interestQuery) use ($prospectPhone): void {
+                    $interestQuery
+                        ->where('hidden_for_prospect', true)
+                        ->whereHas('profile', function ($profileQuery) use ($prospectPhone): void {
+                            $profileQuery->where('phone', $prospectPhone);
+                        });
+                });
+            })
             ->orderBy('rent_price')
             ->paginate($perPage);
 
         return PropertyResource::collection($properties);
     }
 
-    public function show(Property $property)
+    public function show(Request $request, Property $property)
     {
         if (!$property->is_active || $property->state !== 'SC') {
             return response()->json(['message' => 'Imovel nao encontrado.'], 404);
+        }
+
+        $prospectPhone = preg_replace('/\D+/', '', (string) $request->query('prospect_phone'));
+        if ($prospectPhone !== '') {
+            $isHidden = $property->interests()
+                ->where('hidden_for_prospect', true)
+                ->whereHas('profile', function ($query) use ($prospectPhone): void {
+                    $query->where('phone', $prospectPhone);
+                })
+                ->exists();
+
+            if ($isHidden) {
+                return response()->json(['message' => 'Imovel nao encontrado.'], 404);
+            }
         }
 
         $property->load('landlord');

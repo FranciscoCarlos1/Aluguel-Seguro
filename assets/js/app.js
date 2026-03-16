@@ -5,6 +5,7 @@ const API_BASE_URL =
 const AUTH_TOKEN_KEY = "aluguelSeguroToken";
 const SESSION_EMAIL_KEY = "aluguelSeguroEmail";
 const LAST_ROUTE_KEY = "aluguelSeguroLastRoute";
+const PROSPECT_PHONE_KEY = "aluguelSeguroProspectPhone";
 
 const AppState = {
   profile: null,
@@ -62,6 +63,17 @@ const getLastRoute = () => localStorage.getItem(LAST_ROUTE_KEY);
 
 const clearLastRoute = () => {
   localStorage.removeItem(LAST_ROUTE_KEY);
+};
+
+const normalizePhone = (value) => String(value || "").replace(/\D+/g, "");
+
+const getProspectPhone = () => localStorage.getItem(PROSPECT_PHONE_KEY);
+
+const setProspectPhone = (phone) => {
+  const normalized = normalizePhone(phone);
+  if (normalized) {
+    localStorage.setItem(PROSPECT_PHONE_KEY, normalized);
+  }
 };
 
 const isAuthPage = () =>
@@ -1183,6 +1195,7 @@ const initMarketplace = () => {
   const filtersForm = document.querySelector("[data-marketplace-filters]");
   const status = document.querySelector("[data-marketplace-status]");
   const results = document.querySelector("[data-property-results]");
+  const storedProspectPhone = getProspectPhone();
 
   const renderProperties = (items) => {
     if (!results) {
@@ -1225,10 +1238,19 @@ const initMarketplace = () => {
         }
       }
 
+      if (storedProspectPhone) {
+        params.append("prospect_phone", storedProspectPhone);
+      }
+
       const response = await apiRequest(`/properties?${params.toString()}`);
       const items = response.data || [];
       renderProperties(items);
-      setStatus(status, `${items.length} imóvel(is) encontrado(s).`);
+      setStatus(
+        status,
+        storedProspectPhone
+          ? `${items.length} imóvel(is) encontrado(s). Imoveis recusados anteriormente nao voltam a aparecer para este perfil.`
+          : `${items.length} imóvel(is) encontrado(s).`
+      );
     } catch (error) {
       setStatus(status, error.message, true);
     }
@@ -1260,7 +1282,8 @@ const initPropertyDetail = () => {
   const form = document.querySelector("[data-property-interest-form]");
   const phoneInput = document.querySelector("[data-prospect-phone]");
   const questionnaireBox = document.querySelector("[data-questionnaire-box]");
-  const probabilityFields = document.querySelectorAll("[data-probability]");
+  const questionnaireHint = document.querySelector("[data-questionnaire-hint]");
+  const behavioralFields = document.querySelectorAll("[data-behavioral-answer]");
   const status = document.querySelector("[data-interest-status]");
   const paymentCard = document.querySelector("[data-payment-card]");
   const paymentRef = document.querySelector("[data-payment-reference]");
@@ -1268,6 +1291,7 @@ const initPropertyDetail = () => {
   const paymentStatus = document.querySelector("[data-payment-status]");
   const landlordWaLink = document.querySelector("[data-landlord-wa-link]");
   const confirmPaymentBtn = document.querySelector("[data-confirm-payment]");
+  const storedProspectPhone = getProspectPhone();
 
   let currentPaymentReference = null;
 
@@ -1276,15 +1300,27 @@ const initPropertyDetail = () => {
     return;
   }
 
-  const toggleQuestionnaire = (show) => {
+  const formatReviewDate = (value) => {
+    if (!value) {
+      return "";
+    }
+
+    return new Date(value).toLocaleDateString("pt-BR");
+  };
+
+  const toggleQuestionnaire = (show, hint = "") => {
     if (!questionnaireBox) {
       return;
     }
 
     questionnaireBox.classList.toggle("is-hidden", !show);
-    probabilityFields.forEach((field) => {
+    behavioralFields.forEach((field) => {
       field.required = show;
     });
+
+    if (questionnaireHint) {
+      questionnaireHint.textContent = hint;
+    }
   };
 
   const lookupProfileByPhone = async () => {
@@ -1296,20 +1332,33 @@ const initPropertyDetail = () => {
     try {
       const response = await apiRequest(`/prospect-profiles/lookup?phone=${encodeURIComponent(phone)}`);
       if (response.exists) {
-        toggleQuestionnaire(false);
-        setStatus(status, "Perfil já salvo. Não precisa responder o questionário novamente.");
+        const profile = response.profile || {};
+        if (profile.can_refresh_questionnaire) {
+          toggleQuestionnaire(
+            true,
+            "Seu perfil ja pode ser atualizado, porque a ultima revisao passou de 3 meses."
+          );
+          setStatus(status, "Perfil encontrado. Atualize o questionario se quiser renovar a analise comportamental.");
+        } else {
+          toggleQuestionnaire(
+            false,
+            `Perfil salvo e valido ate ${formatReviewDate(profile.review_due_at)}. O questionario sera reaproveitado automaticamente.`
+          );
+          setStatus(status, "Perfil ja salvo. Nao precisa responder o questionario novamente agora.");
+        }
       } else {
-        toggleQuestionnaire(true);
+        toggleQuestionnaire(true, "Na primeira demonstracao de interesse, responda as 7 perguntas do perfil comportamental.");
       }
     } catch (error) {
-      toggleQuestionnaire(true);
+      toggleQuestionnaire(true, "Nao foi possivel verificar o perfil salvo. Preencha o questionario para seguir.");
     }
   };
 
   const loadProperty = async () => {
     setStatus(status, "Carregando imóvel...");
     try {
-      const response = await apiRequest(`/properties/${propertyId}`);
+      const query = storedProspectPhone ? `?prospect_phone=${encodeURIComponent(storedProspectPhone)}` : "";
+      const response = await apiRequest(`/properties/${propertyId}${query}`);
       const property = response.data || response;
 
       if (title) {
@@ -1355,10 +1404,13 @@ const initPropertyDetail = () => {
         has_pet: formData.get("has_pet") === "1",
         rental_reason: formData.get("rental_reason") || null,
         additional_notes: formData.get("additional_notes") || null,
-        payment_probability: formData.get("payment_probability") || null,
-        care_probability: formData.get("care_probability") || null,
-        income_stability_probability: formData.get("income_stability_probability") || null,
-        neighbor_relation_probability: formData.get("neighbor_relation_probability") || null,
+        care_reflection: formData.get("care_reflection") || null,
+        quiet_refuge: formData.get("quiet_refuge") || null,
+        financial_commitment: formData.get("financial_commitment") || null,
+        stability_focus: formData.get("stability_focus") || null,
+        visitors_sharing: formData.get("visitors_sharing") || null,
+        rule_respect: formData.get("rule_respect") || null,
+        preventive_maintenance: formData.get("preventive_maintenance") || null,
       };
 
       try {
@@ -1369,6 +1421,7 @@ const initPropertyDetail = () => {
 
         const interest = response.interest?.data || response.interest || {};
         currentPaymentReference = interest.payment_reference;
+        setProspectPhone(payload.tenant_phone);
 
         if (paymentRef) {
           paymentRef.textContent = interest.payment_reference || "-";
@@ -1414,7 +1467,11 @@ const initPropertyDetail = () => {
     });
   }
 
-  toggleQuestionnaire(true);
+  if (phoneInput && storedProspectPhone && !phoneInput.value) {
+    phoneInput.value = storedProspectPhone;
+  }
+
+  toggleQuestionnaire(true, "Na primeira demonstracao de interesse, responda as 7 perguntas do perfil comportamental.");
   loadProperty();
 };
 

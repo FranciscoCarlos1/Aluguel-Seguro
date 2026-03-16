@@ -14,6 +14,7 @@ class AuthTest extends TestCase
         $registerPayload = [
             'name' => 'Locador Demo',
             'email' => 'locador@example.com',
+            'phone' => '48999990000',
             'password' => 'SenhaForte123',
             'password_confirmation' => 'SenhaForte123',
         ];

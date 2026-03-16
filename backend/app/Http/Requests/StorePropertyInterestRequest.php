@@ -23,10 +23,13 @@ class StorePropertyInterestRequest extends FormRequest
             'has_pet' => ['required', 'boolean'],
             'rental_reason' => ['nullable', 'string', 'max:1000'],
             'additional_notes' => ['nullable', 'string', 'max:1500'],
-            'payment_probability' => ['nullable', 'in:muito_provavel,provavel,pouco_provavel,improvavel'],
-            'care_probability' => ['nullable', 'in:muito_provavel,provavel,pouco_provavel,improvavel'],
-            'income_stability_probability' => ['nullable', 'in:muito_provavel,provavel,pouco_provavel,improvavel'],
-            'neighbor_relation_probability' => ['nullable', 'in:muito_provavel,provavel,pouco_provavel,improvavel'],
+            'care_reflection' => ['nullable', 'in:concordo_totalmente,concordo,neutro,discordo,discordo_totalmente'],
+            'quiet_refuge' => ['nullable', 'in:concordo_totalmente,concordo,neutro,discordo,discordo_totalmente'],
+            'financial_commitment' => ['nullable', 'in:concordo_totalmente,concordo,neutro,discordo,discordo_totalmente'],
+            'stability_focus' => ['nullable', 'in:concordo_totalmente,concordo,neutro,discordo,discordo_totalmente'],
+            'visitors_sharing' => ['nullable', 'in:concordo_totalmente,concordo,neutro,discordo,discordo_totalmente'],
+            'rule_respect' => ['nullable', 'in:concordo_totalmente,concordo,neutro,discordo,discordo_totalmente'],
+            'preventive_maintenance' => ['nullable', 'in:concordo_totalmente,concordo,neutro,discordo,discordo_totalmente'],
         ];
     }
 }

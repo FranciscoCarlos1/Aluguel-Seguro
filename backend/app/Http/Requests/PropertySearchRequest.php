@@ -16,6 +16,7 @@ class PropertySearchRequest extends FormRequest
         return [
             'state' => ['nullable', 'in:SC'],
             'city' => ['nullable', 'string', 'max:120'],
+            'prospect_phone' => ['nullable', 'string', 'max:30'],
             'price_range' => ['nullable', 'in:ate_1000,1001_2000,2001_3000,acima_3000'],
             'bedrooms' => ['nullable', 'integer', 'min:0', 'max:10'],
             'garage' => ['nullable', 'boolean'],

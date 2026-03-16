@@ -41,7 +41,7 @@
 
         <div class="detail-card">
           <h2>Interesse no imóvel</h2>
-          <p class="muted">Preencha seus dados. Se o perfil já existir, o questionário é reaproveitado automaticamente.</p>
+          <p class="muted">Preencha seus dados. Se o perfil ja existir, ele e reaproveitado automaticamente e pode ser atualizado a cada 3 meses.</p>
 
           <form class="form-grid form-grid--two" data-property-interest-form>
             <label>
@@ -81,47 +81,84 @@
             </label>
 
             <div class="detail-card full" data-questionnaire-box>
-              <h3>Perguntas de perfil (pontuação)</h3>
-              <p class="muted">Responda usando níveis de probabilidade.</p>
+              <h3>Questionario de perfil comportamental</h3>
+              <p class="muted" data-questionnaire-hint>Na primeira demonstracao de interesse, responda as 7 perguntas do perfil comportamental.</p>
               <div class="form-grid form-grid--two">
                 <label>
-                  Pagar o aluguel em dia
-                  <select name="payment_probability" data-probability>
+                  Cuidado com o imovel e autodisciplina
+                  <select name="care_reflection" data-behavioral-answer>
                     <option value="">Selecione</option>
-                    <option value="muito_provavel">Muito provável</option>
-                    <option value="provavel">Provável</option>
-                    <option value="pouco_provavel">Pouco provável</option>
-                    <option value="improvavel">Improvável</option>
+                    <option value="concordo_totalmente">Concordo totalmente</option>
+                    <option value="concordo">Concordo</option>
+                    <option value="neutro">Neutro</option>
+                    <option value="discordo">Discordo</option>
+                    <option value="discordo_totalmente">Discordo totalmente</option>
                   </select>
                 </label>
                 <label>
-                  Cuidar bem do imóvel
-                  <select name="care_probability" data-probability>
+                  Casa como refugio de silencio e privacidade
+                  <select name="quiet_refuge" data-behavioral-answer>
                     <option value="">Selecione</option>
-                    <option value="muito_provavel">Muito provável</option>
-                    <option value="provavel">Provável</option>
-                    <option value="pouco_provavel">Pouco provável</option>
-                    <option value="improvavel">Improvável</option>
+                    <option value="concordo_totalmente">Concordo totalmente</option>
+                    <option value="concordo">Concordo</option>
+                    <option value="neutro">Neutro</option>
+                    <option value="discordo">Discordo</option>
+                    <option value="discordo_totalmente">Discordo totalmente</option>
                   </select>
                 </label>
                 <label>
-                  Manter renda estável
-                  <select name="income_stability_probability" data-probability>
+                  Imprevistos justificam adiar compromissos
+                  <select name="financial_commitment" data-behavioral-answer>
                     <option value="">Selecione</option>
-                    <option value="muito_provavel">Muito provável</option>
-                    <option value="provavel">Provável</option>
-                    <option value="pouco_provavel">Pouco provável</option>
-                    <option value="improvavel">Improvável</option>
+                    <option value="concordo_totalmente">Concordo totalmente</option>
+                    <option value="concordo">Concordo</option>
+                    <option value="neutro">Neutro</option>
+                    <option value="discordo">Discordo</option>
+                    <option value="discordo_totalmente">Discordo totalmente</option>
                   </select>
                 </label>
                 <label>
-                  Boa convivência com vizinhos
-                  <select name="neighbor_relation_probability" data-probability>
+                  Rotina focada em trabalho e estabilidade familiar
+                  <select name="stability_focus" data-behavioral-answer>
                     <option value="">Selecione</option>
-                    <option value="muito_provavel">Muito provável</option>
-                    <option value="provavel">Provável</option>
-                    <option value="pouco_provavel">Pouco provável</option>
-                    <option value="improvavel">Improvável</option>
+                    <option value="concordo_totalmente">Concordo totalmente</option>
+                    <option value="concordo">Concordo</option>
+                    <option value="neutro">Neutro</option>
+                    <option value="discordo">Discordo</option>
+                    <option value="discordo_totalmente">Discordo totalmente</option>
+                  </select>
+                </label>
+                <label>
+                  Facilidade com visitantes e parentes por longos periodos
+                  <select name="visitors_sharing" data-behavioral-answer>
+                    <option value="">Selecione</option>
+                    <option value="concordo_totalmente">Concordo totalmente</option>
+                    <option value="concordo">Concordo</option>
+                    <option value="neutro">Neutro</option>
+                    <option value="discordo">Discordo</option>
+                    <option value="discordo_totalmente">Discordo totalmente</option>
+                  </select>
+                </label>
+                <label>
+                  Regras de condominio e convivencia devem ser seguidas a risca
+                  <select name="rule_respect" data-behavioral-answer>
+                    <option value="">Selecione</option>
+                    <option value="concordo_totalmente">Concordo totalmente</option>
+                    <option value="concordo">Concordo</option>
+                    <option value="neutro">Neutro</option>
+                    <option value="discordo">Discordo</option>
+                    <option value="discordo_totalmente">Discordo totalmente</option>
+                  </select>
+                </label>
+                <label>
+                  Pequenos danos devem ser resolvidos imediatamente
+                  <select name="preventive_maintenance" data-behavioral-answer>
+                    <option value="">Selecione</option>
+                    <option value="concordo_totalmente">Concordo totalmente</option>
+                    <option value="concordo">Concordo</option>
+                    <option value="neutro">Neutro</option>
+                    <option value="discordo">Discordo</option>
+                    <option value="discordo_totalmente">Discordo totalmente</option>
                   </select>
                 </label>
               </div>
@@ -140,7 +177,7 @@
             <button class="button ghost is-hidden" type="button" data-confirm-payment>Confirmar pagamento (simulação)</button>
           </div>
           <div class="detail-card is-hidden" data-payment-card>
-            <h3>Pagamento da taxa (R$ 5,99)</h3>
+            <h3>Pagamento da taxa (R$ 4,99)</h3>
             <p><strong>Referência:</strong> <span data-payment-reference>-</span></p>
             <p><strong>PIX copia e cola:</strong></p>
             <textarea rows="3" data-pix-copy readonly></textarea>
