@@ -211,6 +211,14 @@ const portalDate = (value) => {
   });
 };
 
+const portalDateOnly = (value) => {
+  if (!value) {
+    return "A definir";
+  }
+
+  return new Date(value).toLocaleDateString("pt-BR");
+};
+
 const loadPortalState = () => {
   const base = portalBaseState();
 
@@ -350,6 +358,14 @@ const mapInterestToLead = (interest) => ({
   contract: interest.contract || null,
   updated_at: interest.updated_at
 });
+
+const renderSlipSummary = (slip) => `
+  <div class="callout">
+    <strong>${portalEscapeHtml(slip.description || `Boleto ${slip.installment_number || ''}`)}</strong><br />
+    Vencimento: ${portalEscapeHtml(portalDateOnly(slip.due_date))} · Valor: ${portalEscapeHtml(portalCurrency(slip.amount))} · Status: ${portalEscapeHtml(slip.status)}
+    ${slip.payment_link ? `<br /><a class="link" href="${portalEscapeHtml(slip.payment_link)}" target="_blank" rel="noreferrer">Abrir link de pagamento</a>` : ''}
+  </div>
+`;
 
 const mapVisitToCard = (visit) => ({
   id: String(visit.id),
@@ -751,6 +767,19 @@ const initLeadsPage = () => {
                 )
                 .join('')}
             </div>
+            ${lead.contract ? `
+              <div class="section-stack">
+                <div class="metric-strip">
+                  <div class="metric-box"><strong>${portalCurrency(lead.contract.rent_amount || 0)}</strong><span>aluguel do contrato</span></div>
+                  <div class="metric-box"><strong>${portalEscapeHtml(lead.contract.status || 'draft')}</strong><span>status do contrato</span></div>
+                  <div class="metric-box"><strong>${portalEscapeHtml(String(lead.contract.payment_slips?.length || 0))}</strong><span>boleto(s) inicial(is)</span></div>
+                </div>
+                <div class="action-row">
+                  <a class="button ghost" href="contract.html?id=${portalEscapeHtml(String(lead.contract.id))}">Abrir contrato digital</a>
+                </div>
+                ${(lead.contract.payment_slips || []).map(renderSlipSummary).join('')}
+              </div>
+            ` : ''}
             ${lead.rejectionReason ? `<div class="callout">${portalEscapeHtml(lead.rejectionReason)}</div>` : ''}
             <div class="action-row">${actions.join('')}</div>
           </article>
@@ -987,8 +1016,33 @@ const initServicesPage = () => {
     return;
   }
 
-  const render = () => {
+  const render = async () => {
     const state = loadPortalState();
+    let contractMetrics = {
+      totalContracts: 0,
+      signedContracts: 0,
+      pendingSlips: 0,
+    };
+
+    try {
+      if (localStorage.getItem(PORTAL_AUTH_TOKEN_KEY)) {
+        const remote = await loadPortalRemoteData();
+        const interests = remote.landlordInterests || [];
+        const contracts = interests
+          .map((interest) => interest.contract)
+          .filter(Boolean);
+        const slips = contracts.flatMap((contract) => contract.payment_slips || []);
+
+        contractMetrics = {
+          totalContracts: contracts.length,
+          signedContracts: contracts.filter((contract) => contract.status === 'signed').length,
+          pendingSlips: slips.filter((slip) => slip.status !== 'paid').length,
+        };
+      }
+    } catch (error) {
+      setPortalStatus(status, `Modo local ativo: ${error.message}`);
+    }
+
     form.require_paystub.checked = Boolean(state.services.requirePaystub);
     form.require_prolabore.checked = Boolean(state.services.requireProlabore);
     form.enable_serasa.checked = Boolean(state.services.enableSerasa);
@@ -1013,6 +1067,14 @@ const initServicesPage = () => {
       <div class="report-item">
         <span class="report-label">Boleto inicial</span>
         <span class="report-value">Taxa de lixo + seguro incendio em ate ${portalEscapeHtml(state.services.boletoInstallments)}x</span>
+      </div>
+      <div class="report-item">
+        <span class="report-label">Contratos gerados</span>
+        <span class="report-value">${portalEscapeHtml(String(contractMetrics.totalContracts))} total · ${portalEscapeHtml(String(contractMetrics.signedContracts))} assinado(s)</span>
+      </div>
+      <div class="report-item">
+        <span class="report-label">Boletos pendentes</span>
+        <span class="report-value">${portalEscapeHtml(String(contractMetrics.pendingSlips))} aguardando pagamento</span>
       </div>
     `;
   };

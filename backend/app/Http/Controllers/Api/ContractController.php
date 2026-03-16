@@ -3,13 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\ContractResource;
 use App\Models\Contract;
-use App\Models\Property;
 use App\Models\Landlord;
-use App\Models\Tenant;
-use App\Models\PropertyInterest;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -38,16 +35,24 @@ class ContractController extends Controller
             'status' => 'draft',
         ]);
 
-        return response()->json(['contract' => $contract], 201);
+        return response()->json([
+            'contract' => new ContractResource($contract->load(['property', 'landlord', 'tenant', 'paymentSlips'])),
+        ], 201);
     }
 
-    public function show(Contract $contract)
+    public function show(Request $request, Contract $contract)
     {
-        return response()->json(['contract' => $contract]);
+        $this->ensureOwnership($request, $contract);
+
+        return response()->json([
+            'contract' => new ContractResource($contract->load(['property', 'landlord', 'tenant', 'paymentSlips'])),
+        ]);
     }
 
     public function sign(Request $request, Contract $contract)
     {
+        $this->ensureOwnership($request, $contract);
+
         $request->validate([
             'signer_ip' => 'required|ip',
         ]);
@@ -64,7 +69,21 @@ class ContractController extends Controller
             'signature_hash' => $signatureHash,
         ]);
 
-        return response()->json(['message' => 'Contrato assinado com sucesso.', 'contract' => $contract]);
+        return response()->json([
+            'message' => 'Contrato assinado com sucesso.',
+            'contract' => new ContractResource($contract->fresh(['property', 'landlord', 'tenant', 'paymentSlips'])),
+        ]);
+    }
+
+    private function ensureOwnership(Request $request, Contract $contract): void
+    {
+        $contract->loadMissing('landlord');
+
+        abort_if(
+            $contract->landlord?->email !== $request->user()?->email,
+            403,
+            'Este contrato nao pertence ao locador autenticado.'
+        );
     }
 
     private function generateContractText(array $data): string

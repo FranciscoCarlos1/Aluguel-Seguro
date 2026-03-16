@@ -11,10 +11,13 @@
     <header class="site-header">
       <a class="brand" href="index.html">Aluguel Seguro</a>
       <nav class="nav-links">
-        <a href="index.html">Inicio</a>
+        <a href="dashboard.html" data-auth-only>Painel</a>
+        <a href="properties.html" data-auth-only>Imoveis</a>
+        <a href="leads.html" data-auth-only>Interesses</a>
+        <a href="services.html" data-auth-only>Servicos</a>
+        <a href="index.html">Marketplace</a>
         <a href="login.html" data-guest-only>Entrar</a>
         <a href="register.html" data-guest-only>Cadastro</a>
-        <a href="profile.html" class="button ghost" data-auth-only>Perfil</a>
         <div class="session-status">
           <span data-session-label>Sem sessao</span>
           <button class="button ghost session-action" type="button" data-session-action>
@@ -26,6 +29,7 @@
     <main class="panel panel-wide">
       <section class="panel-card panel-card--wide reveal">
         <h1>Contrato Digital</h1>
+        <p class="muted">Revise o contrato, confira os boletos iniciais e conclua a assinatura digital quando o locador estiver pronto.</p>
         <div id="contract-content">
           <p>Carregando contrato...</p>
         </div>

@@ -1487,6 +1487,25 @@ const initContractPage = () => {
   const signForm = document.getElementById("contract-sign-form");
   const status = signForm?.querySelector("[data-status]");
 
+  const renderSlip = (slip) => `
+    <article class="detail-card">
+      <h3>${escapeHtml(slip.description || `Boleto ${slip.installment_number || ""}`)}</h3>
+      <p><strong>Vencimento:</strong> ${escapeHtml(new Date(slip.due_date).toLocaleDateString("pt-BR"))}</p>
+      <p><strong>Valor:</strong> ${escapeHtml(formatMoney(slip.amount))}</p>
+      <p><strong>Status:</strong> ${escapeHtml(slip.status || "pending")}</p>
+      ${slip.payment_link ? `<p><a class="button ghost" href="${escapeHtml(slip.payment_link)}" target="_blank" rel="noreferrer">Abrir pagamento</a></p>` : ""}
+      ${slip.pdf_url ? `<p><a class="link" href="${escapeHtml(slip.pdf_url)}" target="_blank" rel="noreferrer">Abrir boleto em PDF</a></p>` : ""}
+    </article>
+  `;
+
+  const escapeHtml = (value) =>
+    String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+
   const renderContract = (contract) => {
     if (!content) {
       return;
@@ -1502,9 +1521,39 @@ const initContractPage = () => {
       return;
     }
 
-    const pre = document.createElement("pre");
-    pre.textContent = contract.contract_text || "Contrato sem conteudo.";
-    content.appendChild(pre);
+    const slips = contract.payment_slips || [];
+
+    content.innerHTML = `
+      <div class="section-stack">
+        <div class="metric-strip">
+          <div class="metric-box"><strong>${escapeHtml(contract.property?.title || "Imovel")}</strong><span>imovel</span></div>
+          <div class="metric-box"><strong>${escapeHtml(contract.tenant?.full_name || "Inquilino")}</strong><span>interessado</span></div>
+          <div class="metric-box"><strong>${escapeHtml(contract.status || "draft")}</strong><span>status</span></div>
+          <div class="metric-box"><strong>${escapeHtml(formatMoney(contract.rent_amount || 0))}</strong><span>aluguel mensal</span></div>
+        </div>
+        <div class="detail-card">
+          <h2>Resumo do contrato</h2>
+          <p><strong>Inicio:</strong> ${escapeHtml(new Date(contract.start_date).toLocaleDateString("pt-BR"))}</p>
+          <p><strong>Fim previsto:</strong> ${contract.end_date ? escapeHtml(new Date(contract.end_date).toLocaleDateString("pt-BR")) : "Prazo em aberto"}</p>
+          <p><strong>Caucao:</strong> ${escapeHtml(formatMoney(contract.deposit_amount || 0))}</p>
+          <p><strong>Seguro incendio:</strong> ${escapeHtml(formatMoney(contract.fire_insurance || 0))}</p>
+          <p><strong>Taxa de lixo:</strong> ${escapeHtml(formatMoney(contract.garbage_fee || 0))}</p>
+        </div>
+        <div class="detail-card">
+          <h2>Texto contratual</h2>
+          <pre>${escapeHtml(contract.contract_text || "Contrato sem conteudo.")}</pre>
+        </div>
+        <div class="detail-card">
+          <h2>Boletos iniciais</h2>
+          ${slips.length ? slips.map(renderSlip).join("") : "<p>Nenhum boleto inicial gerado.</p>"}
+        </div>
+        ${contract.signed_at ? `
+          <div class="callout">
+            Contrato assinado em ${escapeHtml(new Date(contract.signed_at).toLocaleString("pt-BR"))} com registro de IP ${escapeHtml(contract.signed_by_ip || "n/d")}.
+          </div>
+        ` : ""}
+      </div>
+    `;
 
     if (signForm) {
       signForm.style.display = contract.status === "draft" ? "" : "none";
