@@ -71,7 +71,7 @@ Este repositório já possui o arquivo render.yaml para subir:
 
 - O backend cria o SQLite no disco persistente do Render.
 - O backend roda php artisan migrate --force a cada novo deploy.
-- O frontend gera frontend/env.js em build com a URL pública da API.
+- O frontend gera frontend/env.js em build com a URL pública da API e copia os assets compartilhados para a pasta publicada.
 - O health check da API responde em /api/health.
 
 ### Passos

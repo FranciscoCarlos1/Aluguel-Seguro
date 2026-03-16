@@ -36,7 +36,7 @@ services:
     runtime: static
     rootDir: frontend
     buildCommand: >-
-      sh -c "echo \"window.ALUGUEL_API_BASE_URL='${RENDER_BACKEND_URL}/api/v1';\" > env.js"
+      sh -c "mkdir -p assets/css assets/js && cp ../assets/css/styles.css assets/css/styles.css && cp ../assets/js/app.js assets/js/app.js && cp ../assets/js/portal.js assets/js/portal.js && echo \"window.ALUGUEL_API_BASE_URL='${RENDER_BACKEND_URL}/api/v1';\" > env.js"
     staticPublishPath: .
     envVars:
       - key: RENDER_BACKEND_URL
