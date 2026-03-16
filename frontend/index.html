@@ -82,10 +82,14 @@
               <option value="casa_condominio">Casa em condomínio</option>
             </select>
           </label>
-          <button class="button" type="submit">Buscar</button>
+          <div class="form-actions-row full">
+            <button class="button" type="submit">Buscar no sistema</button>
+            <button class="button ghost" type="button" data-internal-property-search>Buscar no cadastro interno</button>
+          </div>
         </form>
 
         <p class="form-status" data-marketplace-status></p>
+        <p class="muted external-search-note">A busca principal usa o motor do Google por API oficial, mas exibe os resultados dentro do Aluguel Seguro. A busca no cadastro interno consulta apenas os imóveis do banco local/API.</p>
         <div class="property-results" data-property-results></div>
       </section>
     </main>

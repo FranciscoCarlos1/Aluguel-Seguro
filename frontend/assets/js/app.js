@@ -1195,9 +1195,27 @@ const initMarketplace = () => {
   const filtersForm = document.querySelector("[data-marketplace-filters]");
   const status = document.querySelector("[data-marketplace-status]");
   const results = document.querySelector("[data-property-results]");
+  const internalSearchButton = document.querySelector("[data-internal-property-search]");
   const storedProspectPhone = getProspectPhone();
 
-  const renderProperties = (items) => {
+  const collectFilterParams = () => {
+    const params = new URLSearchParams();
+    const formData = new FormData(filtersForm);
+
+    for (const [key, value] of formData.entries()) {
+      if (value !== "") {
+        params.append(key, value);
+      }
+    }
+
+    if (storedProspectPhone) {
+      params.append("prospect_phone", storedProspectPhone);
+    }
+
+    return params;
+  };
+
+  const renderInternalProperties = (items) => {
     if (!results) {
       return;
     }
@@ -1227,25 +1245,41 @@ const initMarketplace = () => {
       .join("");
   };
 
-  const loadProperties = async () => {
-    setStatus(status, "Buscando imóveis...");
+  const renderExternalProperties = (items) => {
+    if (!results) {
+      return;
+    }
+
+    if (!items || items.length === 0) {
+      results.innerHTML = "<p>Nenhum anuncio externo encontrado com esses filtros.</p>";
+      return;
+    }
+
+    results.innerHTML = items
+      .map(
+        (item) => `
+          <article class="property-card property-card--external">
+            <h3>${item.title}</h3>
+            <p>${item.snippet || "Resultado externo encontrado pela busca do Google."}</p>
+            <div class="property-tags">
+              <span>Fonte externa</span>
+              <span>${item.display_link || "google"}</span>
+            </div>
+            <a class="button" href="${item.link}" target="_blank" rel="noreferrer">Abrir anuncio</a>
+          </article>
+        `
+      )
+      .join("");
+  };
+
+  const loadInternalProperties = async () => {
+    setStatus(status, "Buscando imóveis no cadastro interno...");
 
     try {
-      const params = new URLSearchParams();
-      const formData = new FormData(filtersForm);
-      for (const [key, value] of formData.entries()) {
-        if (value !== "") {
-          params.append(key, value);
-        }
-      }
-
-      if (storedProspectPhone) {
-        params.append("prospect_phone", storedProspectPhone);
-      }
-
+      const params = collectFilterParams();
       const response = await apiRequest(`/properties?${params.toString()}`);
       const items = response.data || [];
-      renderProperties(items);
+      renderInternalProperties(items);
       setStatus(
         status,
         storedProspectPhone
@@ -1257,14 +1291,37 @@ const initMarketplace = () => {
     }
   };
 
+  const loadGoogleProperties = async () => {
+    setStatus(status, "Buscando imóveis com o motor do Google dentro do sistema...");
+
+    try {
+      const params = collectFilterParams();
+      params.delete("prospect_phone");
+      params.append("limit", "10");
+
+      const response = await apiRequest(`/external-search/google?${params.toString()}`);
+      const items = response.data || [];
+      renderExternalProperties(items);
+      setStatus(status, `${items.length} anuncio(s) externo(s) encontrado(s) pelo motor do Google dentro do sistema.`);
+    } catch (error) {
+      setStatus(status, error.message, true);
+    }
+  };
+
   if (filtersForm) {
     filtersForm.addEventListener("submit", (event) => {
       event.preventDefault();
-      loadProperties();
+      loadGoogleProperties();
     });
   }
 
-  loadProperties();
+  if (internalSearchButton) {
+    internalSearchButton.addEventListener("click", () => {
+      loadInternalProperties();
+    });
+  }
+
+  loadGoogleProperties();
 };
 
 const initPropertyDetail = () => {

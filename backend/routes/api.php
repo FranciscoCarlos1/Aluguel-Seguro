@@ -9,6 +9,8 @@ use App\Http\Controllers\Api\TenantProfileController;
 use App\Http\Controllers\Api\TenantReviewController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ContractController;
+use App\Http\Controllers\Api\ExternalPropertySearchController;
+use App\Http\Controllers\Api\OlxIntegrationController;
 use App\Http\Controllers\Api\PropertyController;
 use App\Http\Controllers\Api\PropertyFeedImportController;
 use App\Http\Controllers\Api\PropertyInterestController;
@@ -27,6 +29,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/auth/login', [AuthController::class, 'login']);
 
         Route::get('/properties', [PropertyController::class, 'index']);
+        Route::get('/external-search/google', [ExternalPropertySearchController::class, 'google']);
         Route::get('/properties/{property}', [PropertyController::class, 'show']);
         Route::post('/properties/{property}/interests', [PropertyInterestController::class, 'store']);
         Route::post('/property-interests/confirm-payment', [PropertyInterestController::class, 'confirmPayment']);
@@ -44,6 +47,10 @@ Route::prefix('v1')->group(function () {
         Route::get('/landlord/properties', [PropertyController::class, 'landlordIndex']);
         Route::post('/landlord/properties', [PropertyController::class, 'store']);
         Route::post('/landlord/properties/import-feed', PropertyFeedImportController::class);
+        Route::get('/integrations/olx/auth-url', [OlxIntegrationController::class, 'authUrl']);
+        Route::post('/integrations/olx/exchange-token', [OlxIntegrationController::class, 'exchangeToken']);
+        Route::post('/integrations/olx/import-properties', [OlxIntegrationController::class, 'importProperties']);
+        Route::get('/integrations/olx/published-ads', [OlxIntegrationController::class, 'publishedAds']);
 
         Route::get('/landlord/interests', [LandlordInterestController::class, 'index']);
         Route::post('/landlord/interests/{interest}/mark-paid', [LandlordInterestController::class, 'markPaid']);

@@ -448,6 +448,14 @@ const setPortalStatus = (element, message) => {
   }
 };
 
+const safeJsonParse = (value, fallback = {}) => {
+  if (!value || !String(value).trim()) {
+    return fallback;
+  }
+
+  return JSON.parse(value);
+};
+
 const initDashboardPage = async () => {
   const page = document.querySelector('[data-page="dashboard"]');
   if (!page) {
@@ -633,9 +641,54 @@ const initPropertyFormPage = () => {
   const status = document.querySelector('[data-property-form-status]');
   const feedForm = document.querySelector('[data-feed-import-form]');
   const feedStatus = document.querySelector('[data-feed-import-status]');
+  const olxAuthForm = document.querySelector('[data-olx-auth-form]');
+  const olxAuthStatus = document.querySelector('[data-olx-auth-status]');
+  const olxAuthResult = document.querySelector('[data-olx-auth-result]');
+  const olxAuthUrl = document.querySelector('[data-olx-auth-url]');
+  const olxAuthLink = document.querySelector('[data-olx-auth-link]');
+  const olxTokenForm = document.querySelector('[data-olx-token-form]');
+  const olxTokenStatus = document.querySelector('[data-olx-token-status]');
+  const olxTokenResult = document.querySelector('[data-olx-token-result]');
+  const olxTokenValue = document.querySelector('[data-olx-token-value]');
+  const olxImportForm = document.querySelector('[data-olx-import-form]');
+  const olxImportStatus = document.querySelector('[data-olx-import-status]');
+  const olxImportResult = document.querySelector('[data-olx-import-result]');
+  const olxImportPayload = document.querySelector('[data-olx-import-payload]');
+  const olxPublishedForm = document.querySelector('[data-olx-published-form]');
+  const olxPublishedStatus = document.querySelector('[data-olx-published-status]');
+  const olxPublishedResult = document.querySelector('[data-olx-published-result]');
+  const olxPublishedPayload = document.querySelector('[data-olx-published-payload]');
+  const olxPropertyOptions = document.querySelector('[data-olx-property-options]');
   if (!form) {
     return;
   }
+
+  const loadOlxPropertyOptions = async () => {
+    if (!olxPropertyOptions) {
+      return;
+    }
+
+    if (!localStorage.getItem(PORTAL_AUTH_TOKEN_KEY)) {
+      olxPropertyOptions.textContent = 'Entre no portal para carregar seus imoveis publicados na API.';
+      return;
+    }
+
+    try {
+      const response = await portalApiRequest('/landlord/properties');
+      const items = response.data || [];
+
+      if (!items.length) {
+        olxPropertyOptions.textContent = 'Nenhum imovel do locador encontrado na API para exportacao.';
+        return;
+      }
+
+      olxPropertyOptions.innerHTML = items
+        .map((item) => `<div><strong>#${portalEscapeHtml(String(item.id))}</strong> · ${portalEscapeHtml(item.title)} · ${portalEscapeHtml(item.city)}</div>`)
+        .join('');
+    } catch (error) {
+      olxPropertyOptions.textContent = `Nao foi possivel carregar os imoveis da API: ${error.message}`;
+    }
+  };
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -722,6 +775,140 @@ const initPropertyFormPage = () => {
       }
     });
   }
+
+  if (olxAuthForm) {
+    olxAuthForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      if (!localStorage.getItem(PORTAL_AUTH_TOKEN_KEY)) {
+        setPortalStatus(olxAuthStatus, 'Entre no portal para gerar a URL de autorizacao da OLX.');
+        return;
+      }
+
+      const formData = new FormData(olxAuthForm);
+      const params = new URLSearchParams({
+        redirect_uri: String(formData.get('redirect_uri') || ''),
+        state: String(formData.get('state') || 'aluguel-seguro'),
+        scope: String(formData.get('scope') || 'autoupload')
+      });
+
+      try {
+        const response = await portalApiRequest(`/integrations/olx/auth-url?${params.toString()}`);
+        if (olxAuthUrl) {
+          olxAuthUrl.textContent = response.authorization_url || '';
+        }
+        if (olxAuthLink) {
+          olxAuthLink.href = response.authorization_url || '#';
+        }
+        olxAuthResult?.classList.remove('is-hidden');
+        setPortalStatus(olxAuthStatus, 'URL de autorizacao OLX gerada.');
+      } catch (error) {
+        setPortalStatus(olxAuthStatus, `Falha ao gerar URL OLX: ${error.message}`);
+      }
+    });
+  }
+
+  if (olxTokenForm) {
+    olxTokenForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      if (!localStorage.getItem(PORTAL_AUTH_TOKEN_KEY)) {
+        setPortalStatus(olxTokenStatus, 'Entre no portal para trocar code por token.');
+        return;
+      }
+
+      const formData = new FormData(olxTokenForm);
+      try {
+        const response = await portalApiRequest('/integrations/olx/exchange-token', {
+          method: 'POST',
+          body: JSON.stringify({
+            code: formData.get('code'),
+            redirect_uri: formData.get('redirect_uri')
+          })
+        });
+
+        if (olxTokenValue) {
+          olxTokenValue.textContent = response.access_token || '';
+        }
+        olxTokenResult?.classList.remove('is-hidden');
+        setPortalStatus(olxTokenStatus, 'Access token OLX gerado com sucesso.');
+      } catch (error) {
+        setPortalStatus(olxTokenStatus, `Falha ao gerar access token: ${error.message}`);
+      }
+    });
+  }
+
+  if (olxImportForm) {
+    olxImportForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      if (!localStorage.getItem(PORTAL_AUTH_TOKEN_KEY)) {
+        setPortalStatus(olxImportStatus, 'Entre no portal para exportar imoveis para a OLX.');
+        return;
+      }
+
+      const formData = new FormData(olxImportForm);
+      const propertyIds = String(formData.get('property_ids') || '')
+        .split(',')
+        .map((value) => Number(String(value).trim()))
+        .filter((value) => Number.isInteger(value) && value > 0);
+
+      try {
+        const response = await portalApiRequest('/integrations/olx/import-properties', {
+          method: 'POST',
+          body: JSON.stringify({
+            access_token: formData.get('access_token'),
+            property_ids: propertyIds,
+            category: Number(formData.get('category') || 0),
+            zipcode: String(formData.get('zipcode') || '').replace(/\D+/g, ''),
+            phone: String(formData.get('phone') || '').replace(/\D+/g, ''),
+            type: formData.get('type') || 'u',
+            params: safeJsonParse(formData.get('params_json'), {})
+          })
+        });
+
+        if (olxImportPayload) {
+          olxImportPayload.textContent = JSON.stringify(response.olx || response, null, 2);
+        }
+        olxImportResult?.classList.remove('is-hidden');
+        setPortalStatus(olxImportStatus, response.message || 'Exportacao enviada para a OLX.');
+      } catch (error) {
+        setPortalStatus(olxImportStatus, `Falha ao exportar para a OLX: ${error.message}`);
+      }
+    });
+  }
+
+  if (olxPublishedForm) {
+    olxPublishedForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      if (!localStorage.getItem(PORTAL_AUTH_TOKEN_KEY)) {
+        setPortalStatus(olxPublishedStatus, 'Entre no portal para consultar anuncios publicados na OLX.');
+        return;
+      }
+
+      const formData = new FormData(olxPublishedForm);
+      const params = new URLSearchParams();
+      for (const [key, value] of formData.entries()) {
+        if (String(value || '') !== '') {
+          params.append(key, String(value));
+        }
+      }
+
+      try {
+        const response = await portalApiRequest(`/integrations/olx/published-ads?${params.toString()}`);
+        if (olxPublishedPayload) {
+          olxPublishedPayload.textContent = JSON.stringify(response, null, 2);
+        }
+        olxPublishedResult?.classList.remove('is-hidden');
+        setPortalStatus(olxPublishedStatus, `${(response.data || []).length} anuncio(s) retornado(s) pela OLX.`);
+      } catch (error) {
+        setPortalStatus(olxPublishedStatus, `Falha ao consultar anuncios publicados: ${error.message}`);
+      }
+    });
+  }
+
+  loadOlxPropertyOptions();
 };
 
 const initLeadsPage = () => {

@@ -128,6 +128,159 @@
             <p class="form-status full" data-feed-import-status></p>
           </form>
         </div>
+
+        <div class="section-stack">
+          <div>
+            <h2>Integracao oficial OLX</h2>
+            <p class="muted">Conecte sua conta profissional da OLX via OAuth, gere o access token, exporte imoveis locais para a OLX e acompanhe os anuncios publicados pela API oficial.</p>
+          </div>
+
+          <div class="integration-grid">
+            <section class="detail-card section-stack">
+              <div>
+                <h3>1. Gerar URL de autorizacao</h3>
+                <p class="muted">Use um redirect URI previamente cadastrado na OLX. O escopo recomendado para anuncios e autoupload.</p>
+              </div>
+
+              <form class="form-grid" data-olx-auth-form>
+                <label>
+                  Redirect URI
+                  <input type="url" name="redirect_uri" required placeholder="https://seu-dominio.com/olx/callback" />
+                </label>
+                <label>
+                  State
+                  <input type="text" name="state" placeholder="aluguel-seguro" />
+                </label>
+                <label>
+                  Scope
+                  <input type="text" name="scope" value="autoupload" />
+                </label>
+                <button class="button" type="submit">Gerar link OLX</button>
+                <p class="form-status" data-olx-auth-status></p>
+              </form>
+
+              <div class="callout is-hidden" data-olx-auth-result>
+                <strong>URL gerada:</strong>
+                <p class="code-panel" data-olx-auth-url></p>
+                <a class="link" data-olx-auth-link target="_blank" rel="noreferrer">Abrir autenticacao OLX</a>
+              </div>
+            </section>
+
+            <section class="detail-card section-stack">
+              <div>
+                <h3>2. Trocar code por access token</h3>
+                <p class="muted">Depois do login na OLX, cole aqui o code recebido no redirect.</p>
+              </div>
+
+              <form class="form-grid" data-olx-token-form>
+                <label>
+                  Code
+                  <input type="text" name="code" required placeholder="codigo recebido da OLX" />
+                </label>
+                <label>
+                  Redirect URI
+                  <input type="url" name="redirect_uri" required placeholder="https://seu-dominio.com/olx/callback" />
+                </label>
+                <button class="button" type="submit">Gerar access token</button>
+                <p class="form-status" data-olx-token-status></p>
+              </form>
+
+              <div class="callout is-hidden" data-olx-token-result>
+                <strong>Access token:</strong>
+                <p class="code-panel" data-olx-token-value></p>
+              </div>
+            </section>
+
+            <section class="detail-card section-stack">
+              <div>
+                <h3>3. Exportar imoveis locais para a OLX</h3>
+                <p class="muted">Selecione os imoveis do locador e envie para a API oficial de anuncios da OLX.</p>
+              </div>
+
+              <div class="callout" data-olx-property-options>Entre no portal para carregar seus imoveis publicados na API.</div>
+
+              <form class="form-grid" data-olx-import-form>
+                <label>
+                  Access token OLX
+                  <input type="text" name="access_token" required placeholder="token OAuth da OLX" />
+                </label>
+                <label>
+                  IDs dos imoveis
+                  <input type="text" name="property_ids" required placeholder="1,2,3" />
+                </label>
+                <label>
+                  Categoria OLX
+                  <input type="number" name="category" required placeholder="1010" />
+                </label>
+                <label>
+                  CEP do anuncio
+                  <input type="text" name="zipcode" required placeholder="89280000" />
+                </label>
+                <label>
+                  Telefone
+                  <input type="text" name="phone" placeholder="47999998888" />
+                </label>
+                <label>
+                  Tipo da oferta
+                  <select name="type">
+                    <option value="u">Aluguel</option>
+                    <option value="s">Venda</option>
+                  </select>
+                </label>
+                <label class="full">
+                  Params OLX em JSON
+                  <textarea name="params_json" rows="4" placeholder='{"parametro_exemplo": "valor"}'></textarea>
+                </label>
+                <button class="button" type="submit">Enviar para a OLX</button>
+                <p class="form-status" data-olx-import-status></p>
+              </form>
+
+              <div class="callout is-hidden" data-olx-import-result>
+                <strong>Retorno OLX:</strong>
+                <pre class="code-panel" data-olx-import-payload></pre>
+              </div>
+            </section>
+
+            <section class="detail-card section-stack">
+              <div>
+                <h3>4. Consultar anuncios publicados</h3>
+                <p class="muted">Consulte os anuncios do anunciante na OLX usando o access token oficial.</p>
+              </div>
+
+              <form class="form-grid" data-olx-published-form>
+                <label>
+                  Access token OLX
+                  <input type="text" name="access_token" required placeholder="token OAuth da OLX" />
+                </label>
+                <label>
+                  Status
+                  <select name="ads_status">
+                    <option value="">Todos</option>
+                    <option value="published">Publicado</option>
+                    <option value="pending_review">Em revisao</option>
+                    <option value="deleted">Excluido</option>
+                    <option value="refused">Recusado</option>
+                  </select>
+                </label>
+                <label>
+                  Tamanho da pagina
+                  <input type="number" name="fetch_size" min="1" max="200" value="10" />
+                </label>
+                <label>
+                  Page token
+                  <input type="text" name="page_token" placeholder="token da proxima pagina" />
+                </label>
+                <button class="button" type="submit">Consultar OLX</button>
+                <p class="form-status" data-olx-published-status></p>
+              </form>
+
+              <div class="callout is-hidden" data-olx-published-result>
+                <strong>Anuncios publicados:</strong>
+                <pre class="code-panel" data-olx-published-payload></pre>
+              </div>
+            </section>
+          </div>
+        </div>
       </section>
     </main>
 

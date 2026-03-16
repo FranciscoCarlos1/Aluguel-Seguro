@@ -407,6 +407,11 @@ textarea {
   gap: 10px;
 }
 
+.property-card--external {
+  border-color: #d7c3a7;
+  background: #fffaf3;
+}
+
 .property-price {
   font-size: 1.2rem;
   font-weight: 700;
@@ -426,6 +431,17 @@ textarea {
   background: #fff5e9;
   color: var(--accent-dark);
   font-weight: 700;
+}
+
+.form-actions-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.external-search-note {
+  margin-top: 12px;
 }
 
 @media (max-width: 720px) {
@@ -563,6 +579,24 @@ textarea {
   font-size: 1rem;
   color: var(--ink);
   font-weight: 600;
+}
+
+.integration-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.code-panel {
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  background: #f7efe4;
+  color: #4f3a28;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.9rem;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .is-hidden {

@@ -35,4 +35,18 @@ return [
         ],
     ],
 
+    'olx' => [
+        'client_id' => env('OLX_CLIENT_ID'),
+        'client_secret' => env('OLX_CLIENT_SECRET'),
+        'auth_base_url' => env('OLX_AUTH_BASE_URL', 'https://auth.olx.com.br'),
+        'apps_base_url' => env('OLX_APPS_BASE_URL', 'https://apps.olx.com.br'),
+    ],
+
+    'google_search' => [
+        'api_key' => env('GOOGLE_SEARCH_API_KEY'),
+        'engine_id' => env('GOOGLE_SEARCH_ENGINE_ID'),
+        'base_url' => env('GOOGLE_SEARCH_BASE_URL', 'https://www.googleapis.com/customsearch/v1'),
+        'site_query' => env('GOOGLE_SEARCH_SITE_QUERY', 'site:olx.com.br OR site:vivareal.com.br OR site:zapimoveis.com.br'),
+    ],
+
 ];
