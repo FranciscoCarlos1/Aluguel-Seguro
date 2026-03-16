@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Contrato Digital - Aluguel Seguro</title>
+    <link rel="stylesheet" href="../assets/css/styles.css" />
+  </head>
+  <body class="page-contract" data-page="contract">
+    <div class="backdrop"></div>
+    <header class="site-header">
+      <a class="brand" href="index.html">Aluguel Seguro</a>
+      <nav class="nav-links">
+        <a href="index.html">Inicio</a>
+        <a href="login.html" data-guest-only>Entrar</a>
+        <a href="register.html" data-guest-only>Cadastro</a>
+        <a href="profile.html" class="button ghost" data-auth-only>Perfil</a>
+        <div class="session-status">
+          <span data-session-label>Sem sessao</span>
+          <button class="button ghost session-action" type="button" data-session-action>
+            Entrar
+          </button>
+        </div>
+      </nav>
+    </header>
+    <main class="panel panel-wide">
+      <section class="panel-card panel-card--wide reveal">
+        <h1>Contrato Digital</h1>
+        <div id="contract-content">
+          <p>Carregando contrato...</p>
+        </div>
+        <form id="contract-sign-form" style="display:none;">
+          <label>
+            Confirme seu IP para assinatura:
+            <input type="text" name="signer_ip" required placeholder="Seu IP" />
+          </label>
+          <button class="button" type="submit">Assinar Contrato</button>
+          <p class="form-status" data-status></p>
+        </form>
+      </section>
+    </main>
+    <script src="env.js"></script>
+    <script src="../assets/js/app.js"></script>
+  </body>
+</html>

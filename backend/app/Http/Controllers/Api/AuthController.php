@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AuthLoginRequest;
 use App\Http\Requests\AuthRegisterRequest;
+use App\Models\Landlord;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
@@ -14,16 +16,34 @@ class AuthController extends Controller
     {
         $data = $request->validated();
 
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-        ]);
+        [$user, $landlord] = DB::transaction(function () use ($data) {
+            $user = User::create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'password' => Hash::make($data['password']),
+            ]);
+
+            $landlord = Landlord::firstOrNew(['email' => $data['email']]);
+            if (!$landlord->exists) {
+                $landlord->created_by = $data['email'];
+            }
+
+            $landlord->fill([
+                'name' => $data['name'],
+                'phone' => $data['phone'],
+                'status' => $landlord->status ?: 'active',
+                'updated_by' => $data['email'],
+            ]);
+            $landlord->save();
+
+            return [$user, $landlord->fresh()];
+        });
 
         $token = $user->createToken('api')->plainTextToken;
 
         return response()->json([
             'user' => $user,
+            'landlord' => $landlord,
             'token' => $token,
         ], 201);
     }

@@ -245,6 +245,7 @@ const formHandlers = {
     const payload = {
       name: formData.get("name"),
       email: formData.get("email"),
+      phone: formData.get("phone"),
       password: formData.get("password"),
       password_confirmation: formData.get("password_confirmation"),
     };
@@ -257,15 +258,6 @@ const formHandlers = {
     setToken(response.token);
     AppState.session = response.user;
     setSessionEmail(response.user.email);
-
-    await apiRequest("/landlords", {
-      method: "POST",
-      body: JSON.stringify({
-        name: formData.get("name"),
-        email: formData.get("email"),
-        phone: formData.get("phone"),
-      }),
-    });
 
     setStatus(status, "Cadastro realizado. Voce ja pode criar perfis.");
     updateSessionUI();
@@ -1426,6 +1418,109 @@ const initPropertyDetail = () => {
   loadProperty();
 };
 
+const initContractPage = () => {
+  const page = document.querySelector('[data-page="contract"]');
+  if (!page) {
+    return;
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const contractId = params.get("id");
+  const content = document.getElementById("contract-content");
+  const signForm = document.getElementById("contract-sign-form");
+  const status = signForm?.querySelector("[data-status]");
+
+  const renderContract = (contract) => {
+    if (!content) {
+      return;
+    }
+
+    content.innerHTML = "";
+
+    if (!contract) {
+      content.innerHTML = "<p>Contrato nao encontrado.</p>";
+      if (signForm) {
+        signForm.style.display = "none";
+      }
+      return;
+    }
+
+    const pre = document.createElement("pre");
+    pre.textContent = contract.contract_text || "Contrato sem conteudo.";
+    content.appendChild(pre);
+
+    if (signForm) {
+      signForm.style.display = contract.status === "draft" ? "" : "none";
+    }
+  };
+
+  const loadContract = async () => {
+    if (!contractId) {
+      if (content) {
+        content.innerHTML = "<p>Contrato nao informado.</p>";
+      }
+      setStatus(status, "Contrato nao informado.", true);
+      return;
+    }
+
+    if (!getToken()) {
+      if (content) {
+        content.innerHTML = "<p>Faca login para visualizar o contrato.</p>";
+      }
+      if (signForm) {
+        signForm.style.display = "none";
+      }
+      setStatus(status, "Faca login para acessar o contrato.", true);
+      return;
+    }
+
+    setStatus(status, "Carregando contrato...");
+
+    try {
+      const response = await apiRequest(`/contracts/${contractId}`);
+      const contract = response.contract || response.data || response;
+      renderContract(contract);
+      setStatus(
+        status,
+        contract?.status === "draft"
+          ? "Contrato carregado. Assine quando estiver pronto."
+          : "Contrato carregado."
+      );
+    } catch (error) {
+      if (content) {
+        content.innerHTML = `<p>${error.message}</p>`;
+      }
+      if (signForm) {
+        signForm.style.display = "none";
+      }
+      setStatus(status, error.message, true);
+    }
+  };
+
+  if (signForm) {
+    signForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      setStatus(status, "Assinando contrato...");
+
+      try {
+        const formData = new FormData(signForm);
+        const response = await apiRequest(`/contracts/${contractId}/sign`, {
+          method: "POST",
+          body: JSON.stringify({ signer_ip: formData.get("signer_ip") }),
+        });
+
+        renderContract(response.contract || response.data || response);
+        setStatus(status, response.message || "Contrato assinado com sucesso.");
+      } catch (error) {
+        setStatus(status, error.message, true);
+      }
+    });
+  }
+
+  loadContract();
+};
+
 document.addEventListener("DOMContentLoaded", () => {
   trackLastRoute();
   updateSessionUI();
@@ -1436,6 +1531,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initLandlordEdit();
   initMarketplace();
   initPropertyDetail();
+  initContractPage();
   const forms = document.querySelectorAll("[data-form]");
   forms.forEach((form) => {
     form.addEventListener("submit", async (event) => {
