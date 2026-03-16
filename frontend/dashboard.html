@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Painel do Locador - Aluguel Seguro</title>
+    <link rel="stylesheet" href="../assets/css/styles.css" />
+  </head>
+  <body class="page-dashboard" data-page="dashboard">
+    <div class="backdrop"></div>
+    <header class="site-header">
+      <a class="brand" href="index.html">Aluguel Seguro</a>
+      <nav class="nav-links">
+        <a href="index.html">Marketplace</a>
+        <a href="dashboard.html" data-auth-only>Painel</a>
+        <a href="properties.html" data-auth-only>Imoveis</a>
+        <a href="leads.html" data-auth-only>Interesses</a>
+        <a href="visits.html" data-auth-only>Visitas</a>
+        <a href="services.html" data-auth-only>Servicos</a>
+        <a href="support.html" data-auth-only>Suporte</a>
+        <a href="login.html" data-guest-only>Entrar</a>
+        <a href="register.html" data-guest-only>Cadastro</a>
+        <div class="session-status">
+          <span data-session-label>Sem sessao</span>
+          <button class="button ghost session-action" type="button" data-session-action>Entrar</button>
+        </div>
+      </nav>
+    </header>
+
+    <main class="panel panel-wide">
+      <section class="panel-card panel-card--wide reveal section-stack">
+        <div class="section-heading">
+          <div>
+            <h1>Painel do locador</h1>
+            <p class="muted">Uma operacao simples para divulgar imoveis, avaliar perfis, acionar visitas e fechar contratos seguros sem a burocracia da imobiliaria.</p>
+            <div class="live-pill" data-dashboard-live-tag>Sincronizando dados da API...</div>
+          </div>
+          <div class="action-row">
+            <a class="button" href="property-form.html">Cadastrar novo imovel</a>
+            <a class="button ghost" href="leads.html">Ver interesses</a>
+          </div>
+        </div>
+
+        <div class="match-hero">
+          <article class="match-panel">
+            <h2>Match seguro entre locador e inquilino</h2>
+            <p class="muted">O sistema cruza publico ideal, rotina familiar, momento de vida e responsabilidade financeira para reduzir desencontro e aumentar previsibilidade.</p>
+            <div class="match-scoreline">
+              <div class="metric-box"><strong data-dashboard-landlord>Locador</strong><span>perfil principal</span></div>
+              <div class="metric-box"><strong>SC</strong><span>operacao regional</span></div>
+              <div class="metric-box"><strong>Digital</strong><span>contrato e assinatura</span></div>
+            </div>
+          </article>
+          <div class="persona-cluster">
+            <article class="persona-card">
+              <strong>Locador alvo</strong>
+              <span>55 a 65 anos, renda extra com aluguel, busca menos incomodo e mais seguranca contratual.</span>
+            </article>
+            <article class="persona-card">
+              <strong>Inquilino alvo</strong>
+              <span>25 a 35 anos, vindo de fora de SC, renda de R$ 2.500 a R$ 3.000 e foco em estabilidade familiar.</span>
+            </article>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <article class="stat-card">
+            <strong data-dashboard-properties>0</strong>
+            <span>imoveis em divulgacao</span>
+          </article>
+          <article class="stat-card">
+            <strong data-dashboard-leads>0</strong>
+            <span>perfis liberados para decisao</span>
+          </article>
+          <article class="stat-card">
+            <strong data-dashboard-visits>0</strong>
+            <span>visitas confirmadas pela equipe</span>
+          </article>
+          <article class="stat-card">
+            <strong data-dashboard-revenue>R$ 0,00</strong>
+            <span>receita estimada entre taxa e servico mensal</span>
+          </article>
+        </div>
+
+        <div class="section-split">
+          <article class="info-card">
+            <h2>Alertas operacionais</h2>
+            <ul class="timeline-list" data-dashboard-alerts></ul>
+          </article>
+          <article class="process-card">
+            <h2>Como o fluxo acontece</h2>
+            <ul class="check-list" data-dashboard-steps></ul>
+          </article>
+        </div>
+
+        <div class="quick-grid">
+          <article class="info-card">
+            <h2>Carteira de imoveis</h2>
+            <p>Cadastre ate 5 imoveis, revise garantias aceitas e deixe claro o publico ideal para cada anuncio.</p>
+            <a class="link" href="properties.html">Abrir carteira</a>
+          </article>
+          <article class="info-card">
+            <h2>Central de interesses</h2>
+            <p>Veja quem pagou a taxa de R$ 4,99, libere perfil e escolha entre contatar ou reprovar o candidato.</p>
+            <a class="link" href="leads.html">Abrir central</a>
+          </article>
+          <article class="info-card">
+            <h2>Agenda com suporte</h2>
+            <p>Nossa equipe organiza contato por telefone e WhatsApp para poupar o locador das etapas operacionais.</p>
+            <a class="link" href="visits.html">Ver agenda</a>
+          </article>
+          <article class="info-card">
+            <h2>Contrato e cobranca</h2>
+            <p>Ative caucao reduzida, seguro incendio, taxa de lixo e a secretaria mensal de R$ 49,99.</p>
+            <a class="link" href="services.html">Configurar servicos</a>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <script src="env.js"></script>
+    <script src="../assets/js/app.js"></script>
+    <script src="../assets/js/portal.js"></script>
+  </body>
+</html>

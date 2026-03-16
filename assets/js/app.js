@@ -238,7 +238,7 @@ const formHandlers = {
     setSessionEmail(response.user.email);
     setStatus(status, `Sessao iniciada para ${response.user.email}.`);
     updateSessionUI();
-    window.location.href = getLastRoute() || "tenants.html";
+    window.location.href = getLastRoute() || "dashboard.html";
   },
   async register(form, status) {
     const formData = new FormData(form);
@@ -261,7 +261,7 @@ const formHandlers = {
 
     setStatus(status, "Cadastro realizado. Voce ja pode criar perfis.");
     updateSessionUI();
-    window.location.href = getLastRoute() || "tenants.html";
+    window.location.href = getLastRoute() || "dashboard.html";
   },
   async profile(form, status) {
     if (!getToken()) {

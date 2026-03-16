@@ -6,7 +6,7 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => array_filter(
-        explode(',', env('CORS_ALLOWED_ORIGINS', 'http://localhost'))
+        array_map('trim', explode(',', env('CORS_ALLOWED_ORIGINS', 'http://localhost:5500,http://127.0.0.1:5500,http://localhost:8000,http://127.0.0.1:8000')))
     ),
 
     'allowed_origins_patterns' => [],

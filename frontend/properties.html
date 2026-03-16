@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Carteira de Imoveis - Aluguel Seguro</title>
+    <link rel="stylesheet" href="../assets/css/styles.css" />
+  </head>
+  <body class="page-properties" data-page="properties">
+    <div class="backdrop"></div>
+    <header class="site-header">
+      <a class="brand" href="index.html">Aluguel Seguro</a>
+      <nav class="nav-links">
+        <a href="dashboard.html" data-auth-only>Painel</a>
+        <a href="properties.html" data-auth-only>Imoveis</a>
+        <a href="leads.html" data-auth-only>Interesses</a>
+        <a href="visits.html" data-auth-only>Visitas</a>
+        <a href="services.html" data-auth-only>Servicos</a>
+        <a href="support.html" data-auth-only>Suporte</a>
+        <a href="login.html" data-guest-only>Entrar</a>
+        <a href="register.html" data-guest-only>Cadastro</a>
+        <div class="session-status">
+          <span data-session-label>Sem sessao</span>
+          <button class="button ghost session-action" type="button" data-session-action>Entrar</button>
+        </div>
+      </nav>
+    </header>
+
+    <main class="panel panel-wide">
+      <section class="panel-card panel-card--wide reveal section-stack">
+        <div class="section-heading">
+          <div>
+            <h1>Carteira de imoveis</h1>
+            <p class="muted">Organize os imoveis do locador, defina garantias enxutas e acompanhe quais anuncios atraem o publico certo.</p>
+          </div>
+          <a class="button" href="property-form.html">Adicionar imovel</a>
+        </div>
+
+        <div class="callout">
+          A proposta da plataforma e reduzir friccao: caucao maxima de um aluguel, contrato simples, analise de perfil e suporte humanizado ao locador de 55 a 65 anos.
+        </div>
+
+        <p class="form-status" data-property-library-status></p>
+
+        <div class="section-split">
+          <article class="info-card section-stack">
+            <div class="section-heading">
+              <div>
+                <h2>Imoveis publicados na API</h2>
+                <p class="muted">Anuncios reais carregados do backend atual.</p>
+              </div>
+            </div>
+            <div class="section-stack" data-property-library-live></div>
+          </article>
+          <article class="info-card section-stack">
+            <div class="section-heading">
+              <div>
+                <h2>Carteira operacional local</h2>
+                <p class="muted">Rascunhos e configuracoes de apoio para o fluxo assistido.</p>
+              </div>
+            </div>
+            <div class="section-stack" data-property-library-local></div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <script src="env.js"></script>
+    <script src="../assets/js/app.js"></script>
+    <script src="../assets/js/portal.js"></script>
+  </body>
+</html>

@@ -1,1 +1,2 @@
-window.ALUGUEL_API_BASE_URL = "http://localhost:8000/api/v1";
+const aluguelSeguroApiHost = window.location.hostname || "localhost";
+window.ALUGUEL_API_BASE_URL = `http://${aluguelSeguroApiHost}:8000/api/v1`;

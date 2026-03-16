@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Servicos e Contratos - Aluguel Seguro</title>
+    <link rel="stylesheet" href="../assets/css/styles.css" />
+  </head>
+  <body class="page-services" data-page="services">
+    <div class="backdrop"></div>
+    <header class="site-header">
+      <a class="brand" href="index.html">Aluguel Seguro</a>
+      <nav class="nav-links">
+        <a href="dashboard.html" data-auth-only>Painel</a>
+        <a href="properties.html" data-auth-only>Imoveis</a>
+        <a href="leads.html" data-auth-only>Interesses</a>
+        <a href="visits.html" data-auth-only>Visitas</a>
+        <a href="services.html" data-auth-only>Servicos</a>
+        <a href="support.html" data-auth-only>Suporte</a>
+        <div class="session-status">
+          <span data-session-label>Sem sessao</span>
+          <button class="button ghost session-action" type="button" data-session-action>Entrar</button>
+        </div>
+      </nav>
+    </header>
+
+    <main class="panel panel-wide">
+      <section class="panel-card panel-card--wide reveal section-stack">
+        <div>
+          <h1>Contrato, cobranca e servicos</h1>
+          <p class="muted">Configure garantias simples, clausulas de cancelamento e o servico mensal de secretaria para boletos, inadimplencia e reajuste.</p>
+        </div>
+
+        <div class="service-grid">
+          <article class="info-card">
+            <h2>O que entra no contrato</h2>
+            <ul class="bullet-list">
+              <li>Contracheque ou pro-labore como garantia opcional.</li>
+              <li>Caucao sem ultrapassar o valor de um aluguel.</li>
+              <li>Clausula de cancelamento e multa proporcional.</li>
+              <li>Seguro incendio e taxa de lixo pagos na assinatura.</li>
+              <li>Analise de perfil como garantia secundaria.</li>
+            </ul>
+          </article>
+          <article class="info-card">
+            <h2>Secretaria do locador</h2>
+            <p>Por R$ 49,99 ao mes a equipe acompanha boletos, reajuste legal e cobranca de inadimplentes com atendimento humanizado.</p>
+            <div class="callout">Ideal para locadores de 55 a 65 anos que usam o aluguel como renda extra e querem menos incomodo.</div>
+          </article>
+        </div>
+
+        <form class="form-grid form-grid--two" data-service-form>
+          <label>
+            <input type="checkbox" name="require_paystub" />
+            Exigir contracheque
+          </label>
+          <label>
+            <input type="checkbox" name="require_prolabore" />
+            Exigir pro-labore
+          </label>
+          <label>
+            <input type="checkbox" name="enable_serasa" />
+            Autorizar previsao de SPC/Serasa em caso de inadimplencia
+          </label>
+          <label>
+            <input type="checkbox" name="enable_secretary" />
+            Ativar servico mensal de secretaria e cobranca
+          </label>
+          <label>
+            Caucao maxima permitida
+            <input type="number" name="deposit_amount" min="0" step="0.01" />
+          </label>
+          <label>
+            Multa de cancelamento
+            <input type="number" name="cancellation_fee" min="0" step="0.01" />
+          </label>
+          <label>
+            Parcelamento inicial de boleto
+            <select name="boleto_installments">
+              <option value="1">1x</option>
+              <option value="2">2x</option>
+              <option value="3">3x</option>
+            </select>
+          </label>
+          <div class="full">
+            <button class="button" type="submit">Salvar politica</button>
+            <p class="form-status" data-service-status></p>
+          </div>
+        </form>
+
+        <div class="report-grid" data-service-summary></div>
+      </section>
+    </main>
+
+    <script src="env.js"></script>
+    <script src="../assets/js/app.js"></script>
+    <script src="../assets/js/portal.js"></script>
+  </body>
+</html>

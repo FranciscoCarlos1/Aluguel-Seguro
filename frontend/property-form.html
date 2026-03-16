@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cadastrar Imovel - Aluguel Seguro</title>
+    <link rel="stylesheet" href="../assets/css/styles.css" />
+  </head>
+  <body class="page-property-form" data-page="property-form">
+    <div class="backdrop"></div>
+    <header class="site-header">
+      <a class="brand" href="index.html">Aluguel Seguro</a>
+      <nav class="nav-links">
+        <a href="dashboard.html" data-auth-only>Painel</a>
+        <a href="properties.html" data-auth-only>Imoveis</a>
+        <a href="leads.html" data-auth-only>Interesses</a>
+        <a href="services.html" data-auth-only>Servicos</a>
+        <a href="support.html" data-auth-only>Suporte</a>
+        <div class="session-status">
+          <span data-session-label>Sem sessao</span>
+          <button class="button ghost session-action" type="button" data-session-action>Entrar</button>
+        </div>
+      </nav>
+    </header>
+
+    <main class="panel panel-wide">
+      <section class="panel-card panel-card--wide reveal section-stack">
+        <div>
+          <h1>Cadastrar novo imovel</h1>
+          <p class="muted">Monte um anuncio claro para o publico que vem de fora de SC, busca previsibilidade e nao consegue atender exigencias excessivas de imobiliaria.</p>
+        </div>
+
+        <form class="form-grid form-grid--two" data-property-form>
+          <label>
+            Titulo do imovel
+            <input type="text" name="title" required placeholder="Ex: Casa com patio e rotina silenciosa" />
+          </label>
+          <label>
+            Cidade
+            <input type="text" name="city" required placeholder="Joinville" />
+          </label>
+          <label>
+            Bairro
+            <input type="text" name="neighborhood" required placeholder="Saguacu" />
+          </label>
+          <label>
+            Tipo de imovel
+            <select name="property_type" required>
+              <option value="apartamento">Apartamento</option>
+              <option value="kitnet">Kitnet</option>
+              <option value="casa">Casa</option>
+              <option value="casa_condominio">Casa em condominio</option>
+            </select>
+          </label>
+          <label>
+            Valor do aluguel
+            <input type="number" name="rent_price" min="0" step="0.01" required placeholder="1850" />
+          </label>
+          <label>
+            Quartos
+            <input type="number" name="bedrooms" min="1" max="6" required placeholder="2" />
+          </label>
+          <label>
+            Possui garagem?
+            <select name="has_garage" required>
+              <option value="1">Sim</option>
+              <option value="0">Nao</option>
+            </select>
+          </label>
+          <label>
+            WhatsApp do locador
+            <input type="tel" name="whatsapp" required placeholder="(47) 99999-0000" />
+          </label>
+          <label>
+            Caucao maxima
+            <input type="number" name="deposit_amount" min="0" step="0.01" placeholder="1850" />
+          </label>
+          <label>
+            Nivel de apoio da equipe
+            <select name="support_level" required>
+              <option value="essencial">Essencial</option>
+              <option value="completo">Completo</option>
+              <option value="premium">Premium</option>
+            </select>
+          </label>
+          <label class="full">
+            Descricao do anuncio
+            <textarea name="description" rows="4" required placeholder="Explique rotina, localizacao, perfil ideal e diferenciais do imovel."></textarea>
+          </label>
+          <label class="full">
+            Garantias e clausulas sugeridas
+            <textarea name="guarantee_notes" rows="4" placeholder="Ex: contracheque ou pro-labore, caucao de um aluguel, multa de cancelamento, seguro incendio e taxa de lixo."></textarea>
+          </label>
+          <button class="button" type="submit">Salvar imovel</button>
+          <p class="form-status" data-property-form-status></p>
+        </form>
+      </section>
+    </main>
+
+    <script src="env.js"></script>
+    <script src="../assets/js/app.js"></script>
+    <script src="../assets/js/portal.js"></script>
+  </body>
+</html>
