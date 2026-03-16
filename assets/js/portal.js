@@ -285,6 +285,10 @@ const loadPortalRemoteData = async () => {
 
   if (token) {
     requests.push(portalApiRequest("/tenants?per_page=50"));
+    requests.push(portalApiRequest("/landlord/properties"));
+    requests.push(portalApiRequest("/landlord/interests"));
+    requests.push(portalApiRequest("/landlord/visits"));
+    requests.push(portalApiRequest("/landlord/support-tickets"));
     requests.push(
       portalApiRequest("/landlords/me").catch((error) => {
         if (error.status === 404 || error.status === 401) {
@@ -295,14 +299,73 @@ const loadPortalRemoteData = async () => {
     );
   }
 
-  const [propertiesResponse, tenantsResponse, landlordResponse] = await Promise.all(requests);
+  const [
+    propertiesResponse,
+    tenantsResponse,
+    landlordPropertiesResponse,
+    interestsResponse,
+    visitsResponse,
+    supportTicketsResponse,
+    landlordResponse
+  ] = await Promise.all(requests);
 
   return {
     liveProperties: propertiesResponse?.data || [],
     liveTenants: tenantsResponse?.data || [],
+    landlordProperties: landlordPropertiesResponse?.data || [],
+    landlordInterests: interestsResponse?.data || [],
+    landlordVisits: visitsResponse?.data || [],
+    supportTickets: supportTicketsResponse?.data || [],
     landlord: landlordResponse?.data || landlordResponse || null
   };
 };
+
+const mapInterestToLead = (interest) => ({
+  id: String(interest.id),
+  propertyId: interest.property?.id,
+  tenantName: interest.profile?.full_name || "Perfil sem nome",
+  ageRange: interest.profile?.age_range || "Nao informado",
+  origin: interest.profile?.rental_reason || "Origem nao informada",
+  family: `${interest.profile?.household_size || 1} pessoa(s) no grupo familiar`,
+  occupation: interest.profile?.occupation || "Profissao nao informada",
+  income: Number(interest.profile?.monthly_income || 0),
+  score: Number(interest.profile?.score || 0),
+  feePaid: interest.payment_status === "paid",
+  status: interest.landlord_decision || (interest.payment_status === "paid" ? "profile_unlocked" : "pending_fee"),
+  phone: interest.profile?.phone || "",
+  questionnaire: [
+    {
+      question: "Compatibilidade geral",
+      answer: `${interest.profile?.score || 0}/100`,
+      note: interest.landlord_notes || "Perfil analisado pela equipe a partir do questionario comportamental."
+    }
+  ],
+  rejectionReason: interest.landlord_decision === "rejected" ? interest.landlord_notes : "",
+  contract: interest.contract || null,
+  updated_at: interest.updated_at
+});
+
+const mapVisitToCard = (visit) => ({
+  id: String(visit.id),
+  leadId: String(visit.property_interest_id),
+  propertyId: visit.property?.id || visit.property_id,
+  tenantName: visit.interest?.profile?.full_name || "Interessado",
+  when: visit.scheduled_for,
+  mode: visit.mode || "presencial",
+  status: visit.status,
+  operator: visit.operator_name || "Equipe Aluguel Seguro"
+});
+
+const mapSupportTicket = (ticket) => ({
+  id: String(ticket.id),
+  name: ticket.name,
+  phone: ticket.phone,
+  topic: ticket.topic,
+  preferredTime: ticket.preferred_time,
+  notes: ticket.notes,
+  status: ticket.status,
+  createdAt: ticket.created_at
+});
 
 const portalStatusClass = (status) => {
   if (["pending_fee", "requested"].includes(status)) {
@@ -388,11 +451,13 @@ const initDashboardPage = async () => {
 
   try {
     const remote = await loadPortalRemoteData();
-    const activeProperties = remote.liveProperties.length + state.properties.length;
+    const activeProperties = (remote.landlordProperties?.length || remote.liveProperties.length) + state.properties.length;
     const liveTenants = remote.liveTenants.length;
-    const pendingFees = state.leads.filter((lead) => lead.status === "pending_fee");
-    const unlockedProfiles = state.leads.filter((lead) => lead.feePaid);
-    const confirmedVisits = state.visits.filter((visit) => visit.status === "confirmed");
+    const liveLeads = (remote.landlordInterests || []).map(mapInterestToLead);
+    const liveVisits = (remote.landlordVisits || []).map(mapVisitToCard);
+    const pendingFees = liveLeads.filter((lead) => lead.status === "pending_fee");
+    const unlockedProfiles = liveLeads.filter((lead) => lead.feePaid);
+    const confirmedVisits = liveVisits.filter((visit) => visit.status === "confirmed");
 
     if (summaryNodes.properties) {
       summaryNodes.properties.textContent = String(activeProperties);
@@ -413,15 +478,15 @@ const initDashboardPage = async () => {
     }
 
     if (liveTag) {
-      liveTag.textContent = `${remote.liveProperties.length} imovel(is) reais da API · ${liveTenants} perfil(is) real(is) de inquilino`;
+      liveTag.textContent = `${remote.landlordProperties?.length || 0} imovel(is) do locador · ${liveLeads.length} interesse(s) real(is) · ${confirmedVisits.length} visita(s)`;
     }
 
     if (alerts) {
       alerts.innerHTML = [
         `${pendingFees.length} interesse(s) aguardando taxa de R$ 4,99 para liberar perfil.`,
-        `${remote.liveProperties.length} anuncio(s) reais disponiveis hoje na API.`,
+        `${remote.landlordProperties?.length || remote.liveProperties.length} anuncio(s) reais disponiveis hoje na API.`,
         `${confirmedVisits.length} visita(s) ja confirmadas com suporte humanizado.`,
-        `${state.supportTickets.length} atendimento(s) abertos para telefone ou WhatsApp.`
+        `${(remote.supportTickets || []).length} atendimento(s) abertos para telefone ou WhatsApp.`
       ]
         .map((item) => `<li>${portalEscapeHtml(item)}</li>`)
         .join("");
@@ -518,14 +583,15 @@ const initPropertiesPage = async () => {
 
   try {
     const remote = await loadPortalRemoteData();
-    liveList.innerHTML = remote.liveProperties.length
-      ? remote.liveProperties
+    const landlordProperties = remote.landlordProperties?.length ? remote.landlordProperties : remote.liveProperties;
+    liveList.innerHTML = landlordProperties.length
+      ? landlordProperties
           .map((property) => renderPropertyCard(property, 0, "Publicado na API"))
           .join("")
       : '<div class="empty-state">Nenhum imovel real encontrado na API.</div>';
 
     if (status) {
-      status.textContent = `${remote.liveProperties.length} imovel(is) real(is) carregados da API.`;
+      status.textContent = `${landlordProperties.length} imovel(is) real(is) carregados da API.`;
     }
   } catch (error) {
     liveList.innerHTML = `<div class="empty-state">${portalEscapeHtml(error.message)}</div>`;
@@ -547,10 +613,36 @@ const initPropertyFormPage = () => {
     return;
   }
 
-  form.addEventListener('submit', (event) => {
+  form.addEventListener('submit', async (event) => {
     event.preventDefault();
     const formData = new FormData(form);
     const state = loadPortalState();
+    const payload = {
+      title: formData.get('title'),
+      city: formData.get('city'),
+      state: 'SC',
+      address_neighborhood: formData.get('neighborhood'),
+      property_type: formData.get('property_type'),
+      rent_price: Number(formData.get('rent_price') || 0),
+      bedrooms: Number(formData.get('bedrooms') || 1),
+      has_garage: formData.get('has_garage') === '1',
+      description: formData.get('description'),
+      is_active: true
+    };
+
+    try {
+      if (localStorage.getItem(PORTAL_AUTH_TOKEN_KEY)) {
+        await portalApiRequest('/landlord/properties', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        form.reset();
+        setPortalStatus(status, 'Imovel publicado no backend com sucesso.');
+        return;
+      }
+    } catch (error) {
+      setPortalStatus(status, `Falha ao publicar na API: ${error.message}. Salvando localmente.`);
+    }
 
     state.properties.unshift({
       id: `local-property-${Date.now()}`,
@@ -588,16 +680,29 @@ const initLeadsPage = () => {
     return;
   }
 
-  const render = () => {
+  const render = async () => {
     const state = loadPortalState();
-    if (state.leads.length === 0) {
+    let leads = state.leads;
+    let properties = state.properties;
+
+    try {
+      if (localStorage.getItem(PORTAL_AUTH_TOKEN_KEY)) {
+        const remote = await loadPortalRemoteData();
+        leads = (remote.landlordInterests || []).map(mapInterestToLead);
+        properties = remote.landlordProperties || properties;
+      }
+    } catch (error) {
+      setPortalStatus(status, `Modo local ativo: ${error.message}`);
+    }
+
+    if (leads.length === 0) {
       list.innerHTML = '<div class="empty-state">Nenhum interesse registrado ainda.</div>';
       return;
     }
 
-    list.innerHTML = state.leads
+    list.innerHTML = leads
       .map((lead) => {
-        const property = getPropertyById(state, lead.propertyId);
+        const property = properties.find((item) => String(item.id) === String(lead.propertyId));
         const actions = [];
         if (!lead.feePaid) {
           actions.push(`<button class="button" type="button" data-action="mark-paid" data-lead-id="${portalEscapeHtml(lead.id)}">Confirmar taxa de R$ 4,99</button>`);
@@ -648,7 +753,7 @@ const initLeadsPage = () => {
       .join('');
   };
 
-  list.addEventListener('click', (event) => {
+  list.addEventListener('click', async (event) => {
     const button = event.target.closest('[data-action]');
     if (!button) {
       return;
@@ -656,6 +761,57 @@ const initLeadsPage = () => {
 
     const state = loadPortalState();
     const lead = state.leads.find((item) => item.id === button.dataset.leadId);
+    const token = localStorage.getItem(PORTAL_AUTH_TOKEN_KEY);
+
+    try {
+      if (token) {
+        if (button.dataset.action === 'mark-paid') {
+          await portalApiRequest(`/landlord/interests/${button.dataset.leadId}/mark-paid`, { method: 'POST', body: JSON.stringify({}) });
+          setPortalStatus(status, 'Taxa confirmada no backend.');
+        }
+
+        if (button.dataset.action === 'request-contact') {
+          await portalApiRequest(`/landlord/interests/${button.dataset.leadId}/request-contact`, { method: 'POST', body: JSON.stringify({}) });
+          setPortalStatus(status, 'Equipe acionada para contato e visita.');
+        }
+
+        if (button.dataset.action === 'reject-profile') {
+          await portalApiRequest(`/landlord/interests/${button.dataset.leadId}/reject`, {
+            method: 'POST',
+            body: JSON.stringify({ reason: 'Perfil nao apropriado para a rotina deste imovel.' })
+          });
+          setPortalStatus(status, 'Perfil encerrado no backend.');
+        }
+
+        if (button.dataset.action === 'prepare-contract') {
+          const liveProperty = lead ? getPropertyById(state, lead.propertyId) : null;
+          await portalApiRequest(`/landlord/interests/${button.dataset.leadId}/generate-contract`, {
+            method: 'POST',
+            body: JSON.stringify({
+              start_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+              end_date: new Date(Date.now() + 372 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+              rent_amount: Number(liveProperty?.rent_price || state.services.depositAmount || 0),
+              deposit_amount: Number(state.services.depositAmount || 0),
+              fire_insurance: 38.5,
+              garbage_fee: 21.5,
+              boleto_installments: Number(state.services.boletoInstallments || 1),
+              cancellation_fee: Number(state.services.cancellationFee || 0),
+              require_paystub: Boolean(state.services.requirePaystub),
+              require_prolabore: Boolean(state.services.requireProlabore),
+              enable_serasa: Boolean(state.services.enableSerasa)
+            })
+          });
+          setPortalStatus(status, 'Contrato digital e boletos iniciais gerados.');
+        }
+
+        await render();
+        return;
+      }
+    } catch (error) {
+      setPortalStatus(status, error.message);
+      return;
+    }
+
     if (!lead) {
       return;
     }
@@ -708,10 +864,21 @@ const initVisitsPage = () => {
     return;
   }
 
-  const renderVisits = () => {
+  const renderVisits = async () => {
     const state = loadPortalState();
-    const requested = state.visits.filter((visit) => visit.status === 'requested');
-    const scheduled = state.visits.filter((visit) => visit.status === 'confirmed');
+    let visits = state.visits;
+
+    try {
+      if (localStorage.getItem(PORTAL_AUTH_TOKEN_KEY)) {
+        const remote = await loadPortalRemoteData();
+        visits = (remote.landlordVisits || []).map(mapVisitToCard);
+      }
+    } catch (error) {
+      setPortalStatus(status, `Modo local ativo: ${error.message}`);
+    }
+
+    const requested = visits.filter((visit) => visit.status === 'requested');
+    const scheduled = visits.filter((visit) => visit.status === 'confirmed');
 
     pending.innerHTML = requested.length
       ? requested
@@ -755,7 +922,7 @@ const initVisitsPage = () => {
       : '<div class="empty-state">Ainda nao ha visitas confirmadas.</div>';
   };
 
-  page.addEventListener('click', (event) => {
+  page.addEventListener('click', async (event) => {
     const button = event.target.closest('[data-visit-action]');
     if (!button) {
       return;
@@ -763,6 +930,23 @@ const initVisitsPage = () => {
 
     const state = loadPortalState();
     const visit = state.visits.find((item) => item.id === button.dataset.visitId);
+    const token = localStorage.getItem(PORTAL_AUTH_TOKEN_KEY);
+
+    try {
+      if (token) {
+        await portalApiRequest(`/landlord/visits/${button.dataset.visitId}/${button.dataset.visitAction}`, {
+          method: 'POST',
+          body: JSON.stringify({})
+        });
+        setPortalStatus(status, button.dataset.visitAction === 'confirm' ? 'Visita confirmada.' : 'Visita cancelada.');
+        await renderVisits();
+        return;
+      }
+    } catch (error) {
+      setPortalStatus(status, error.message);
+      return;
+    }
+
     if (!visit) {
       return;
     }
@@ -861,10 +1045,21 @@ const initSupportPage = () => {
     return;
   }
 
-  const render = () => {
+  const render = async () => {
     const state = loadPortalState();
-    queue.innerHTML = state.supportTickets.length
-      ? state.supportTickets
+    let tickets = state.supportTickets;
+
+    try {
+      if (localStorage.getItem(PORTAL_AUTH_TOKEN_KEY)) {
+        const remote = await loadPortalRemoteData();
+        tickets = (remote.supportTickets || []).map(mapSupportTicket);
+      }
+    } catch (error) {
+      setPortalStatus(status, `Modo local ativo: ${error.message}`);
+    }
+
+    queue.innerHTML = tickets.length
+      ? tickets
           .map(
             (ticket) => `
               <article class="support-card">
@@ -884,9 +1079,32 @@ const initSupportPage = () => {
       : '<div class="empty-state">Nenhum atendimento aberto.</div>';
   };
 
-  form.addEventListener('submit', (event) => {
+  form.addEventListener('submit', async (event) => {
     event.preventDefault();
     const formData = new FormData(form);
+    const payload = {
+      name: formData.get('name'),
+      phone: formData.get('phone'),
+      topic: formData.get('topic'),
+      preferred_time: formData.get('preferred_time'),
+      notes: formData.get('notes')
+    };
+
+    try {
+      if (localStorage.getItem(PORTAL_AUTH_TOKEN_KEY)) {
+        await portalApiRequest('/landlord/support-tickets', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        form.reset();
+        await render();
+        setPortalStatus(status, 'Pedido enviado para a equipe pelo backend.');
+        return;
+      }
+    } catch (error) {
+      setPortalStatus(status, `Falha ao registrar suporte na API: ${error.message}`);
+    }
+
     const state = loadPortalState();
     state.supportTickets.unshift({
       id: `support-${Date.now()}`,

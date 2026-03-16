@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PropertySearchRequest;
 use App\Http\Resources\PropertyResource;
+use App\Models\Landlord;
 use App\Models\Property;
+use Illuminate\Http\Request;
 
 class PropertyController extends Controller
 {
@@ -54,5 +56,60 @@ class PropertyController extends Controller
         $property->load('landlord');
 
         return new PropertyResource($property);
+    }
+
+    public function landlordIndex(Request $request)
+    {
+        $landlord = $this->resolveLandlord($request);
+
+        $properties = Property::query()
+            ->with('landlord')
+            ->where('landlord_id', $landlord->id)
+            ->latest()
+            ->get();
+
+        return PropertyResource::collection($properties);
+    }
+
+    public function store(Request $request)
+    {
+        $landlord = $this->resolveLandlord($request);
+
+        $data = $request->validate([
+            'title' => ['required', 'string', 'max:160'],
+            'city' => ['required', 'string', 'max:120'],
+            'state' => ['nullable', 'string', 'max:2'],
+            'rent_price' => ['required', 'numeric', 'min:0'],
+            'bedrooms' => ['required', 'integer', 'min:0', 'max:10'],
+            'has_garage' => ['required', 'boolean'],
+            'property_type' => ['required', 'in:kitnet,casa,apartamento,casa_condominio'],
+            'description' => ['required', 'string', 'max:4000'],
+            'address_neighborhood' => ['nullable', 'string', 'max:120'],
+            'address_line' => ['nullable', 'string', 'max:160'],
+            'address_number' => ['nullable', 'string', 'max:20'],
+            'is_active' => ['nullable', 'boolean'],
+        ]);
+
+        $property = Property::create([
+            ...$data,
+            'landlord_id' => $landlord->id,
+            'state' => strtoupper($data['state'] ?? 'SC'),
+            'is_active' => $data['is_active'] ?? true,
+        ]);
+
+        $property->load('landlord');
+
+        return (new PropertyResource($property))
+            ->response()
+            ->setStatusCode(201);
+    }
+
+    private function resolveLandlord(Request $request): Landlord
+    {
+        $landlord = Landlord::where('email', $request->user()?->email)->first();
+
+        abort_if(!$landlord, 404, 'Locador nao encontrado para esta sessao.');
+
+        return $landlord;
     }
 }

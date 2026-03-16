@@ -56,4 +56,9 @@ class Contract extends Model
     {
         return $this->belongsTo(PropertyInterest::class, 'property_interest_id');
     }
+
+    public function paymentSlips()
+    {
+        return $this->hasMany(PaymentSlip::class);
+    }
 }

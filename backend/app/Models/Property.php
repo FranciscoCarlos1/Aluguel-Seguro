@@ -42,6 +42,16 @@ class Property extends Model
         return $this->hasMany(PropertyInterest::class);
     }
 
+    public function contracts()
+    {
+        return $this->hasMany(Contract::class);
+    }
+
+    public function visits()
+    {
+        return $this->hasMany(VisitSchedule::class);
+    }
+
     public function priceRange(): string
     {
         $value = (float) $this->rent_price;

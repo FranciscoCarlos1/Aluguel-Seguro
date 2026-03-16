@@ -31,4 +31,19 @@ class Landlord extends Model
     {
         return $this->hasMany(Property::class);
     }
+
+    public function contracts()
+    {
+        return $this->hasMany(Contract::class);
+    }
+
+    public function visits()
+    {
+        return $this->hasMany(VisitSchedule::class);
+    }
+
+    public function supportTickets()
+    {
+        return $this->hasMany(SupportTicket::class);
+    }
 }

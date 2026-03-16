@@ -18,6 +18,9 @@ class PaymentSlip extends Model
         'bank_slip_number',
         'pdf_url',
         'payment_link',
+        'description',
+        'installment_number',
+        'installment_total',
         'paid_at',
         'fine',
         'interest',
@@ -26,6 +29,8 @@ class PaymentSlip extends Model
     protected $casts = [
         'due_date' => 'date',
         'amount' => 'decimal:2',
+        'installment_number' => 'integer',
+        'installment_total' => 'integer',
         'paid_at' => 'datetime',
         'fine' => 'decimal:2',
         'interest' => 'decimal:2',
