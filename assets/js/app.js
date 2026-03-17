@@ -256,6 +256,27 @@ const syncRoleNavigation = (hasToken, accountType) => {
   const sessionStatus = nav.querySelector(".session-status");
 
   getRoleNavItems(accountType).forEach((item) => {
+    const normalizedHref = normalizeNavHref(item.href);
+    const existingLink = Array.from(nav.querySelectorAll("a")).find((anchor) => {
+      if (
+        anchor.dataset.roleNavGenerated ||
+        anchor.dataset.navAuthTemplate ||
+        anchor.hasAttribute("data-guest-only")
+      ) {
+        return false;
+      }
+
+      return normalizeNavHref(anchor.getAttribute("href")) === normalizedHref;
+    });
+
+    if (existingLink) {
+      if (normalizedHref === currentPage) {
+        existingLink.setAttribute("aria-current", "page");
+      }
+
+      return;
+    }
+
     const link = document.createElement("a");
     link.href = item.href;
     link.textContent = item.label;
@@ -293,9 +314,20 @@ const updateSessionUI = () => {
   const guestOnlyItems = document.querySelectorAll("[data-guest-only]");
 
   if (label) {
-    label.textContent = hasToken
-      ? `Sessao ativa${email ? ` · ${email}` : ""}${accountType ? ` · ${getAccountTypeLabel(accountType)}` : ""}`
-      : "Sem sessao";
+    if (hasToken) {
+      label.textContent = accountType
+        ? `Conta ativa · ${getAccountTypeLabel(accountType)}`
+        : "Conta ativa";
+
+      if (email) {
+        label.title = email;
+      } else {
+        label.removeAttribute("title");
+      }
+    } else {
+      label.textContent = "Sem sessao";
+      label.removeAttribute("title");
+    }
   }
 
   if (action) {
