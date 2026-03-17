@@ -5,8 +5,10 @@ namespace Tests\Feature;
 use App\Models\Landlord;
 use App\Models\Property;
 use App\Models\User;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Schema;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -64,6 +66,65 @@ class PropertyFeedImportTest extends TestCase
             'source_name' => 'olx_parceiro',
             'source_reference' => 'olx-001',
             'city' => 'Sao Bento do Sul',
+        ]);
+    }
+
+    public function test_landlord_can_import_properties_when_external_source_columns_are_missing(): void
+    {
+        Schema::table('properties', function (Blueprint $table): void {
+            $table->dropIndex(['source_name', 'source_reference']);
+            $table->dropColumn([
+                'source_name',
+                'source_reference',
+                'source_url',
+                'hero_image_url',
+                'image_urls',
+            ]);
+        });
+
+        $user = User::factory()->create([
+            'email' => 'retroimport@example.com',
+        ]);
+        Landlord::create([
+            'name' => 'Importador Retro',
+            'email' => 'retroimport@example.com',
+            'phone' => '48994443333',
+            'status' => 'active',
+        ]);
+
+        Sanctum::actingAs($user);
+
+        Http::fake([
+            'https://feed.antigo.exemplo/imoveis.json' => Http::response([
+                'items' => [
+                    [
+                        'id' => 'retro-001',
+                        'title' => 'Apartamento importado sem colunas externas',
+                        'city' => 'Joinville',
+                        'state' => 'SC',
+                        'price' => 1700,
+                        'bedrooms' => 2,
+                        'has_garage' => true,
+                        'type' => 'apartamento',
+                        'description' => 'Importacao resiliente com schema legado.',
+                    ],
+                ],
+            ], 200),
+        ]);
+
+        $response = $this->postJson('/api/v1/landlord/properties/import-feed', [
+            'feed_url' => 'https://feed.antigo.exemplo/imoveis.json',
+            'source_name' => 'feed_legado',
+            'format' => 'json',
+        ]);
+
+        $response
+            ->assertStatus(201)
+            ->assertJsonPath('properties.0.title', 'Apartamento importado sem colunas externas');
+
+        $this->assertDatabaseHas('properties', [
+            'title' => 'Apartamento importado sem colunas externas',
+            'city' => 'Joinville',
         ]);
     }
 

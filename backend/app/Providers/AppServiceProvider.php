@@ -3,7 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Property;
-use Database\Seeders\DatabaseSeeder;
+use App\Services\DemoCatalogService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -40,7 +40,7 @@ class AppServiceProvider extends ServiceProvider
                 return;
             }
 
-            (new DatabaseSeeder())->run();
+            app(DemoCatalogService::class)->ensureCatalogAvailable();
         } catch (Throwable $exception) {
             report($exception);
         }

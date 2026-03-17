@@ -26,12 +26,11 @@ class PropertyFeedImporter
             }
 
             $property = Property::updateOrCreate(
-                [
+                Property::importLookupAttributes($landlord->id, $normalized),
+                Property::persistableAttributes([
+                    ...$normalized,
                     'landlord_id' => $landlord->id,
-                    'source_name' => $sourceName,
-                    'source_reference' => $normalized['source_reference'],
-                ],
-                $normalized
+                ])
             );
 
             $imported[] = $property->fresh('landlord');

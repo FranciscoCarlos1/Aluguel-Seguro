@@ -99,14 +99,14 @@ O backend esta em backend/ com API REST para locadores, inquilinos, perfis e ava
 
 ### Como rodar
 
-1. Garanta que a extensao SQLite do PHP esteja instalada e habilitada.
+1. Garanta que a extensao do banco escolhido esteja instalada e habilitada no PHP.
 2. Rode as migracoes: php artisan migrate.
 3. Rode o seeder com dados de exemplo: php artisan db:seed.
 4. Inicie o servidor: php artisan serve.
 
 ### Observacao de banco
 
-- O banco usa SQLite em database/database.sqlite.
+- Em desenvolvimento voce pode usar SQLite ou Postgres, conforme as variaveis do arquivo backend/.env.
 - Sanctum foi instalado para tokens. A tabela personal_access_tokens sera criada nas migracoes.
 
 ### Autenticacao
@@ -137,18 +137,20 @@ Este repositório já possui o arquivo render.yaml para subir:
 
 - API Laravel (Web Service): aluguel-seguro-api
 - Frontend estático (Static Site): aluguel-seguro
+- Postgres gerenciado: aluguel-seguro-db
 
 ### O que fica automático
 
-- O backend cria o SQLite no disco persistente do Render.
+- O Blueprint cria uma instancia Render Postgres para a API.
 - O backend roda php artisan migrate --force a cada novo deploy.
+- O backend preserva os imoveis cadastrados e so recompõe o catalogo demo quando a tabela properties estiver vazia.
 - O frontend gera frontend/env.js em build com a URL pública da API e copia os assets compartilhados para a pasta publicada.
 - O health check da API responde em /api/health.
 
 ### Passos
 
 1. No Render, clique em New + > Blueprint.
-2. Selecione este repositório e confirme a criação dos 2 serviços.
+2. Selecione este repositório e confirme a criação dos 3 recursos.
 3. Em aluguel-seguro-api, configure:
 	- APP_KEY = gere uma chave única com php artisan key:generate --show
 	- APP_URL = URL pública da API (ex: https://aluguel-seguro-api.onrender.com)
@@ -158,11 +160,11 @@ Este repositório já possui o arquivo render.yaml para subir:
 	- GOOGLE_SEARCH_SITE_QUERY = opcional, para limitar domínios como OLX, VivaReal e Zap
 4. Em aluguel-seguro, configure:
 	- RENDER_BACKEND_URL = URL pública da API (sem /api/v1)
-5. Faça deploy dos dois serviços.
-6. Se quiser popular produção com a massa demo, rode uma única vez no shell do Render:
-	- php artisan db:seed --force
+5. Faça deploy dos serviços.
+6. Se quiser forcar a reposicao segura do catalogo demo no shell do Render, rode:
+	- php artisan catalog:ensure-demo
 
-Observação: o backend usa SQLite em disco persistente no Render (/var/data/database.sqlite) e não executa seed automaticamente em produção.
+Observacao: o banco Render sera criado com nome Aluguel_Seguro e usuario admin. A senha do Postgres gerenciado nao pode ser fixada no Blueprint; o Render gera essa senha automaticamente e a injeta no servico da API. O backend nao executa db:seed automaticamente no boot. Em vez disso, ele garante apenas o catalogo demo quando a tabela de imoveis estiver vazia, sem apagar anuncios ja cadastrados.
 
 Se você criar um Web Service Docker manual no Render apontando para a raiz do repositório, o Dockerfile da raiz já encaminha corretamente para backend/.
 ### Endpoints principais

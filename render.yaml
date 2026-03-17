@@ -15,21 +15,41 @@ services:
       - key: APP_URL
         sync: false
       - key: DB_CONNECTION
-        value: sqlite
+        value: pgsql
+      - key: DB_URL
+        fromDatabase:
+          name: aluguel-seguro-db
+          property: connectionString
+      - key: DB_HOST
+        fromDatabase:
+          name: aluguel-seguro-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: aluguel-seguro-db
+          property: port
       - key: DB_DATABASE
-        value: /var/data/database.sqlite
+        fromDatabase:
+          name: aluguel-seguro-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: aluguel-seguro-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: aluguel-seguro-db
+          property: password
+      - key: DB_SSLMODE
+        value: require
       - key: SESSION_DRIVER
-        value: file
+        value: database
       - key: CACHE_STORE
-        value: file
+        value: database
       - key: QUEUE_CONNECTION
-        value: sync
+        value: database
       - key: CORS_ALLOWED_ORIGINS
         sync: false
-    disk:
-      name: aluguel-seguro-data
-      mountPath: /var/data
-      sizeGB: 1
 
   - type: web
     name: aluguel-seguro
@@ -41,3 +61,10 @@ services:
     envVars:
       - key: RENDER_BACKEND_URL
         sync: false
+
+databases:
+  - name: aluguel-seguro-db
+    plan: basic-256mb
+    region: oregon
+    databaseName: Aluguel_Seguro
+    user: admin

@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Schema;
 
 class Property extends Model
 {
@@ -41,6 +43,43 @@ class Property extends Model
     public function landlord()
     {
         return $this->belongsTo(Landlord::class);
+    }
+
+    public static function persistableAttributes(array $attributes): array
+    {
+        if (!Schema::hasTable((new static())->getTable())) {
+            return $attributes;
+        }
+
+        return Arr::only($attributes, Schema::getColumnListing((new static())->getTable()));
+    }
+
+    public static function importLookupAttributes(int $landlordId, array $attributes): array
+    {
+        $lookup = ['landlord_id' => $landlordId];
+        $columns = Schema::hasTable((new static())->getTable())
+            ? Schema::getColumnListing((new static())->getTable())
+            : [];
+
+        if (in_array('source_reference', $columns, true) && !empty($attributes['source_reference'])) {
+            if (in_array('source_name', $columns, true) && !empty($attributes['source_name'])) {
+                $lookup['source_name'] = $attributes['source_name'];
+            }
+
+            $lookup['source_reference'] = $attributes['source_reference'];
+
+            return $lookup;
+        }
+
+        if (!empty($attributes['title'])) {
+            $lookup['title'] = $attributes['title'];
+        }
+
+        if (in_array('city', $columns, true) && !empty($attributes['city'])) {
+            $lookup['city'] = $attributes['city'];
+        }
+
+        return $lookup;
     }
 
     public function interests()

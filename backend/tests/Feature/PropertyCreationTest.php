@@ -4,8 +4,10 @@ namespace Tests\Feature;
 
 use App\Models\Landlord;
 use App\Models\User;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
@@ -111,6 +113,61 @@ class PropertyCreationTest extends TestCase
         $this->assertCount(2, Storage::disk('public')->allFiles('properties/1/' . now()->format('Y/m')));
         $this->assertDatabaseHas('properties', [
             'title' => 'Apartamento com upload',
+        ]);
+    }
+
+    public function test_landlord_can_create_property_when_external_source_columns_are_missing(): void
+    {
+        Schema::table('properties', function (Blueprint $table): void {
+            $table->dropIndex(['source_name', 'source_reference']);
+            $table->dropColumn([
+                'source_name',
+                'source_reference',
+                'source_url',
+                'hero_image_url',
+                'image_urls',
+            ]);
+        });
+
+        $user = User::factory()->create([
+            'email' => 'retrocompat@teste.com',
+            'account_type' => 'landlord',
+        ]);
+
+        Landlord::create([
+            'name' => 'Locador Retro',
+            'email' => 'retrocompat@teste.com',
+            'phone' => '47999992222',
+            'status' => 'active',
+            'created_by' => 'retrocompat@teste.com',
+            'updated_by' => 'retrocompat@teste.com',
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $response = $this->postJson('/api/v1/landlord/properties', [
+            'title' => 'Casa schema antigo',
+            'city' => 'Joinville',
+            'state' => 'SC',
+            'rent_price' => 2100,
+            'bedrooms' => 2,
+            'has_garage' => true,
+            'property_type' => 'casa',
+            'description' => 'Criacao resiliente mesmo sem colunas novas.',
+            'address_neighborhood' => 'America',
+            'hero_image_url' => 'https://cdn.exemplo/capa-antiga.jpg',
+            'image_urls' => [
+                'https://cdn.exemplo/capa-antiga.jpg',
+            ],
+        ]);
+
+        $response
+            ->assertCreated()
+            ->assertJsonPath('data.title', 'Casa schema antigo');
+
+        $this->assertDatabaseHas('properties', [
+            'title' => 'Casa schema antigo',
+            'city' => 'Joinville',
         ]);
     }
 }
