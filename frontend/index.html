@@ -25,72 +25,87 @@
     </header>
 
     <main class="panel panel-wide">
-      <section class="panel-card reveal panel-card--wide">
-        <div class="tenants-header">
-          <div>
-            <h1>Encontre seu imovel em SC sem a burocracia da imobiliaria</h1>
-            <p class="muted">Busque por cidade, valor e tipo de imovel. O match conecta inquilinos e locatarios com analise de perfil, suporte humanizado e contrato digital.</p>
-          </div>
+      <section class="panel-card reveal panel-card--wide marketplace-shell">
+        <div class="marketplace-intro">
+          <article class="marketplace-brand-card">
+            <span class="eyebrow">Aluga Seguro</span>
+            <h1>Aluguel com seguranca e sem burocracia</h1>
+            <p class="muted">
+              Filtre por UF, cidade, valor e tipo de imovel para encontrar opcoes mais aderentes ao seu perfil.
+            </p>
+            <div class="marketplace-mini-note">
+              Match entre locador e inquilino com analise comportamental, suporte humanizado e contrato digital.
+            </div>
+          </article>
+
+          <article class="marketplace-filter-card">
+            <div class="tenants-header">
+              <div>
+                <h2>Filtrar</h2>
+                <p class="muted">Ajuste os campos e veja os imoveis listados abaixo.</p>
+              </div>
+            </div>
+
+            <form class="form-grid form-grid--filters" data-marketplace-filters>
+              <label>
+                UF
+                <select name="state">
+                  <option value="SC">SC</option>
+                </select>
+              </label>
+              <label>
+                Cidade
+                <input type="text" name="city" placeholder="Ex: Palhoca" />
+              </label>
+              <label>
+                Valor
+                <select name="price_range">
+                  <option value="">Todos</option>
+                  <option value="ate_1000">Até R$ 1.000,00</option>
+                  <option value="1001_2000">R$ 1.001,00 a R$ 2.000,00</option>
+                  <option value="2001_3000">R$ 2.001,00 a R$ 3.000,00</option>
+                  <option value="acima_3000">Acima de R$ 3.000,00</option>
+                </select>
+              </label>
+              <label>
+                Quartos
+                <select name="bedrooms">
+                  <option value="">Qualquer</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4+</option>
+                </select>
+              </label>
+              <label>
+                Garagem
+                <select name="garage">
+                  <option value="">Qualquer</option>
+                  <option value="1">Com garagem</option>
+                  <option value="0">Sem garagem</option>
+                </select>
+              </label>
+              <label>
+                Tipo
+                <select name="property_type">
+                  <option value="">Todos</option>
+                  <option value="kitnet">Kitnet</option>
+                  <option value="casa">Casa</option>
+                  <option value="apartamento">Apartamento</option>
+                  <option value="casa_condominio">Casa em condomínio</option>
+                </select>
+              </label>
+              <div class="form-actions-row full">
+                <button class="button" type="submit">Ver imóveis</button>
+                <button class="button ghost" type="button" data-google-property-search>Busca complementar</button>
+              </div>
+            </form>
+          </article>
         </div>
 
-        <form class="form-grid form-grid--two" data-marketplace-filters>
-          <label>
-            Estado
-            <select name="state">
-              <option value="SC">SC</option>
-            </select>
-          </label>
-          <label>
-            Cidade
-            <input type="text" name="city" placeholder="Ex: Florianopolis" />
-          </label>
-          <label>
-            Valor
-            <select name="price_range">
-              <option value="">Todos</option>
-              <option value="ate_1000">Até R$ 1.000,00</option>
-              <option value="1001_2000">R$ 1.001,00 a R$ 2.000,00</option>
-              <option value="2001_3000">R$ 2.001,00 a R$ 3.000,00</option>
-              <option value="acima_3000">Acima de R$ 3.000,00</option>
-            </select>
-          </label>
-          <label>
-            Quartos
-            <select name="bedrooms">
-              <option value="">Qualquer</option>
-              <option value="1">1</option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-              <option value="4">4+</option>
-            </select>
-          </label>
-          <label>
-            Garagem
-            <select name="garage">
-              <option value="">Qualquer</option>
-              <option value="1">Com garagem</option>
-              <option value="0">Sem garagem</option>
-            </select>
-          </label>
-          <label>
-            Tipo de imóvel
-            <select name="property_type">
-              <option value="">Todos</option>
-              <option value="kitnet">Kitnet</option>
-              <option value="casa">Casa</option>
-              <option value="apartamento">Apartamento</option>
-              <option value="casa_condominio">Casa em condomínio</option>
-            </select>
-          </label>
-          <div class="form-actions-row full">
-            <button class="button" type="submit">Buscar no cadastro interno</button>
-            <button class="button ghost" type="button" data-google-property-search>Buscar com Google</button>
-          </div>
-        </form>
-
         <p class="form-status" data-marketplace-status></p>
-        <p class="muted external-search-note">A busca principal consulta os imóveis do cadastro interno do Aluguel Seguro. A busca com Google continua disponível como opção complementar enquanto a API externa estiver liberada.</p>
-        <div class="property-results" data-property-results></div>
+        <p class="muted external-search-note">A busca principal consulta os imóveis do cadastro interno do Aluguel Seguro. A busca complementar usa o Google quando necessário.</p>
+        <div class="property-results property-results--stacked" data-property-results></div>
       </section>
     </main>
 

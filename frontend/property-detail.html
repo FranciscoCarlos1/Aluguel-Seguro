@@ -25,7 +25,7 @@
     </header>
 
     <main class="panel panel-wide">
-      <section class="panel-card reveal panel-card--wide">
+      <section class="panel-card reveal panel-card--wide property-detail-shell">
         <div class="detail-header">
           <div>
             <h1 data-property-title>Carregando imóvel...</h1>
@@ -33,20 +33,38 @@
           </div>
         </div>
 
-        <div class="detail-card detail-card--gallery">
-          <img class="detail-hero-image is-hidden" data-property-hero alt="Imagem principal do imóvel" />
-          <div class="property-gallery" data-property-gallery></div>
+        <div class="property-detail-top">
+          <div class="detail-card detail-card--gallery">
+            <img class="detail-hero-image is-hidden" data-property-hero alt="Imagem principal do imóvel" />
+            <div class="property-gallery" data-property-gallery></div>
+          </div>
+
+          <aside class="detail-card property-summary-card">
+            <div class="property-price-badge" data-property-price>R$ 0,00/mês</div>
+            <div class="chip-row" data-property-highlights></div>
+            <ul class="property-overview-list" data-property-overview></ul>
+            <div class="property-cta-row">
+              <button class="button" type="button" data-open-interest-flow>Entrar em contato</button>
+              <a class="button ghost" href="index.html">Ver outros imóveis</a>
+            </div>
+          </aside>
         </div>
 
-        <div class="detail-card">
-          <h2>Sobre o imóvel</h2>
-          <p class="summary-text" data-property-description></p>
-          <ul class="detail-meta" data-property-meta></ul>
+        <div class="detail-grid property-detail-grid">
+          <div class="detail-card">
+            <h2>Informações</h2>
+            <p class="summary-text" data-property-description></p>
+            <ul class="detail-meta" data-property-meta></ul>
+          </div>
+          <div class="detail-card">
+            <h2>Diferenciais</h2>
+            <ul class="note-list" data-property-differentials></ul>
+          </div>
         </div>
 
-        <div class="detail-card">
-          <h2>Interesse no imóvel</h2>
-          <p class="muted">Preencha seus dados. Se o perfil ja existir, ele e reaproveitado automaticamente e pode ser atualizado a cada 3 meses.</p>
+        <div class="detail-card property-contact-flow is-hidden" data-contact-flow>
+          <h2>Entrar em contato</h2>
+          <p class="muted">Preencha os dados principais. O perfil salvo pode ser reaproveitado por até 3 meses e o questionário aparece como segunda etapa.</p>
 
           <form class="form-grid form-grid--two" data-property-interest-form>
             <label>
@@ -173,7 +191,7 @@
               Observações
               <textarea name="additional_notes" rows="3"></textarea>
             </label>
-            <button class="button" type="submit">Enviar interesse</button>
+            <button class="button" type="submit">Enviar contato</button>
             <p class="form-status full" data-interest-status></p>
           </form>
 

@@ -1665,18 +1665,28 @@ const initMarketplace = () => {
     results.innerHTML = items
       .map(
         (property) => `
-          <article class="property-card">
-            ${resolvePropertyImages(property).hero ? `<img class="property-card-image" src="${resolvePropertyImages(property).hero}" alt="${property.title}">` : ""}
-            <h3>${property.title}</h3>
-            <p>${property.city}/${property.state}</p>
-            <p class="property-price">${formatMoney(property.rent_price)}/mês</p>
-            <div class="property-tags">
-              <span>${formatPropertyType(property.property_type)}</span>
-              <span>${property.bedrooms} quarto(s)</span>
-              <span>${property.has_garage ? "Com garagem" : "Sem garagem"}</span>
-              ${property.source_name ? `<span>Fonte: ${property.source_name}</span>` : ""}
+          <article class="property-card property-card--listing">
+            <div class="property-card-media">
+              ${resolvePropertyImages(property).hero ? `<img class="property-card-image" src="${resolvePropertyImages(property).hero}" alt="${property.title}">` : `<div class="property-card-image property-card-image--placeholder"></div>`}
             </div>
-            <a class="button" href="property-detail.html?id=${property.id}">Ver imóvel</a>
+            <div class="property-card-body">
+              <p class="property-card-eyebrow">${property.city}/${property.state}</p>
+              <h3>${property.title}</h3>
+              <div class="property-tags">
+                <span>${formatPropertyType(property.property_type)}</span>
+                <span>${property.bedrooms} quarto(s)</span>
+                <span>${property.has_garage ? "vaga" : "sem vaga"}</span>
+              </div>
+              <p class="property-card-description">${property.description || "Imovel com processo simplificado de locacao e acompanhamento assistido."}</p>
+            </div>
+            <div class="property-card-aside">
+              <p class="property-price">${formatMoney(property.rent_price)}/mês</p>
+              <div class="property-card-stack">
+                ${property.address_neighborhood ? `<span class="mini-chip">${property.address_neighborhood}</span>` : ""}
+                ${property.source_name ? `<span class="mini-chip">${property.source_name}</span>` : ""}
+              </div>
+              <a class="button" href="property-detail.html?id=${property.id}">Ver imóvel</a>
+            </div>
           </article>
         `
       )
@@ -1696,14 +1706,19 @@ const initMarketplace = () => {
     results.innerHTML = items
       .map(
         (item) => `
-          <article class="property-card property-card--external">
-            <h3>${item.title}</h3>
-            <p>${item.snippet || "Resultado externo encontrado pela busca do Google."}</p>
-            <div class="property-tags">
-              <span>Fonte externa</span>
-              <span>${item.display_link || "google"}</span>
+          <article class="property-card property-card--listing property-card--external">
+            <div class="property-card-body">
+              <p class="property-card-eyebrow">Busca complementar</p>
+              <h3>${item.title}</h3>
+              <p class="property-card-description">${item.snippet || "Resultado externo encontrado pela busca do Google."}</p>
+              <div class="property-tags">
+                <span>Fonte externa</span>
+                <span>${item.display_link || "google"}</span>
+              </div>
             </div>
-            <a class="button" href="${item.link}" target="_blank" rel="noreferrer">Abrir anuncio</a>
+            <div class="property-card-aside">
+              <a class="button" href="${item.link}" target="_blank" rel="noreferrer">Abrir anuncio</a>
+            </div>
           </article>
         `
       )
@@ -1775,8 +1790,14 @@ const initPropertyDetail = () => {
   const subtitle = document.querySelector("[data-property-subtitle]");
   const description = document.querySelector("[data-property-description]");
   const meta = document.querySelector("[data-property-meta]");
+  const propertyPrice = document.querySelector("[data-property-price]");
+  const propertyHighlights = document.querySelector("[data-property-highlights]");
+  const propertyOverview = document.querySelector("[data-property-overview]");
+  const propertyDifferentials = document.querySelector("[data-property-differentials]");
   const heroImage = document.querySelector("[data-property-hero]");
   const gallery = document.querySelector("[data-property-gallery]");
+  const contactFlow = document.querySelector("[data-contact-flow]");
+  const openInterestFlowBtn = document.querySelector("[data-open-interest-flow]");
   const form = document.querySelector("[data-property-interest-form]");
   const phoneInput = document.querySelector("[data-prospect-phone]");
   const questionnaireBox = document.querySelector("[data-questionnaire-box]");
@@ -1804,6 +1825,15 @@ const initPropertyDetail = () => {
     }
 
     return new Date(value).toLocaleDateString("pt-BR");
+  };
+
+  const openInterestFlow = () => {
+    if (contactFlow) {
+      contactFlow.classList.remove("is-hidden");
+      contactFlow.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    setStatus(status, "Preencha os dados para iniciar o contato sobre este imóvel.");
   };
 
   const toggleQuestionnaire = (show, hint = "") => {
@@ -1865,6 +1895,9 @@ const initPropertyDetail = () => {
       if (subtitle) {
         subtitle.textContent = `${property.city}/${property.state} · ${formatMoney(property.rent_price)}/mês`;
       }
+      if (propertyPrice) {
+        propertyPrice.textContent = `${formatMoney(property.rent_price)}/mês`;
+      }
       if (description) {
         description.textContent = property.description || "Sem descrição.";
       }
@@ -1914,12 +1947,37 @@ const initPropertyDetail = () => {
           ${property.source_url ? `<li><strong>Anuncio original:</strong> <a href="${property.source_url}" target="_blank" rel="noreferrer">abrir fonte</a></li>` : ""}
         `;
       }
+      if (propertyHighlights) {
+        propertyHighlights.innerHTML = `
+          <span class="mini-chip">${formatPropertyType(property.property_type)}</span>
+          <span class="mini-chip">${property.bedrooms} quarto(s)</span>
+          <span class="mini-chip">${property.has_garage ? "Com garagem" : "Sem garagem"}</span>
+        `;
+      }
+      if (propertyOverview) {
+        propertyOverview.innerHTML = `
+          <li><strong>Localizacao:</strong> ${property.city}/${property.state}${property.address_neighborhood ? ` · ${property.address_neighborhood}` : ""}</li>
+          <li><strong>Garantia:</strong> caucao maxima de um aluguel.</li>
+          <li><strong>Contato:</strong> analise assistida antes da liberacao da visita.</li>
+        `;
+      }
+      if (propertyDifferentials) {
+        propertyDifferentials.innerHTML = `
+          <li>Contrato simples e suporte humanizado ao longo da negociacao.</li>
+          <li>Questionario comportamental usado apenas na etapa de contato.</li>
+          <li>${property.has_garage ? "Vaga de garagem incluida no anuncio." : "Sem vaga de garagem, ideal para perfil sem carro."}</li>
+        `;
+      }
 
-      setStatus(status, "Pronto para registrar interesse.");
+      setStatus(status, "Veja as informacoes e use Entrar em contato para avancar.");
     } catch (error) {
       setStatus(status, error.message, true);
     }
   };
+
+  if (openInterestFlowBtn) {
+    openInterestFlowBtn.addEventListener("click", openInterestFlow);
+  }
 
   if (phoneInput) {
     phoneInput.addEventListener("blur", lookupProfileByPhone);
@@ -1976,6 +2034,10 @@ const initPropertyDetail = () => {
           confirmPaymentBtn.classList.remove("is-hidden");
         }
 
+        if (contactFlow) {
+          contactFlow.classList.remove("is-hidden");
+        }
+
         setStatus(status, response.message || "Interesse enviado com sucesso.");
       } catch (error) {
         setStatus(status, error.message, true);
@@ -2005,6 +2067,9 @@ const initPropertyDetail = () => {
 
   if (phoneInput && storedProspectPhone && !phoneInput.value) {
     phoneInput.value = storedProspectPhone;
+    if (contactFlow) {
+      contactFlow.classList.remove("is-hidden");
+    }
   }
 
   toggleQuestionnaire(true, "Na primeira demonstracao de interesse, responda as 7 perguntas do perfil comportamental.");
