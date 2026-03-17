@@ -164,7 +164,7 @@ Este repositório já possui o arquivo render.yaml para subir:
 6. Se quiser forcar a reposicao segura do catalogo demo no shell do Render, rode:
 	- php artisan catalog:ensure-demo
 
-Observacao: o banco Render sera criado com nome Aluguel_Seguro e usuario admin. A senha do Postgres gerenciado nao pode ser fixada no Blueprint; o Render gera essa senha automaticamente e a injeta no servico da API. O backend nao executa db:seed automaticamente no boot. Em vez disso, ele garante apenas o catalogo demo quando a tabela de imoveis estiver vazia, sem apagar anuncios ja cadastrados.
+Observacao: o banco Render sera criado com nome aluguel_seguro e usuario admin. A senha do Postgres gerenciado nao pode ser fixada no Blueprint; o Render gera essa senha automaticamente e a injeta no servico da API. O backend nao executa db:seed automaticamente no boot. Em vez disso, ele garante apenas o catalogo demo quando a tabela de imoveis estiver vazia, sem apagar anuncios ja cadastrados.
 
 Se você criar um Web Service Docker manual no Render apontando para a raiz do repositório, o Dockerfile da raiz já encaminha corretamente para backend/.
 ### Endpoints principais
