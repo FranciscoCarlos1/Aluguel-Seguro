@@ -1825,7 +1825,6 @@ const initPropertyDetail = () => {
   const propertyPrice = document.querySelector("[data-property-price]");
   const propertyHighlights = document.querySelector("[data-property-highlights]");
   const propertyOverview = document.querySelector("[data-property-overview]");
-  const propertyDifferentials = document.querySelector("[data-property-differentials]");
   const heroImage = document.querySelector("[data-property-hero]");
   const gallery = document.querySelector("[data-property-gallery]");
   const contactFlow = document.querySelector("[data-contact-flow]");
@@ -2038,8 +2037,6 @@ const initPropertyDetail = () => {
           <li><strong>Quartos:</strong> ${property.bedrooms}</li>
           <li><strong>Garagem:</strong> ${property.has_garage ? "Sim" : "Não"}</li>
           <li><strong>Bairro:</strong> ${property.address_neighborhood || "-"}</li>
-          <li><strong>Origem:</strong> ${property.source_name || "Carteira interna"}</li>
-          ${property.source_url ? `<li><strong>Anuncio original:</strong> <a href="${property.source_url}" target="_blank" rel="noreferrer">abrir fonte</a></li>` : ""}
         `;
       }
       if (propertyHighlights) {
@@ -2052,18 +2049,9 @@ const initPropertyDetail = () => {
       if (propertyOverview) {
         propertyOverview.innerHTML = `
           <li><strong>Localizacao:</strong> ${property.city}/${property.state}${property.address_neighborhood ? ` · ${property.address_neighborhood}` : ""}</li>
-          <li><strong>Garantia:</strong> caucao maxima de um aluguel.</li>
-          <li><strong>Contato:</strong> analise assistida antes da liberacao da visita.</li>
+          <li><strong>Condições:</strong> caução obrigatorio.</li>
         `;
       }
-      if (propertyDifferentials) {
-        propertyDifferentials.innerHTML = `
-          <li>Contrato simples e suporte humanizado ao longo da negociacao.</li>
-          <li>Questionario comportamental usado apenas na etapa de contato.</li>
-          <li>${property.has_garage ? "Vaga de garagem incluida no anuncio." : "Sem vaga de garagem, ideal para perfil sem carro."}</li>
-        `;
-      }
-
       setStatus(status, "Veja as informacoes e use Entrar em contato para avancar.");
     } catch (error) {
       setStatus(status, error.message, true);
