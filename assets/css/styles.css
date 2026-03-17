@@ -347,7 +347,7 @@ body {
 }
 
 .form-grid--filters {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .form-grid--two .full {
@@ -362,6 +362,7 @@ label {
   display: grid;
   gap: 8px;
   font-weight: 600;
+  min-width: 0;
 }
 
 input,
@@ -371,6 +372,8 @@ textarea {
   padding: 12px 14px;
   font-size: 1rem;
   font-family: inherit;
+  width: 100%;
+  min-width: 0;
 }
 
 select {
@@ -380,6 +383,8 @@ select {
   font-size: 1rem;
   font-family: inherit;
   background: #fff;
+  width: 100%;
+  min-width: 0;
 }
 
 textarea {
@@ -584,6 +589,33 @@ textarea {
 
 .external-search-note {
   margin-top: 12px;
+}
+
+@media (min-width: 1180px) {
+  .form-grid--filters {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 920px) {
+  .marketplace-intro {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .form-grid--filters {
+    grid-template-columns: 1fr;
+  }
+
+  .form-actions-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .form-actions-row .button {
+    width: 100%;
+  }
 }
 
 @media (max-width: 720px) {
