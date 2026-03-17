@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\LandlordInterestController;
 use App\Http\Controllers\Api\PaymentSlipController;
 use App\Http\Controllers\Api\SupportTicketController;
 use App\Http\Controllers\Api\TenantController;
+use App\Http\Controllers\Api\TenantInterestController;
 use App\Http\Controllers\Api\TenantProfileController;
 use App\Http\Controllers\Api\TenantReviewController;
 use App\Http\Controllers\Api\AuthController;
@@ -39,6 +40,7 @@ Route::prefix('v1')->group(function () {
 
     Route::middleware(['auth:sanctum', 'throttle:api', ApiAuditLog::class])->group(function () {
         Route::post('/auth/logout', [AuthController::class, 'logout']);
+        Route::get('/tenant/interests', [TenantInterestController::class, 'index']);
 
         Route::post('/landlords', [LandlordController::class, 'store']);
         Route::get('/landlords/me', [LandlordController::class, 'showMe']);

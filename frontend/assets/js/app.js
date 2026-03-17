@@ -146,7 +146,67 @@ const getAccountTypeLabel = (accountType) => {
 };
 
 const getPostAuthRoute = (accountType) =>
-  accountType === "tenant" ? "profile.html" : "dashboard.html";
+  accountType === "tenant" ? "my-interests.html" : "dashboard.html";
+
+const LANDLORD_ONLY_PAGES = new Set([
+  "dashboard.html",
+  "properties.html",
+  "property-form.html",
+  "leads.html",
+  "visits.html",
+  "services.html",
+  "support.html",
+  "contract.html",
+  "landlord-edit.html",
+  "tenants.html",
+  "tenant-detail.html",
+  "tenant-edit.html",
+]);
+
+const TENANT_ONLY_PAGES = new Set([
+  "profile.html",
+  "my-interests.html",
+]);
+
+const getCurrentPage = () =>
+  normalizeNavHref(window.location.pathname.split("/").pop() || "index.html");
+
+const isRouteAllowedForAccountType = (route, accountType) => {
+  const normalizedRoute = normalizeNavHref(route || "index.html");
+
+  if (accountType === "tenant") {
+    return !LANDLORD_ONLY_PAGES.has(normalizedRoute);
+  }
+
+  if (accountType === "landlord") {
+    return !TENANT_ONLY_PAGES.has(normalizedRoute);
+  }
+
+  return true;
+};
+
+const getDefaultRouteForAccountType = (accountType) =>
+  accountType === "tenant" ? "my-interests.html" : "dashboard.html";
+
+const getSafeRouteForAccountType = (route, accountType) =>
+  isRouteAllowedForAccountType(route, accountType)
+    ? route
+    : getDefaultRouteForAccountType(accountType);
+
+const enforceAccountRouteAccess = () => {
+  const token = getToken();
+  if (!token) {
+    return;
+  }
+
+  const accountType = getSessionAccountType();
+  const currentPage = getCurrentPage();
+  const safeRoute = getSafeRouteForAccountType(currentPage, accountType);
+
+  if (safeRoute !== currentPage) {
+    window.location.replace(safeRoute);
+  }
+};
 
 const LANDLORD_NAV_ITEMS = [
   { href: "dashboard.html", label: "Painel" },
@@ -161,9 +221,9 @@ const LANDLORD_NAV_ITEMS = [
 ];
 
 const TENANT_NAV_ITEMS = [
+  { href: "my-interests.html", label: "Meus interesses" },
+  { href: "index.html", label: "Marketplace" },
   { href: "profile.html", label: "Meu perfil", button: true },
-  { href: "tenants.html", label: "Inquilinos" },
-  { href: "tenant-detail.html?id=1", label: "Perfil detalhado" },
 ];
 
 const getRoleNavItems = (accountType) =>
@@ -353,7 +413,10 @@ const formHandlers = {
     setSessionAccountType(response.user.account_type || "landlord");
     setStatus(status, `Sessao iniciada para ${response.user.email}.`);
     updateSessionUI();
-    window.location.href = getLastRoute() || getPostAuthRoute(response.user.account_type || "landlord");
+    window.location.href = getSafeRouteForAccountType(
+      getLastRoute() || getPostAuthRoute(response.user.account_type || "landlord"),
+      response.user.account_type || "landlord"
+    );
   },
   async register(form, status) {
     const formData = new FormData(form);
@@ -383,7 +446,10 @@ const formHandlers = {
         : "Cadastro realizado. Agora voce pode acessar o painel do locador."
     );
     updateSessionUI();
-    window.location.href = getLastRoute() || getPostAuthRoute(payload.account_type);
+    window.location.href = getSafeRouteForAccountType(
+      getLastRoute() || getPostAuthRoute(payload.account_type),
+      payload.account_type
+    );
   },
   async profile(form, status) {
     if (!getToken()) {
@@ -1296,6 +1362,236 @@ const formatMoney = (value) => {
   });
 };
 
+const formatDateTime = (value, options = { dateStyle: "short", timeStyle: "short" }) => {
+  if (!value) {
+    return "-";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "-";
+  }
+
+  return date.toLocaleString("pt-BR", options);
+};
+
+const escapeHtml = (value) =>
+  String(value ?? "").replace(/[&<>\"']/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  })[character]);
+
+const resolveInterestStage = (interest) => {
+  if (interest?.contract?.status === "signed") {
+    return {
+      label: "Contrato assinado",
+      tone: "ready",
+      detail: `Contrato assinado em ${formatDateTime(interest.contract.signed_at)}.`,
+      key: "contract-signed",
+    };
+  }
+
+  if (interest?.contract) {
+    return {
+      label: "Contrato em preparacao",
+      tone: "ready",
+      detail: "Seu interesse foi aprovado e a formalizacao do contrato ja foi iniciada.",
+      key: "contract-ready",
+    };
+  }
+
+  if (interest?.landlord_decision === "rejected" || interest?.rejected_at) {
+    return {
+      label: "Interesse negado",
+      tone: "alert",
+      detail:
+        interest?.landlord_notes ||
+        "O locador decidiu nao seguir com este interesse neste momento.",
+      key: "rejected",
+    };
+  }
+
+  if (interest?.visit?.status === "confirmed") {
+    return {
+      label: "Visita confirmada",
+      tone: "ready",
+      detail: `Visita confirmada para ${formatDateTime(interest.visit.scheduled_for)}.`,
+      key: "visit-confirmed",
+    };
+  }
+
+  if (interest?.landlord_decision === "contact_requested" || interest?.contact_requested_at) {
+    return {
+      label: "Aceito para visita",
+      tone: "ready",
+      detail:
+        interest?.visit?.scheduled_for
+          ? `O locador liberou a visita para ${formatDateTime(interest.visit.scheduled_for)}.`
+          : "O locador aceitou seu interesse e a visita sera alinhada em seguida.",
+      key: "visit-approved",
+    };
+  }
+
+  if (interest?.payment_status !== "paid") {
+    return {
+      label: "Aguardando pagamento",
+      tone: "pending",
+      detail: "A taxa de analise ainda nao foi confirmada para este interesse.",
+      key: "payment-pending",
+    };
+  }
+
+  return {
+    label: "Em analise",
+    tone: "progress",
+    detail: "Seu interesse foi recebido e esta em avaliacao pelo locador.",
+    key: "under-review",
+  };
+};
+
+const initTenantInterests = () => {
+  const page = document.querySelector('[data-page="my-interests"]');
+  if (!page) {
+    return;
+  }
+
+  const status = document.querySelector("[data-interest-status]");
+  const summary = document.querySelector("[data-interest-summary]");
+  const list = document.querySelector("[data-interest-list]");
+
+  if (!getToken()) {
+    setStatus(status, "Faca login para acompanhar seus interesses.", true);
+    return;
+  }
+
+  const renderSummary = (items) => {
+    if (!summary) {
+      return;
+    }
+
+    const approved = items.filter((interest) => {
+      const key = resolveInterestStage(interest).key;
+      return key === "visit-approved" || key === "visit-confirmed" || key === "contract-ready" || key === "contract-signed";
+    }).length;
+    const rejected = items.filter((interest) => resolveInterestStage(interest).key === "rejected").length;
+    const review = items.filter((interest) => resolveInterestStage(interest).key === "under-review").length;
+
+    summary.innerHTML = `
+      <div>
+        <strong>${items.length}</strong>
+        <span>interesse(s) registrado(s)</span>
+      </div>
+      <div>
+        <strong>${approved}</strong>
+        <span>aceito(s) para visita ou contrato</span>
+      </div>
+      <div>
+        <strong>${review}</strong>
+        <span>em analise</span>
+      </div>
+      <div>
+        <strong>${rejected}</strong>
+        <span>negado(s)</span>
+      </div>
+    `;
+  };
+
+  const renderList = (items) => {
+    if (!list) {
+      return;
+    }
+
+    if (!Array.isArray(items) || items.length === 0) {
+      list.innerHTML = `
+        <div class="empty-state">
+          <h2>Nenhum interesse por enquanto</h2>
+          <p>Quando voce demonstrar interesse em um imovel, o acompanhamento aparecera aqui.</p>
+          <a class="button" href="index.html">Explorar marketplace</a>
+        </div>
+      `;
+      return;
+    }
+
+    list.innerHTML = items
+      .map((interest) => {
+        const property = interest.property || {};
+        const stage = resolveInterestStage(interest);
+        const paymentTone = interest.payment_status === "paid" ? "ready" : "pending";
+        const visitLabel = interest.visit?.scheduled_for
+          ? `Visita: ${formatDateTime(interest.visit.scheduled_for)}`
+          : "Visita ainda nao agendada";
+        const contractLabel = interest.contract
+          ? `Contrato: ${interest.contract.status || "em preparacao"}`
+          : "Contrato ainda nao gerado";
+
+        return `
+          <article class="detail-card">
+            <div class="detail-header">
+              <div>
+                <h2>${escapeHtml(property.title || "Imovel sem titulo")}</h2>
+                <p class="muted">
+                  ${escapeHtml(property.city || "Cidade nao informada")}/${escapeHtml(property.state || "-")}
+                  · ${escapeHtml(formatPropertyType(property.property_type))}
+                </p>
+              </div>
+              <span class="status-chip ${stage.tone}">${escapeHtml(stage.label)}</span>
+            </div>
+
+            <div class="chip-row">
+              <span class="mini-chip">${escapeHtml(formatMoney(property.rent_price || 0))}/mes</span>
+              <span class="mini-chip">${escapeHtml(String(property.bedrooms || 0))} quarto(s)</span>
+              <span class="status-chip ${paymentTone}">
+                ${interest.payment_status === "paid" ? "Analise paga" : "Pagamento pendente"}
+              </span>
+            </div>
+
+            <p>${escapeHtml(stage.detail)}</p>
+
+            <ul class="detail-meta">
+              <li><strong>Atualizacao:</strong> ${escapeHtml(formatDateTime(interest.created_at))}</li>
+              <li><strong>Visita:</strong> ${escapeHtml(visitLabel)}</li>
+              <li><strong>Contrato:</strong> ${escapeHtml(contractLabel)}</li>
+              <li><strong>Taxa de analise:</strong> ${escapeHtml(formatMoney(interest.analysis_fee || 0))}</li>
+              ${interest.landlord_notes ? `<li><strong>Observacao do locador:</strong> ${escapeHtml(interest.landlord_notes)}</li>` : ""}
+            </ul>
+
+            <div class="detail-actions">
+              ${property.id ? `<a class="button ghost" href="property-detail.html?id=${property.id}">Ver imovel</a>` : ""}
+            </div>
+          </article>
+        `;
+      })
+      .join("");
+  };
+
+  const loadInterests = async () => {
+    setStatus(status, "Carregando seus interesses...");
+
+    try {
+      const response = await apiRequest("/tenant/interests");
+      const items = response.data || [];
+      renderSummary(items);
+      renderList(items);
+      setStatus(status, items.length > 0 ? "Seus interesses foram atualizados." : "Voce ainda nao possui interesses registrados.");
+    } catch (error) {
+      if (list) {
+        list.innerHTML = `
+          <div class="empty-state">
+            <h2>Nao foi possivel carregar</h2>
+            <p>${escapeHtml(error.message)}</p>
+          </div>
+        `;
+      }
+      setStatus(status, error.message, true);
+    }
+  };
+
+  loadInterests();
+};
+
 const resolvePropertyImages = (property) => {
   const gallery = Array.isArray(property?.image_urls) ? property.image_urls.filter(Boolean) : [];
   const hero = property?.hero_image_url || gallery[0] || null;
@@ -1868,6 +2164,7 @@ const initContractPage = () => {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
+  enforceAccountRouteAccess();
   trackLastRoute();
   updateSessionUI();
   initSessionActions();
@@ -1877,6 +2174,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initLandlordEdit();
   initMarketplace();
   initPropertyDetail();
+  initTenantInterests();
   initContractPage();
   const forms = document.querySelectorAll("[data-form]");
   forms.forEach((form) => {

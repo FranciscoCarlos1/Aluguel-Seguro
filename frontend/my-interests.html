@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Meus Interesses - Aluguel Seguro</title>
+    <link rel="stylesheet" href="../assets/css/styles.css" />
+  </head>
+  <body class="page-my-interests" data-page="my-interests">
+    <div class="backdrop"></div>
+    <header class="site-header">
+      <a class="brand" href="index.html">Aluguel Seguro</a>
+      <nav class="nav-links">
+        <a href="index.html">Marketplace</a>
+        <a href="login.html" data-guest-only>Entrar</a>
+        <a href="register.html" data-guest-only>Cadastro</a>
+        <a href="profile.html" class="button ghost" data-auth-only>Meu perfil</a>
+        <div class="session-status">
+          <span data-session-label>Sem sessao</span>
+          <button class="button ghost session-action" type="button" data-session-action>
+            Entrar
+          </button>
+        </div>
+      </nav>
+    </header>
+
+    <main class="panel panel-wide">
+      <section class="panel-card panel-card--wide reveal">
+        <div class="tenants-header">
+          <div>
+            <h1>Meus interesses</h1>
+            <p class="muted">
+              Acompanhe os imoveis em que voce deu match, veja quais foram aceitos para visita e quais nao avancaram.
+            </p>
+          </div>
+        </div>
+
+        <div class="metric-strip" data-interest-summary></div>
+        <p class="form-status" data-interest-status></p>
+        <div class="detail-grid" data-interest-list></div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>MVP de locacao direta com perfil comportamental, contrato seguro e apoio por telefone e WhatsApp.</p>
+    </footer>
+
+    <script src="env.js"></script>
+    <script src="../assets/js/app.js"></script>
+  </body>
+</html>
