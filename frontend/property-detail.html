@@ -64,134 +64,162 @@
 
         <div class="detail-card property-contact-flow is-hidden" data-contact-flow>
           <h2>Entrar em contato</h2>
-          <p class="muted">Preencha os dados principais. O perfil salvo pode ser reaproveitado por até 3 meses e o questionário aparece como segunda etapa.</p>
+          <p class="muted">Primeiro preencha os dados de contato. Depois o sistema abre a etapa do questionario para concluir o interesse.</p>
+
+          <div class="property-flow-steps" data-interest-steps>
+            <span class="mini-chip is-active" data-step-indicator="contact">1. Contato</span>
+            <span class="mini-chip" data-step-indicator="questionnaire">2. Questionario</span>
+          </div>
 
           <form class="form-grid form-grid--two" data-property-interest-form>
-            <label>
-              Nome completo
-              <input type="text" name="tenant_name" required />
-            </label>
-            <label>
-              Telefone (WhatsApp)
-              <input type="text" name="tenant_phone" data-prospect-phone required />
-            </label>
-            <label>
-              E-mail
-              <input type="email" name="tenant_email" />
-            </label>
-            <label>
-              Profissão
-              <input type="text" name="occupation" />
-            </label>
-            <label>
-              Renda mensal
-              <input type="number" name="monthly_income" min="0" step="0.01" />
-            </label>
-            <label>
-              Quantas pessoas vão morar
-              <input type="number" name="household_size" min="1" max="12" />
-            </label>
-            <label>
-              Possui pet?
-              <select name="has_pet" required>
-                <option value="0">Não</option>
-                <option value="1">Sim</option>
-              </select>
-            </label>
-            <label class="full">
-              Motivo da locação
-              <textarea name="rental_reason" rows="2"></textarea>
-            </label>
+            <div class="property-flow-panel full" data-step-panel="contact">
+              <div class="property-flow-panel__header">
+                <h3>Dados de contato</h3>
+                <p class="muted">Informe os dados basicos para seguir para a analise do perfil.</p>
+              </div>
 
-            <div class="detail-card full" data-questionnaire-box>
-              <h3>Questionario de perfil comportamental</h3>
-              <p class="muted" data-questionnaire-hint>Na primeira demonstracao de interesse, responda as 7 perguntas do perfil comportamental.</p>
               <div class="form-grid form-grid--two">
                 <label>
-                  Cuidado com o imovel e autodisciplina
-                  <select name="care_reflection" data-behavioral-answer>
-                    <option value="">Selecione</option>
-                    <option value="concordo_totalmente">Concordo totalmente</option>
-                    <option value="concordo">Concordo</option>
-                    <option value="neutro">Neutro</option>
-                    <option value="discordo">Discordo</option>
-                    <option value="discordo_totalmente">Discordo totalmente</option>
-                  </select>
+                  Nome completo
+                  <input type="text" name="tenant_name" required />
                 </label>
                 <label>
-                  Casa como refugio de silencio e privacidade
-                  <select name="quiet_refuge" data-behavioral-answer>
-                    <option value="">Selecione</option>
-                    <option value="concordo_totalmente">Concordo totalmente</option>
-                    <option value="concordo">Concordo</option>
-                    <option value="neutro">Neutro</option>
-                    <option value="discordo">Discordo</option>
-                    <option value="discordo_totalmente">Discordo totalmente</option>
-                  </select>
+                  Telefone (WhatsApp)
+                  <input type="text" name="tenant_phone" data-prospect-phone required />
                 </label>
                 <label>
-                  Imprevistos justificam adiar compromissos
-                  <select name="financial_commitment" data-behavioral-answer>
-                    <option value="">Selecione</option>
-                    <option value="concordo_totalmente">Concordo totalmente</option>
-                    <option value="concordo">Concordo</option>
-                    <option value="neutro">Neutro</option>
-                    <option value="discordo">Discordo</option>
-                    <option value="discordo_totalmente">Discordo totalmente</option>
-                  </select>
+                  E-mail
+                  <input type="email" name="tenant_email" />
                 </label>
                 <label>
-                  Rotina focada em trabalho e estabilidade familiar
-                  <select name="stability_focus" data-behavioral-answer>
-                    <option value="">Selecione</option>
-                    <option value="concordo_totalmente">Concordo totalmente</option>
-                    <option value="concordo">Concordo</option>
-                    <option value="neutro">Neutro</option>
-                    <option value="discordo">Discordo</option>
-                    <option value="discordo_totalmente">Discordo totalmente</option>
-                  </select>
+                  Profissão
+                  <input type="text" name="occupation" />
                 </label>
                 <label>
-                  Facilidade com visitantes e parentes por longos periodos
-                  <select name="visitors_sharing" data-behavioral-answer>
-                    <option value="">Selecione</option>
-                    <option value="concordo_totalmente">Concordo totalmente</option>
-                    <option value="concordo">Concordo</option>
-                    <option value="neutro">Neutro</option>
-                    <option value="discordo">Discordo</option>
-                    <option value="discordo_totalmente">Discordo totalmente</option>
-                  </select>
+                  Renda mensal
+                  <input type="number" name="monthly_income" min="0" step="0.01" />
                 </label>
                 <label>
-                  Regras de condominio e convivencia devem ser seguidas a risca
-                  <select name="rule_respect" data-behavioral-answer>
-                    <option value="">Selecione</option>
-                    <option value="concordo_totalmente">Concordo totalmente</option>
-                    <option value="concordo">Concordo</option>
-                    <option value="neutro">Neutro</option>
-                    <option value="discordo">Discordo</option>
-                    <option value="discordo_totalmente">Discordo totalmente</option>
-                  </select>
+                  Quantas pessoas vão morar
+                  <input type="number" name="household_size" min="1" max="12" />
                 </label>
                 <label>
-                  Pequenos danos devem ser resolvidos imediatamente
-                  <select name="preventive_maintenance" data-behavioral-answer>
-                    <option value="">Selecione</option>
-                    <option value="concordo_totalmente">Concordo totalmente</option>
-                    <option value="concordo">Concordo</option>
-                    <option value="neutro">Neutro</option>
-                    <option value="discordo">Discordo</option>
-                    <option value="discordo_totalmente">Discordo totalmente</option>
+                  Possui pet?
+                  <select name="has_pet" required>
+                    <option value="0">Não</option>
+                    <option value="1">Sim</option>
                   </select>
                 </label>
+                <label class="full">
+                  Motivo da locação
+                  <textarea name="rental_reason" rows="2"></textarea>
+                </label>
+              </div>
+
+              <div class="property-flow-actions">
+                <button class="button" type="button" data-next-interest-step>Salvar contato e continuar</button>
               </div>
             </div>
 
-            <label class="full">
-              Observações
-              <textarea name="additional_notes" rows="3"></textarea>
-            </label>
-            <button class="button" type="submit">Enviar contato</button>
+            <div class="property-flow-panel full is-hidden" data-step-panel="questionnaire">
+              <div class="property-flow-panel__header">
+                <h3>Questionario de perfil comportamental</h3>
+                <p class="muted" data-questionnaire-hint>Na primeira demonstracao de interesse, responda as 7 perguntas do perfil comportamental.</p>
+              </div>
+
+              <div class="detail-card detail-card--nested" data-questionnaire-box>
+                <div class="form-grid form-grid--two">
+                  <label>
+                    Cuidado com o imovel e autodisciplina
+                    <select name="care_reflection" data-behavioral-answer>
+                      <option value="">Selecione</option>
+                      <option value="concordo_totalmente">Concordo totalmente</option>
+                      <option value="concordo">Concordo</option>
+                      <option value="neutro">Neutro</option>
+                      <option value="discordo">Discordo</option>
+                      <option value="discordo_totalmente">Discordo totalmente</option>
+                    </select>
+                  </label>
+                  <label>
+                    Casa como refugio de silencio e privacidade
+                    <select name="quiet_refuge" data-behavioral-answer>
+                      <option value="">Selecione</option>
+                      <option value="concordo_totalmente">Concordo totalmente</option>
+                      <option value="concordo">Concordo</option>
+                      <option value="neutro">Neutro</option>
+                      <option value="discordo">Discordo</option>
+                      <option value="discordo_totalmente">Discordo totalmente</option>
+                    </select>
+                  </label>
+                  <label>
+                    Imprevistos justificam adiar compromissos
+                    <select name="financial_commitment" data-behavioral-answer>
+                      <option value="">Selecione</option>
+                      <option value="concordo_totalmente">Concordo totalmente</option>
+                      <option value="concordo">Concordo</option>
+                      <option value="neutro">Neutro</option>
+                      <option value="discordo">Discordo</option>
+                      <option value="discordo_totalmente">Discordo totalmente</option>
+                    </select>
+                  </label>
+                  <label>
+                    Rotina focada em trabalho e estabilidade familiar
+                    <select name="stability_focus" data-behavioral-answer>
+                      <option value="">Selecione</option>
+                      <option value="concordo_totalmente">Concordo totalmente</option>
+                      <option value="concordo">Concordo</option>
+                      <option value="neutro">Neutro</option>
+                      <option value="discordo">Discordo</option>
+                      <option value="discordo_totalmente">Discordo totalmente</option>
+                    </select>
+                  </label>
+                  <label>
+                    Facilidade com visitantes e parentes por longos periodos
+                    <select name="visitors_sharing" data-behavioral-answer>
+                      <option value="">Selecione</option>
+                      <option value="concordo_totalmente">Concordo totalmente</option>
+                      <option value="concordo">Concordo</option>
+                      <option value="neutro">Neutro</option>
+                      <option value="discordo">Discordo</option>
+                      <option value="discordo_totalmente">Discordo totalmente</option>
+                    </select>
+                  </label>
+                  <label>
+                    Regras de condominio e convivencia devem ser seguidas a risca
+                    <select name="rule_respect" data-behavioral-answer>
+                      <option value="">Selecione</option>
+                      <option value="concordo_totalmente">Concordo totalmente</option>
+                      <option value="concordo">Concordo</option>
+                      <option value="neutro">Neutro</option>
+                      <option value="discordo">Discordo</option>
+                      <option value="discordo_totalmente">Discordo totalmente</option>
+                    </select>
+                  </label>
+                  <label>
+                    Pequenos danos devem ser resolvidos imediatamente
+                    <select name="preventive_maintenance" data-behavioral-answer>
+                      <option value="">Selecione</option>
+                      <option value="concordo_totalmente">Concordo totalmente</option>
+                      <option value="concordo">Concordo</option>
+                      <option value="neutro">Neutro</option>
+                      <option value="discordo">Discordo</option>
+                      <option value="discordo_totalmente">Discordo totalmente</option>
+                    </select>
+                  </label>
+                </div>
+              </div>
+
+              <label class="full property-flow-notes">
+                Observações
+                <textarea name="additional_notes" rows="3"></textarea>
+              </label>
+
+              <div class="property-flow-actions full is-hidden" data-step-actions="questionnaire">
+                <button class="button ghost" type="button" data-back-interest-step>Voltar</button>
+                <button class="button" type="submit">Enviar interesse</button>
+              </div>
+            </div>
+
             <p class="form-status full" data-interest-status></p>
           </form>
 

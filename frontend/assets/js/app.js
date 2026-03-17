@@ -1832,6 +1832,12 @@ const initPropertyDetail = () => {
   const openInterestFlowBtn = document.querySelector("[data-open-interest-flow]");
   const form = document.querySelector("[data-property-interest-form]");
   const phoneInput = document.querySelector("[data-prospect-phone]");
+  const contactPanel = document.querySelector('[data-step-panel="contact"]');
+  const questionnairePanel = document.querySelector('[data-step-panel="questionnaire"]');
+  const nextInterestStepBtn = document.querySelector("[data-next-interest-step]");
+  const backInterestStepBtn = document.querySelector("[data-back-interest-step]");
+  const questionnaireActions = document.querySelector('[data-step-actions="questionnaire"]');
+  const stepIndicators = document.querySelectorAll("[data-step-indicator]");
   const questionnaireBox = document.querySelector("[data-questionnaire-box]");
   const questionnaireHint = document.querySelector("[data-questionnaire-hint]");
   const behavioralFields = document.querySelectorAll("[data-behavioral-answer]");
@@ -1845,6 +1851,7 @@ const initPropertyDetail = () => {
   const storedProspectPhone = getProspectPhone();
 
   let currentPaymentReference = null;
+  let currentInterestStep = "contact";
 
   if (!propertyId) {
     setStatus(status, "Imóvel não informado.", true);
@@ -1862,10 +1869,51 @@ const initPropertyDetail = () => {
   const openInterestFlow = () => {
     if (contactFlow) {
       contactFlow.classList.remove("is-hidden");
-      contactFlow.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
+    setInterestStep("contact", false);
+    contactFlow?.scrollIntoView({ behavior: "smooth", block: "start" });
+
     setStatus(status, "Preencha os dados para iniciar o contato sobre este imóvel.");
+  };
+
+  const setInterestStep = (step, shouldScroll = true) => {
+    currentInterestStep = step;
+
+    if (contactPanel) {
+      contactPanel.classList.toggle("is-hidden", step !== "contact");
+    }
+
+    if (questionnairePanel) {
+      questionnairePanel.classList.toggle("is-hidden", step !== "questionnaire");
+    }
+
+    if (questionnaireActions) {
+      questionnaireActions.classList.toggle("is-hidden", step !== "questionnaire");
+    }
+
+    stepIndicators.forEach((indicator) => {
+      indicator.classList.toggle("is-active", indicator.dataset.stepIndicator === step);
+    });
+
+    if (shouldScroll) {
+      contactFlow?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
+  const validateContactStep = () => {
+    if (!contactPanel) {
+      return true;
+    }
+
+    const fields = contactPanel.querySelectorAll("input, select, textarea");
+    for (const field of fields) {
+      if (typeof field.reportValidity === "function" && !field.reportValidity()) {
+        return false;
+      }
+    }
+
+    return true;
   };
 
   const toggleQuestionnaire = (show, hint = "") => {
@@ -1880,6 +1928,21 @@ const initPropertyDetail = () => {
 
     if (questionnaireHint) {
       questionnaireHint.textContent = hint;
+    }
+  };
+
+  const goToQuestionnaireStep = async () => {
+    if (!validateContactStep()) {
+      return;
+    }
+
+    await lookupProfileByPhone();
+    setInterestStep("questionnaire");
+
+    if (questionnaireBox?.classList.contains("is-hidden")) {
+      setStatus(status, "Contato salvo. Seu perfil comportamental anterior sera reaproveitado. Revise as observacoes e envie o interesse.");
+    } else {
+      setStatus(status, "Contato salvo. Agora responda o questionario para concluir o interesse.");
     }
   };
 
@@ -2011,6 +2074,17 @@ const initPropertyDetail = () => {
     openInterestFlowBtn.addEventListener("click", openInterestFlow);
   }
 
+  if (nextInterestStepBtn) {
+    nextInterestStepBtn.addEventListener("click", goToQuestionnaireStep);
+  }
+
+  if (backInterestStepBtn) {
+    backInterestStepBtn.addEventListener("click", () => {
+      setInterestStep("contact");
+      setStatus(status, "Revise os dados de contato antes de seguir.");
+    });
+  }
+
   if (phoneInput) {
     phoneInput.addEventListener("blur", lookupProfileByPhone);
   }
@@ -2018,6 +2092,11 @@ const initPropertyDetail = () => {
   if (form) {
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
+
+      if (currentInterestStep !== "questionnaire") {
+        await goToQuestionnaireStep();
+        return;
+      }
 
       const formData = new FormData(form);
       const payload = {
@@ -2070,6 +2149,8 @@ const initPropertyDetail = () => {
           contactFlow.classList.remove("is-hidden");
         }
 
+        setInterestStep("questionnaire", false);
+
         setStatus(status, response.message || "Interesse enviado com sucesso.");
       } catch (error) {
         setStatus(status, error.message, true);
@@ -2104,6 +2185,7 @@ const initPropertyDetail = () => {
     }
   }
 
+  setInterestStep("contact", false);
   toggleQuestionnaire(true, "Na primeira demonstracao de interesse, responda as 7 perguntas do perfil comportamental.");
   loadProperty();
 };

@@ -733,6 +733,49 @@ textarea {
   gap: 18px;
 }
 
+.property-flow-steps {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.property-flow-steps .mini-chip {
+  background: #fff7ef;
+  color: #7b5b3c;
+}
+
+.property-flow-steps .mini-chip.is-active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.property-flow-panel {
+  display: grid;
+  gap: 18px;
+}
+
+.property-flow-panel__header {
+  display: grid;
+  gap: 6px;
+}
+
+.detail-card--nested {
+  box-shadow: none;
+  background: #fffaf4;
+}
+
+.property-flow-notes {
+  display: grid;
+  gap: 8px;
+}
+
+.property-flow-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
 .property-detail-grid {
   margin-bottom: 0;
 }
@@ -1262,5 +1305,14 @@ textarea {
 
   .property-card-aside {
     justify-items: stretch;
+  }
+
+  .property-flow-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .property-flow-actions .button {
+    width: 100%;
   }
 }
