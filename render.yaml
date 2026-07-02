@@ -1,5 +1,6 @@
 databases:
   - name: ifc-jornada-db
+    plan: basic-256mb
     databaseName: ifc_jornada
     user: ifc_jornada
 
@@ -28,8 +29,9 @@ services:
       - key: IFC_JORNADA_OFFICIAL_SHEET_SYNC_HOUR
         value: 23
 
-  - type: static
+  - type: web
     name: ifc-jornada-frontend
+    runtime: static
     rootDir: frontend
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
