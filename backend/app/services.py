@@ -484,6 +484,12 @@ def decode_indicator_raw_value(code: str, raw_value: int) -> float:
     return float(raw_value)
 
 
+def resolve_indicator_raw_value(code: str, stored_raw_value: float, quality_score: float) -> float:
+    if code == "IND5" and stored_raw_value <= 0 and quality_score > 0:
+        return round(max(0, min(quality_score, 25)), 2)
+    return stored_raw_value
+
+
 def score_indicator(code: str, raw_value: float, quality_score: float = 0) -> float:
     if code == "IND1":
         return max(10 - (min(max(raw_value, 0), 5) * 2), 0)
@@ -660,7 +666,8 @@ def get_monthly_indicators(db: Session, year: int, month: int) -> schemas.Monthl
     max_score = 0.0
     for definition in INDICATOR_DEFINITIONS:
         record = records_by_code.get(definition["code"])
-        raw_value = decode_indicator_raw_value(definition["code"], record.raw_value if record else 0)
+        stored_raw_value = decode_indicator_raw_value(definition["code"], record.raw_value if record else 0)
+        raw_value = resolve_indicator_raw_value(definition["code"], stored_raw_value, quality_summary.quality_score)
         score = score_indicator(definition["code"], raw_value, quality_summary.quality_score)
         total_score += score
         max_score += float(definition["max_score"])
