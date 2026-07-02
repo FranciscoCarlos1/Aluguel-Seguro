@@ -291,8 +291,6 @@ const newHoliday = ref({
 const entryForm = ref({
   work_date: '',
   clock_in: '',
-  lunch_out: '',
-  lunch_in: '',
   clock_out: '',
   notes: '',
 })
@@ -851,8 +849,6 @@ function syncEntryFormFromSummary() {
     entryForm.value = {
       work_date: '',
       clock_in: '',
-      lunch_out: '',
-      lunch_in: '',
       clock_out: '',
       notes: '',
     }
@@ -869,8 +865,6 @@ function syncEntryFormFromSummary() {
   entryForm.value = {
     work_date: day.work_date,
     clock_in: day.entry?.clock_in ?? '',
-    lunch_out: day.entry?.lunch_out ?? '',
-    lunch_in: day.entry?.lunch_in ?? '',
     clock_out: day.entry?.clock_out ?? '',
     notes: day.entry?.notes ?? '',
   }
@@ -881,8 +875,6 @@ function editDay(day: DaySummary) {
   entryForm.value = {
     work_date: day.work_date,
     clock_in: day.entry?.clock_in ?? '',
-    lunch_out: day.entry?.lunch_out ?? '',
-    lunch_in: day.entry?.lunch_in ?? '',
     clock_out: day.entry?.clock_out ?? '',
     notes: day.entry?.notes ?? '',
   }
@@ -903,8 +895,8 @@ async function saveEntry() {
         employee_id: summary.employee.id,
         work_date: entryForm.value.work_date,
         clock_in: entryForm.value.clock_in || null,
-        lunch_out: entryForm.value.lunch_out || null,
-        lunch_in: entryForm.value.lunch_in || null,
+        lunch_out: null,
+        lunch_in: null,
         clock_out: entryForm.value.clock_out || null,
         notes: entryForm.value.notes || null,
       }),
@@ -1734,14 +1726,6 @@ onMounted(async () => {
               <label class="field">
                 <span>Entrada</span>
                 <input v-model="entryForm.clock_in" type="time" />
-              </label>
-              <label class="field">
-                <span>Saida almoco</span>
-                <input v-model="entryForm.lunch_out" type="time" />
-              </label>
-              <label class="field">
-                <span>Retorno almoco</span>
-                <input v-model="entryForm.lunch_in" type="time" />
               </label>
               <label class="field">
                 <span>Saida final</span>
