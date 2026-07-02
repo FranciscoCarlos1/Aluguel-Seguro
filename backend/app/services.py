@@ -471,7 +471,20 @@ def update_cost_config(db: Session, payload: schemas.CostConfigUpdate) -> schema
     return get_cost_config_payload(db)
 
 
-def score_indicator(code: str, raw_value: int, quality_score: float = 0) -> float:
+def encode_indicator_raw_value(code: str, raw_value: float) -> int:
+    normalized = max(raw_value, 0)
+    if code == "IND5":
+        return int(round(min(normalized, 25) * 100))
+    return int(round(normalized))
+
+
+def decode_indicator_raw_value(code: str, raw_value: int) -> float:
+    if code == "IND5":
+        return round(max(raw_value, 0) / 100, 2)
+    return float(raw_value)
+
+
+def score_indicator(code: str, raw_value: float, quality_score: float = 0) -> float:
     if code == "IND1":
         return max(10 - (min(max(raw_value, 0), 5) * 2), 0)
     if code == "IND2":
@@ -491,7 +504,7 @@ def score_indicator(code: str, raw_value: int, quality_score: float = 0) -> floa
     if code == "IND4":
         return 20 if raw_value <= 0 else 0
     if code == "IND5":
-        return round(max(0, min(quality_score, 25)), 2)
+        return round(max(0, min(raw_value, 25)), 2)
     return 0
 
 
@@ -647,7 +660,7 @@ def get_monthly_indicators(db: Session, year: int, month: int) -> schemas.Monthl
     max_score = 0.0
     for definition in INDICATOR_DEFINITIONS:
         record = records_by_code.get(definition["code"])
-        raw_value = record.raw_value if record else 0
+        raw_value = decode_indicator_raw_value(definition["code"], record.raw_value if record else 0)
         score = score_indicator(definition["code"], raw_value, quality_summary.quality_score)
         total_score += score
         max_score += float(definition["max_score"])
@@ -659,7 +672,7 @@ def get_monthly_indicators(db: Session, year: int, month: int) -> schemas.Monthl
                 target_description=definition["target_description"],
                 periodicity=definition["periodicity"],
                 input_kind=definition["input_kind"],
-                raw_value=quality_summary.quality_score if definition["code"] == "IND5" else raw_value,
+                raw_value=raw_value,
                 score=score,
                 max_score=float(definition["max_score"]),
                 notes=record.notes if record else None,
@@ -698,8 +711,7 @@ def update_monthly_indicators(
         if record is None:
             record = models.IndicatorMonthlyRecord(year=year, month=month, code=item.code)
             db.add(record)
-        if item.code != "IND5":
-            record.raw_value = int(round(max(item.raw_value, 0)))
+        record.raw_value = encode_indicator_raw_value(item.code, item.raw_value)
         record.notes = item.notes.strip() if item.notes else None
     db.commit()
     return get_monthly_indicators(db, year, month)

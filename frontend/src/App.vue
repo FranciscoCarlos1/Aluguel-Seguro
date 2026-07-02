@@ -209,6 +209,14 @@ const weekdayOptions = [
   { value: 6, label: 'Domingo' },
 ]
 const qualityRatingOptions = ['O', 'B', 'R', 'I', 'N'] as const
+const serviceLevelBands = [
+  { label: 'De 80 a 100 pontos', min_score: 80, payment_description: '100% do valor previsto', factor: 1.0 },
+  { label: 'De 70 a 79 pontos', min_score: 70, payment_description: '97% do valor previsto', factor: 0.97 },
+  { label: 'De 60 a 69 pontos', min_score: 60, payment_description: '95% do valor previsto', factor: 0.95 },
+  { label: 'De 50 a 59 pontos', min_score: 50, payment_description: '93% do valor previsto', factor: 0.93 },
+  { label: 'De 40 a 49 pontos', min_score: 40, payment_description: '90% do valor previsto', factor: 0.9 },
+  { label: 'Abaixo de 40 pontos', min_score: 0, payment_description: '90% do valor previsto + multa', factor: 0.9 },
+]
 
 const today = new Date()
 const selectedYear = ref(today.getFullYear())
@@ -313,7 +321,56 @@ const selectedEmployeeSummary = computed(() => {
 })
 const activeEmployees = computed(() => employees.value.filter((employee) => employee.is_active))
 const hiddenInactiveCount = computed(() => employees.value.filter((employee) => !employee.is_active).length)
+const qualitySummaryPreview = computed<ServiceQualitySummary | null>(() => {
+  if (!monthlyImr.value) {
+    return null
+  }
+
+  const count_o = monthlyImr.value.quality_items.filter((item) => item.rating === 'O').length
+  const count_b = monthlyImr.value.quality_items.filter((item) => item.rating === 'B').length
+  const count_r = monthlyImr.value.quality_items.filter((item) => item.rating === 'R').length
+  const count_i = monthlyImr.value.quality_items.filter((item) => item.rating === 'I').length
+  const count_n = monthlyImr.value.quality_items.filter((item) => item.rating === 'N').length
+  const total_answered = count_o + count_b + count_r + count_i
+  const ratio = (value: number) => (total_answered > 0 ? Number((value / total_answered).toFixed(4)) : 0)
+  const index_o = ratio(count_o)
+  const index_b = ratio(count_b)
+  const index_r = ratio(count_r)
+  const index_i = ratio(count_i)
+
+  return {
+    total_answered,
+    count_o,
+    count_b,
+    count_r,
+    count_i,
+    count_n,
+    index_o,
+    index_b,
+    index_r,
+    index_i,
+    quality_score: roundCurrency((index_o + index_b) * 25),
+    comment: monthlyImr.value.quality_summary.comment,
+  }
+})
 const monthlyIndicators = computed(() => monthlyImr.value?.indicators ?? null)
+const previewIndicatorTotalScore = computed(() => {
+  if (!monthlyIndicators.value) {
+    return 0
+  }
+
+  return roundCurrency(
+    monthlyIndicators.value.items.reduce((sum, item) => {
+      return sum + scoreIndicatorPreview(item.code, Number(item.raw_value) || 0)
+    }, 0),
+  )
+})
+const previewIndicatorMaxScore = computed(() => {
+  if (!monthlyIndicators.value) {
+    return 0
+  }
+  return roundCurrency(monthlyIndicators.value.items.reduce((sum, item) => sum + item.max_score, 0))
+})
 const qualityGroups = computed(() => {
   const groups = new Map<string, ServiceQualityItem[]>()
   for (const item of monthlyImr.value?.quality_items ?? []) {
@@ -322,6 +379,53 @@ const qualityGroups = computed(() => {
     groups.set(item.category, current)
   }
   return Array.from(groups.entries()).map(([category, items]) => ({ category, items }))
+})
+const previewServiceLevelBands = computed<ServiceLevelBand[]>(() => {
+  const totalScore = previewIndicatorTotalScore.value
+  const selectedLabel = serviceLevelBands.find((band) => totalScore >= band.min_score)?.label ?? serviceLevelBands[serviceLevelBands.length - 1].label
+  return serviceLevelBands.map((band) => ({
+    label: band.label,
+    payment_description: band.payment_description,
+    factor: band.factor,
+    selected: band.label === selectedLabel,
+  }))
+})
+const previewVtApuracao = computed<VtApuracao | null>(() => {
+  if (!monthlyImr.value || !monthlyIndicators.value) {
+    return null
+  }
+
+  const monthlyWithVt = monthlyImr.value.vt_apuracao.monthly_with_vt
+  const monthlyWithoutVt = monthlyImr.value.vt_apuracao.monthly_without_vt
+  const vtMonthlyDifference = roundCurrency(monthlyWithVt - monthlyWithoutVt)
+  const employeeCount = Math.max(activeEmployees.value.length, 1)
+  const dailyDenominator = Math.max(Number(costConfig.value.monthly_work_days) || 0, 1) * employeeCount
+  const vtDailyDifferenceExact = vtMonthlyDifference / dailyDenominator
+  const vtDailyDifferencePerEmployee = roundCurrency(vtDailyDifferenceExact)
+  const missingVtDays = Math.max(Number(monthlyImr.value.vt_apuracao.missing_vt_days) || 0, 0)
+  const vtDiscountValue = roundCurrency(vtDailyDifferenceExact * missingVtDays)
+  const crecheMonthlyDifference = monthlyImr.value.vt_apuracao.creche_monthly_difference
+  const paidCrecheValue = Math.max(Number(monthlyImr.value.vt_apuracao.paid_creche_value) || 0, 0)
+  const crecheDiscountValue = roundCurrency(Math.max(crecheMonthlyDifference - paidCrecheValue, 0))
+  const serviceLevelFactor = previewServiceLevelBands.value.find((band) => band.selected)?.factor ?? 0.9
+  const monthlyReferenceValue = roundCurrency(monthlyWithVt - vtDiscountValue - crecheDiscountValue)
+  const monthlyDueWithImr = roundCurrency(monthlyReferenceValue * serviceLevelFactor)
+
+  return {
+    monthly_with_vt: monthlyWithVt,
+    monthly_without_vt: monthlyWithoutVt,
+    vt_monthly_difference: vtMonthlyDifference,
+    vt_daily_difference_per_employee: vtDailyDifferencePerEmployee,
+    missing_vt_days: missingVtDays,
+    vt_discount_value: vtDiscountValue,
+    creche_monthly_difference: crecheMonthlyDifference,
+    paid_creche_value: paidCrecheValue,
+    creche_discount_value: crecheDiscountValue,
+    monthly_reference_value: monthlyReferenceValue,
+    service_level_factor: serviceLevelFactor,
+    monthly_due_with_imr: monthlyDueWithImr,
+    final_billed_value: monthlyDueWithImr,
+  }
 })
 
 function updateSelectedEmployee(value: string) {
@@ -376,6 +480,10 @@ function formatCurrency(value: number): string {
   }).format(value)
 }
 
+function roundCurrency(value: number): number {
+  return Math.round((value + Number.EPSILON) * 100) / 100
+}
+
 function formatNumber(value: number, fractionDigits = 2): string {
   return new Intl.NumberFormat('pt-BR', {
     minimumFractionDigits: 0,
@@ -389,6 +497,48 @@ function formatRatio(value: number): string {
 
 function formatPercent(value: number): string {
   return `${formatNumber(value * 100, 2)}%`
+}
+
+function scoreIndicatorPreview(code: string, rawValue: number): number {
+  if (code === 'IND1') {
+    return Math.max(10 - (Math.min(Math.max(rawValue, 0), 5) * 2), 0)
+  }
+  if (code === 'IND2') {
+    if (rawValue <= 0) {
+      return 10
+    }
+    if (rawValue === 1) {
+      return 8
+    }
+    if (rawValue === 2) {
+      return 6
+    }
+    if (rawValue === 3) {
+      return 4
+    }
+    if (rawValue === 4) {
+      return 2
+    }
+    return 0
+  }
+  if (code === 'IND3') {
+    return rawValue <= 0 ? 35 : 0
+  }
+  if (code === 'IND4') {
+    return rawValue <= 0 ? 20 : 0
+  }
+  if (code === 'IND5') {
+    return roundCurrency(Math.max(0, Math.min(rawValue, 25)))
+  }
+  return 0
+}
+
+function getIndicatorRawValue(item: IndicatorItem): number {
+  return Number(item.raw_value) || 0
+}
+
+function getIndicatorScore(item: IndicatorItem): number {
+  return scoreIndicatorPreview(item.code, getIndicatorRawValue(item))
 }
 
 function formatDateTime(value: string | null): string {
@@ -1390,7 +1540,7 @@ onMounted(async () => {
                 <h2>Relatorio mensal conforme a planilha</h2>
                 <p class="indicator-meta">{{ monthlyImr.unit_name }} · Contrato {{ monthlyImr.contract_number }} · Responsavel {{ monthlyImr.manager_name }}</p>
               </div>
-              <span class="pill">{{ monthlyIndicators.total_score }}/{{ monthlyIndicators.max_score }} pontos</span>
+              <span class="pill">{{ previewIndicatorTotalScore }}/{{ previewIndicatorMaxScore }} pontos</span>
             </div>
 
             <div class="imr-section-grid">
@@ -1401,8 +1551,8 @@ onMounted(async () => {
               </article>
               <article class="indicator-card imr-meta-card">
                 <strong>Nivel de servico</strong>
-                <p>Fator aplicado: {{ formatNumber(monthlyImr.vt_apuracao.service_level_factor, 2) }}</p>
-                <p>Valor mensal devido: {{ formatCurrency(monthlyImr.vt_apuracao.monthly_due_with_imr) }}</p>
+                <p>Fator aplicado: {{ formatNumber(previewVtApuracao?.service_level_factor ?? 0, 2) }}</p>
+                <p>Valor mensal devido: {{ formatCurrency(previewVtApuracao?.monthly_due_with_imr ?? 0) }}</p>
               </article>
             </div>
 
@@ -1410,14 +1560,15 @@ onMounted(async () => {
               <article v-for="item in monthlyIndicators.items" :key="item.code" class="indicator-card">
                 <div class="indicator-topline">
                   <strong>{{ item.code }} · {{ item.title }}</strong>
-                  <span class="pill subtle">{{ item.score }}/{{ item.max_score }}</span>
+                  <span class="pill subtle">{{ getIndicatorScore(item) }}/{{ item.max_score }}</span>
                 </div>
                 <p>{{ item.purpose }}</p>
                 <p class="indicator-meta">Meta: {{ item.target_description }}</p>
                 <div class="indicator-fields">
                   <label class="field">
-                    <span>{{ item.input_kind === 'score' ? 'Pontuacao apurada automaticamente' : 'Ocorrencias no mes' }}</span>
-                    <input v-model.number="item.raw_value" type="number" min="0" step="1" :max="item.input_kind === 'score' ? item.max_score : undefined" :disabled="!isAdmin || item.input_kind === 'score'" />
+                    <span>{{ item.input_kind === 'score' ? 'Pontuacao apurada no mes' : 'Ocorrencias no mes' }}</span>
+                    <input :value="getIndicatorRawValue(item)" @input="item.raw_value = Number(($event.target as HTMLInputElement).value) || 0" type="number" min="0" :step="item.input_kind === 'score' ? '0.01' : '1'" :max="item.input_kind === 'score' ? item.max_score : undefined" :disabled="!isAdmin" />
+                    <small v-if="item.code === 'IND5'" class="field-help">Voce pode digitar a pontuacao manualmente. A planilha de avaliacao abaixo continua disponivel como apoio visual.</small>
                   </label>
                   <label class="field field-full">
                     <span>Observacoes</span>
@@ -1433,7 +1584,7 @@ onMounted(async () => {
                   <p class="eyebrow">Planilha de Avaliacao</p>
                   <h3>Avaliacao da qualidade dos servicos</h3>
                 </div>
-                <span class="pill subtle">Pontuacao da pesquisa: {{ formatNumber(monthlyImr.quality_summary.quality_score) }}/25</span>
+                <span class="pill subtle">Pontuacao da pesquisa: {{ formatNumber(qualitySummaryPreview?.quality_score ?? 0) }}/25</span>
               </div>
 
               <div class="quality-groups">
@@ -1459,11 +1610,11 @@ onMounted(async () => {
               <div class="quality-summary-grid">
                 <article class="summary-box">
                   <strong>Totais por grau</strong>
-                  <p>O: {{ monthlyImr.quality_summary.count_o }} · B: {{ monthlyImr.quality_summary.count_b }} · R: {{ monthlyImr.quality_summary.count_r }} · I: {{ monthlyImr.quality_summary.count_i }} · N: {{ monthlyImr.quality_summary.count_n }}</p>
+                  <p>O: {{ qualitySummaryPreview?.count_o ?? 0 }} · B: {{ qualitySummaryPreview?.count_b ?? 0 }} · R: {{ qualitySummaryPreview?.count_r ?? 0 }} · I: {{ qualitySummaryPreview?.count_i ?? 0 }} · N: {{ qualitySummaryPreview?.count_n ?? 0 }}</p>
                 </article>
                 <article class="summary-box">
                   <strong>Indices</strong>
-                  <p>O: {{ formatRatio(monthlyImr.quality_summary.index_o) }} · B: {{ formatRatio(monthlyImr.quality_summary.index_b) }} · R: {{ formatRatio(monthlyImr.quality_summary.index_r) }} · I: {{ formatRatio(monthlyImr.quality_summary.index_i) }}</p>
+                  <p>O: {{ formatRatio(qualitySummaryPreview?.index_o ?? 0) }} · B: {{ formatRatio(qualitySummaryPreview?.index_b ?? 0) }} · R: {{ formatRatio(qualitySummaryPreview?.index_r ?? 0) }} · I: {{ formatRatio(qualitySummaryPreview?.index_i ?? 0) }}</p>
                 </article>
               </div>
             </div>
@@ -1477,7 +1628,7 @@ onMounted(async () => {
               </div>
 
               <div class="service-band-list">
-                <article v-for="band in monthlyImr.service_level_bands" :key="band.label" :class="['service-band', { 'service-band-selected': band.selected }]">
+                <article v-for="band in previewServiceLevelBands" :key="band.label" :class="['service-band', { 'service-band-selected': band.selected }]">
                   <strong>{{ band.label }}</strong>
                   <p>{{ band.payment_description }}</p>
                   <span>Fator {{ formatNumber(band.factor, 2) }}</span>
@@ -1496,19 +1647,19 @@ onMounted(async () => {
               <div class="vt-grid">
                 <label class="field static-field">
                   <span>Valor mensal com VT</span>
-                  <strong>{{ formatCurrency(monthlyImr.vt_apuracao.monthly_with_vt) }}</strong>
+                  <strong>{{ formatCurrency(previewVtApuracao?.monthly_with_vt ?? 0) }}</strong>
                 </label>
                 <label class="field static-field">
                   <span>Valor mensal sem VT</span>
-                  <strong>{{ formatCurrency(monthlyImr.vt_apuracao.monthly_without_vt) }}</strong>
+                  <strong>{{ formatCurrency(previewVtApuracao?.monthly_without_vt ?? 0) }}</strong>
                 </label>
                 <label class="field static-field">
                   <span>Diferenca VT mensal</span>
-                  <strong>{{ formatCurrency(monthlyImr.vt_apuracao.vt_monthly_difference) }}</strong>
+                  <strong>{{ formatCurrency(previewVtApuracao?.vt_monthly_difference ?? 0) }}</strong>
                 </label>
                 <label class="field static-field">
                   <span>Diferenca VT diaria por funcionario</span>
-                  <strong>{{ formatCurrency(monthlyImr.vt_apuracao.vt_daily_difference_per_employee) }}</strong>
+                  <strong>{{ formatCurrency(previewVtApuracao?.vt_daily_difference_per_employee ?? 0) }}</strong>
                 </label>
                 <label class="field">
                   <span>Quantidade de dias sem VT pago</span>
@@ -1516,11 +1667,11 @@ onMounted(async () => {
                 </label>
                 <label class="field static-field">
                   <span>Valor a descontar VT</span>
-                  <strong>{{ formatCurrency(monthlyImr.vt_apuracao.vt_discount_value) }}</strong>
+                  <strong>{{ formatCurrency(previewVtApuracao?.vt_discount_value ?? 0) }}</strong>
                 </label>
                 <label class="field static-field">
                   <span>Diferenca reembolso creche mensal</span>
-                  <strong>{{ formatCurrency(monthlyImr.vt_apuracao.creche_monthly_difference) }}</strong>
+                  <strong>{{ formatCurrency(previewVtApuracao?.creche_monthly_difference ?? 0) }}</strong>
                 </label>
                 <label class="field">
                   <span>Valor pago de reembolso creche</span>
@@ -1528,23 +1679,23 @@ onMounted(async () => {
                 </label>
                 <label class="field static-field">
                   <span>Valor a descontar reembolso creche</span>
-                  <strong>{{ formatCurrency(monthlyImr.vt_apuracao.creche_discount_value) }}</strong>
+                  <strong>{{ formatCurrency(previewVtApuracao?.creche_discount_value ?? 0) }}</strong>
                 </label>
                 <label class="field static-field">
                   <span>Valor mensal de referencia</span>
-                  <strong>{{ formatCurrency(monthlyImr.vt_apuracao.monthly_reference_value) }}</strong>
+                  <strong>{{ formatCurrency(previewVtApuracao?.monthly_reference_value ?? 0) }}</strong>
                 </label>
                 <label class="field static-field">
                   <span>Fator de ajuste de nivel de servico</span>
-                  <strong>{{ formatPercent(monthlyImr.vt_apuracao.service_level_factor) }}</strong>
+                  <strong>{{ formatPercent(previewVtApuracao?.service_level_factor ?? 0) }}</strong>
                 </label>
                 <label class="field static-field">
                   <span>Valor mensal devido</span>
-                  <strong>{{ formatCurrency(monthlyImr.vt_apuracao.monthly_due_with_imr) }}</strong>
+                  <strong>{{ formatCurrency(previewVtApuracao?.monthly_due_with_imr ?? 0) }}</strong>
                 </label>
                 <label class="field static-field field-full">
                   <span>Valor mensal a faturar</span>
-                  <strong>{{ formatCurrency(monthlyImr.vt_apuracao.final_billed_value) }}</strong>
+                  <strong>{{ formatCurrency(previewVtApuracao?.final_billed_value ?? 0) }}</strong>
                 </label>
               </div>
             </div>
