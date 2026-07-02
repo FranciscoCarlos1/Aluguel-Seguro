@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 type Employee = {
   id: number
@@ -215,6 +215,14 @@ type WorkspaceSection = {
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim() || 'http://127.0.0.1:8000/api'
 const STORAGE_TOKEN_KEY = 'ifc-jornada-token'
+const sectionPaths: Record<WorkspaceSectionKey, string> = {
+  'monthly-summary': '/',
+  team: '/equipe',
+  imr: '/imr',
+  quality: '/planilha-avaliacao',
+  'service-level': '/avaliacao-nivel-servico',
+  'daily-entry': '/lancamento-diario',
+}
 const weekdayOptions = [
   { value: 0, label: 'Segunda' },
   { value: 1, label: 'Terca' },
@@ -379,6 +387,8 @@ const availableSections = computed(() => workspaceSections.filter((section) => !
 const activeSectionMeta = computed(() => availableSections.value.find((section) => section.key === activeSection.value) ?? availableSections.value[0])
 const isImrWorkspaceSection = computed(() => ['imr', 'quality', 'service-level'].includes(activeSection.value))
 const showsMonthlyOperations = computed(() => ['monthly-summary', 'imr', 'quality', 'service-level', 'daily-entry'].includes(activeSection.value))
+const showsDailyEntryEditor = computed(() => ['monthly-summary', 'daily-entry'].includes(activeSection.value))
+const workspaceContentRef = ref<HTMLElement | null>(null)
 const qualitySummaryPreview = computed<ServiceQualitySummary | null>(() => {
   if (!monthlyImr.value) {
     return null
@@ -495,8 +505,38 @@ function handleSelectedEmployeeChange(event: Event) {
   updateSelectedEmployee(target?.value ?? '')
 }
 
-function activateSection(sectionKey: WorkspaceSectionKey) {
+function normalizeSectionPath(pathname: string): string {
+  const normalized = pathname.replace(/\/+$/, '')
+  return normalized || '/'
+}
+
+function getSectionKeyFromPath(pathname: string): WorkspaceSectionKey {
+  const normalized = normalizeSectionPath(pathname)
+  const matchedEntry = (Object.entries(sectionPaths) as Array<[WorkspaceSectionKey, string]>).find(([, path]) => path === normalized)
+  return matchedEntry?.[0] ?? 'monthly-summary'
+}
+
+function syncSectionRoute(sectionKey: WorkspaceSectionKey, mode: 'push' | 'replace' = 'push') {
+  const targetPath = sectionPaths[sectionKey]
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  if (normalizeSectionPath(window.location.pathname) === targetPath) {
+    return
+  }
+
+  const method = mode === 'replace' ? 'replaceState' : 'pushState'
+  window.history[method](null, '', targetPath)
+}
+
+async function activateSection(sectionKey: WorkspaceSectionKey, mode: 'push' | 'replace' | 'silent' = 'push') {
   activeSection.value = sectionKey
+  if (mode !== 'silent') {
+    syncSectionRoute(sectionKey, mode)
+  }
+  await nextTick()
+  workspaceContentRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
 function handleIndicatorRawValueInput(event: Event, item: IndicatorItem) {
@@ -516,9 +556,21 @@ function resetEmployeeForm() {
 
 watch(availableSections, (sections) => {
   if (!sections.some((section) => section.key === activeSection.value) && sections[0]) {
-    activeSection.value = sections[0].key
+    void activateSection(sections[0].key, 'replace')
   }
 })
+
+function handleBrowserNavigation() {
+  const routeSection = getSectionKeyFromPath(window.location.pathname)
+  if (availableSections.value.some((section) => section.key === routeSection)) {
+    void activateSection(routeSection, 'silent')
+    return
+  }
+
+  if (availableSections.value[0]) {
+    void activateSection(availableSections.value[0].key, 'replace')
+  }
+}
 
 function formatMinutes(totalMinutes: number): string {
   const sign = totalMinutes < 0 ? '-' : ''
@@ -955,6 +1007,10 @@ function editDay(day: DaySummary) {
   }
 }
 
+function openDailyEntryEditor() {
+  void activateSection('daily-entry')
+}
+
 async function saveEntry() {
   const summary = selectedEmployeeSummary.value
   if (!summary || !entryForm.value.work_date) {
@@ -1144,12 +1200,19 @@ watch(selectedEmployeeSummary, () => {
 })
 
 onMounted(async () => {
+  handleBrowserNavigation()
+  window.addEventListener('popstate', handleBrowserNavigation)
+
   const storedToken = localStorage.getItem(STORAGE_TOKEN_KEY) ?? ''
   if (!storedToken) {
     return
   }
   persistToken(storedToken)
   await loadData()
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('popstate', handleBrowserNavigation)
 })
 </script>
 
@@ -1468,7 +1531,7 @@ onMounted(async () => {
       </article>
     </section>
 
-    <section v-if="activeSection === 'team'" class="content-grid single-focus-grid">
+    <section v-if="activeSection === 'team'" ref="workspaceContentRef" class="content-grid single-focus-grid">
       <article v-if="isAdmin" class="panel">
         <div class="panel-heading">
           <div>
@@ -1530,7 +1593,7 @@ onMounted(async () => {
 
     </section>
 
-    <section v-else-if="showsMonthlyOperations" class="content-grid single-focus-grid">
+    <section v-else-if="showsMonthlyOperations" ref="workspaceContentRef" class="content-grid single-focus-grid">
       <article class="panel wide">
         <div class="panel-heading">
           <div>
@@ -1585,6 +1648,9 @@ onMounted(async () => {
               </div>
               <button class="ghost-button report-button" :disabled="downloadingReport" type="button" @click="downloadEmployeeReport">
                 {{ downloadingReport ? 'Gerando PDF...' : 'Baixar relatorio PDF' }}
+              </button>
+              <button class="primary-button" type="button" @click="openDailyEntryEditor">
+                Abrir lancamento diario
               </button>
             </div>
           </div>
@@ -1807,12 +1873,13 @@ onMounted(async () => {
             </div>
           </div>
 
-          <form v-if="activeSection === 'daily-entry'" class="entry-form" @submit.prevent="saveEntry">
+          <form v-if="showsDailyEntryEditor" class="entry-form" @submit.prevent="saveEntry">
             <div class="entry-form-header">
               <div>
                 <strong>Lancamento diario</strong>
                 <p>Informe os horarios reais da funcionaria para o dia selecionado e o sistema recalcula saldo e glosa automaticamente.</p>
               </div>
+              <span v-if="activeSection === 'monthly-summary'" class="pill subtle">Editor rapido liberado no resumo</span>
             </div>
             <div class="entry-form-grid">
               <label class="field field-full">
