@@ -1,6 +1,6 @@
 databases:
   - name: ifc-jornada-db
-    plan: basic-256mb
+    plan: free
     databaseName: ifc_jornada
     user: ifc_jornada
 
@@ -8,6 +8,7 @@ services:
   - type: web
     name: ifc-jornada-api
     runtime: python
+    plan: free
     rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
