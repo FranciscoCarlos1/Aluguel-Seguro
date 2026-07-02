@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import DailyEntryEditor from './components/DailyEntryEditor.vue'
+import WorkspaceNav from './components/WorkspaceNav.vue'
 
 type Employee = {
   id: number
@@ -1011,6 +1013,10 @@ function openDailyEntryEditor() {
   void activateSection('daily-entry')
 }
 
+function handleSectionSelect(sectionKey: string) {
+  void activateSection(sectionKey as WorkspaceSectionKey)
+}
+
 async function saveEntry() {
   const summary = selectedEmployeeSummary.value
   if (!summary || !entryForm.value.work_date) {
@@ -1276,31 +1282,13 @@ onBeforeUnmount(() => {
       </div>
     </header>
 
-    <section class="workspace-nav-shell">
-      <div class="workspace-nav-header">
-        <div>
-          <p class="eyebrow">Modulos do sistema</p>
-          <h2>{{ activeSectionMeta?.label }}</h2>
-          <p class="workspace-nav-copy">{{ activeSectionMeta?.description }}</p>
-        </div>
-        <span class="pill subtle">{{ availableSections.length }} areas</span>
-      </div>
-
-      <div class="workspace-nav-grid">
-        <button
-          v-for="section in availableSections"
-          :key="section.key"
-          type="button"
-          class="workspace-nav-card"
-          :class="{ 'workspace-nav-card-active': activeSection === section.key }"
-          @click="activateSection(section.key)"
-        >
-          <span class="workspace-nav-eyebrow">{{ section.eyebrow }}</span>
-          <strong>{{ section.label }}</strong>
-          <small>{{ section.description }}</small>
-        </button>
-      </div>
-    </section>
+    <WorkspaceNav
+      :sections="availableSections"
+      :active-section="activeSection"
+      :active-label="activeSectionMeta?.label ?? ''"
+      :active-description="activeSectionMeta?.description ?? ''"
+      @select="handleSectionSelect"
+    />
 
     <p v-if="errorMessage" class="feedback feedback-error">{{ errorMessage }}</p>
     <p v-else-if="loading" class="feedback">Carregando dados do mes...</p>
@@ -1873,45 +1861,16 @@ onBeforeUnmount(() => {
             </div>
           </div>
 
-          <form v-if="showsDailyEntryEditor" class="entry-form" @submit.prevent="saveEntry">
-            <div class="entry-form-header">
-              <div>
-                <strong>Lancamento diario</strong>
-                <p>Informe os horarios reais da funcionaria para o dia selecionado e o sistema recalcula saldo e glosa automaticamente.</p>
-              </div>
-              <span v-if="activeSection === 'monthly-summary'" class="pill subtle">Editor rapido liberado no resumo</span>
-            </div>
-            <div class="entry-form-grid">
-              <label class="field field-full">
-                <span>Funcionaria</span>
-                <select :value="selectedEmployeeId ?? ''" @change="handleSelectedEmployeeChange">
-                  <option value="">Selecione uma funcionaria</option>
-                  <option v-for="item in monthSummary?.employees ?? []" :key="item.employee.id" :value="String(item.employee.id)">
-                    {{ item.employee.name }}
-                  </option>
-                </select>
-              </label>
-              <label class="field">
-                <span>Data</span>
-                <input v-model="entryForm.work_date" type="date" />
-              </label>
-              <label class="field">
-                <span>Entrada</span>
-                <input v-model="entryForm.clock_in" type="time" />
-              </label>
-              <label class="field">
-                <span>Saida final</span>
-                <input v-model="entryForm.clock_out" type="time" />
-              </label>
-              <label class="field field-full">
-                <span>Observacoes</span>
-                <input v-model="entryForm.notes" type="text" placeholder="Atestado, compensacao, observacao interna..." />
-              </label>
-            </div>
-            <button class="primary-button" :disabled="savingEntry" type="submit">
-              {{ savingEntry ? 'Salvando lancamento...' : 'Salvar lancamento do dia' }}
-            </button>
-          </form>
+          <DailyEntryEditor
+            v-if="showsDailyEntryEditor"
+            :active-section="activeSection"
+            :entry-form="entryForm"
+            :employees="monthSummary?.employees ?? []"
+            :saving-entry="savingEntry"
+            :selected-employee-id="selectedEmployeeId"
+            @employee-change="handleSelectedEmployeeChange"
+            @submit-entry="saveEntry"
+          />
         </div>
 
         <div v-else class="empty-state">
