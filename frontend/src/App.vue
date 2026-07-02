@@ -450,6 +450,7 @@ const qualityGroups = computed(() => {
   }
   return Array.from(groups.entries()).map(([category, items]) => ({ category, items }))
 })
+const qualityLegend = 'O = otimo · B = bom · R = regular · I = insatisfatorio · N = nao se aplica/nao sei responder'
 const previewServiceLevelBands = computed<ServiceLevelBand[]>(() => {
   const totalScore = previewIndicatorTotalScore.value
   const selectedLabel = serviceLevelBands.find((band) => totalScore >= band.min_score)?.label ?? serviceLevelBands[serviceLevelBands.length - 1].label
@@ -616,10 +617,6 @@ function formatNumber(value: number, fractionDigits = 2): string {
     minimumFractionDigits: 0,
     maximumFractionDigits: fractionDigits,
   }).format(value)
-}
-
-function formatRatio(value: number): string {
-  return formatNumber(value, 4)
 }
 
 function formatPercent(value: number): string {
@@ -1738,36 +1735,89 @@ onBeforeUnmount(() => {
                 <span class="pill subtle">Pontuacao da pesquisa: {{ formatNumber(qualitySummaryPreview?.quality_score ?? 0) }}/25</span>
               </div>
 
-              <div class="quality-groups">
-                <section v-for="group in qualityGroups" :key="group.category" class="quality-group">
-                  <h4>{{ group.category }}</h4>
-                  <div class="quality-items">
-                    <label v-for="item in group.items" :key="item.code" class="quality-row">
-                      <span>{{ item.description }}</span>
-                      <select v-model="item.rating" :disabled="!isAdmin">
-                        <option value="">Selecione</option>
-                        <option v-for="option in qualityRatingOptions" :key="option" :value="option">{{ option }}</option>
-                      </select>
-                    </label>
+              <section class="quality-sheet">
+                <div class="quality-sheet-meta">
+                  <div class="quality-sheet-meta-row quality-sheet-meta-row-title">
+                    <strong>Planilha de Avaliacao da Qualidade dos Servicos Prestados de Limpeza</strong>
                   </div>
-                </section>
-              </div>
+                  <div class="quality-sheet-meta-row">
+                    <span><strong>Orgao/Unidade:</strong> {{ monthlyImr.unit_name }}</span>
+                    <span><strong>Mes de Referencia:</strong> {{ formatMonthTitle(monthSummary) }}</span>
+                  </div>
+                  <div class="quality-sheet-meta-row">
+                    <span><strong>No do Contrato:</strong> {{ monthlyImr.contract_number }}</span>
+                    <span><strong>Contratada:</strong> {{ monthlyImr.contractor_name }}</span>
+                  </div>
+                  <div class="quality-sheet-meta-row">
+                    <span><strong>Gestor/Responsavel:</strong> {{ monthlyImr.manager_name }}</span>
+                  </div>
+                </div>
 
-              <label class="field field-full">
-                <span>Comentario ou observacao</span>
-                <textarea v-model="monthlyImr.quality_summary.comment" rows="3" :disabled="!isAdmin" placeholder="Espaco para observacoes gerais sobre a avaliacao do mes." />
-              </label>
+                <div class="quality-sheet-legend">
+                  <strong>Legenda do Grau de Satisfacao</strong>
+                  <p>{{ qualityLegend }}</p>
+                </div>
 
-              <div class="quality-summary-grid">
-                <article class="summary-box">
-                  <strong>Totais por grau</strong>
-                  <p>O: {{ qualitySummaryPreview?.count_o ?? 0 }} · B: {{ qualitySummaryPreview?.count_b ?? 0 }} · R: {{ qualitySummaryPreview?.count_r ?? 0 }} · I: {{ qualitySummaryPreview?.count_i ?? 0 }} · N: {{ qualitySummaryPreview?.count_n ?? 0 }}</p>
-                </article>
-                <article class="summary-box">
-                  <strong>Indices</strong>
-                  <p>O: {{ formatRatio(qualitySummaryPreview?.index_o ?? 0) }} · B: {{ formatRatio(qualitySummaryPreview?.index_b ?? 0) }} · R: {{ formatRatio(qualitySummaryPreview?.index_r ?? 0) }} · I: {{ formatRatio(qualitySummaryPreview?.index_i ?? 0) }}</p>
-                </article>
-              </div>
+                <div class="table-wrap quality-sheet-table-wrap">
+                  <table class="quality-sheet-table">
+                    <thead>
+                      <tr>
+                        <th>Descricao</th>
+                        <th>Servicos/Procedimentos/Especificacoes</th>
+                        <th>Grau de Satisfacao</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <template v-for="group in qualityGroups" :key="group.category">
+                        <tr v-for="(item, index) in group.items" :key="item.code">
+                          <td v-if="index === 0" :rowspan="group.items.length" class="quality-category-cell">{{ group.category }}</td>
+                          <td>{{ item.description }}</td>
+                          <td class="quality-rating-cell">
+                            <select v-model="item.rating" :disabled="!isAdmin">
+                              <option value="">Selecione</option>
+                              <option v-for="option in qualityRatingOptions" :key="option" :value="option">{{ option }}</option>
+                            </select>
+                          </td>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </table>
+                </div>
+
+                <label class="field field-full quality-comment-field">
+                  <span>Comentario ou observacao para melhorar os servicos prestados</span>
+                  <textarea v-model="monthlyImr.quality_summary.comment" rows="4" :disabled="!isAdmin" placeholder="Registre aqui observacoes gerais da avaliacao." />
+                </label>
+
+                <div class="quality-sheet-summary">
+                  <div class="quality-sheet-summary-row">
+                    <strong>A - Numero de quesitos pontuados por grau de satisfacao</strong>
+                    <div class="quality-sheet-summary-values">
+                      <span>O {{ qualitySummaryPreview?.count_o ?? 0 }}</span>
+                      <span>B {{ qualitySummaryPreview?.count_b ?? 0 }}</span>
+                      <span>R {{ qualitySummaryPreview?.count_r ?? 0 }}</span>
+                      <span>I {{ qualitySummaryPreview?.count_i ?? 0 }}</span>
+                    </div>
+                  </div>
+                  <div class="quality-sheet-summary-row">
+                    <strong>B - Total de quesitos avaliados</strong>
+                    <div class="quality-sheet-summary-single">{{ qualitySummaryPreview?.total_answered ?? 0 }}</div>
+                  </div>
+                  <div class="quality-sheet-summary-row">
+                    <strong>C - Indice de avaliacao por quesito</strong>
+                    <div class="quality-sheet-summary-values">
+                      <span>O {{ formatNumber(qualitySummaryPreview?.index_o ?? 0, 2) }}</span>
+                      <span>B {{ formatNumber(qualitySummaryPreview?.index_b ?? 0, 2) }}</span>
+                      <span>R {{ formatNumber(qualitySummaryPreview?.index_r ?? 0, 2) }}</span>
+                      <span>I {{ formatNumber(qualitySummaryPreview?.index_i ?? 0, 2) }}</span>
+                    </div>
+                  </div>
+                  <div class="quality-sheet-summary-row quality-sheet-summary-total">
+                    <strong>D - Pontuacao total</strong>
+                    <div class="quality-sheet-summary-single">{{ formatNumber(qualitySummaryPreview?.quality_score ?? 0, 2) }}</div>
+                  </div>
+                </div>
+              </section>
             </div>
 
             <div v-if="activeSection === 'service-level'" class="imr-service-panel">
