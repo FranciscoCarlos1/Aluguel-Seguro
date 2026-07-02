@@ -197,6 +197,22 @@ type MonthlyImrReportResponse = {
   vt_apuracao: VtApuracao
 }
 
+type WorkspaceSectionKey =
+  | 'monthly-summary'
+  | 'team'
+  | 'imr'
+  | 'quality'
+  | 'service-level'
+  | 'daily-entry'
+
+type WorkspaceSection = {
+  key: WorkspaceSectionKey
+  label: string
+  eyebrow: string
+  description: string
+  adminOnly?: boolean
+}
+
 const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim() || 'http://127.0.0.1:8000/api'
 const STORAGE_TOKEN_KEY = 'ifc-jornada-token'
 const weekdayOptions = [
@@ -223,6 +239,7 @@ const selectedYear = ref(today.getFullYear())
 const selectedMonth = ref(today.getMonth() + 1)
 const selectedEmployeeId = ref<number | null>(null)
 const selectedWorkDate = ref('')
+const activeSection = ref<WorkspaceSectionKey>('monthly-summary')
 const token = ref('')
 const currentUser = ref<User | null>(null)
 
@@ -319,6 +336,49 @@ const selectedEmployeeSummary = computed(() => {
 })
 const activeEmployees = computed(() => employees.value.filter((employee) => employee.is_active))
 const hiddenInactiveCount = computed(() => employees.value.filter((employee) => !employee.is_active).length)
+const workspaceSections: WorkspaceSection[] = [
+  {
+    key: 'monthly-summary',
+    label: 'Resumo mensal',
+    eyebrow: 'Visao geral',
+    description: 'Competencia, indicadores principais e quadro resumido da equipe no mes.',
+  },
+  {
+    key: 'team',
+    label: 'Equipe',
+    eyebrow: 'Cadastros',
+    description: 'Funcionarias oficiais, status, excecoes e manutencao operacional do quadro.',
+    adminOnly: true,
+  },
+  {
+    key: 'imr',
+    label: 'IMR',
+    eyebrow: 'Indicadores',
+    description: 'Indicadores consolidados do instrumento de medicao e acao mensal.',
+  },
+  {
+    key: 'quality',
+    label: 'Planilha de Avaliacao',
+    eyebrow: 'Qualidade',
+    description: 'Pesquisa de satisfacao e apuracao da qualidade dos servicos prestados.',
+  },
+  {
+    key: 'service-level',
+    label: 'Avaliacao de Nivel de Servico',
+    eyebrow: 'Faturamento',
+    description: 'Faixa aplicavel, descontos de VT e valor final a faturar.',
+  },
+  {
+    key: 'daily-entry',
+    label: 'Lancamento diario',
+    eyebrow: 'Operacao',
+    description: 'Selecione o dia, informe entrada e saida e ajuste a jornada rapidamente.',
+  },
+]
+const availableSections = computed(() => workspaceSections.filter((section) => !section.adminOnly || isAdmin.value))
+const activeSectionMeta = computed(() => availableSections.value.find((section) => section.key === activeSection.value) ?? availableSections.value[0])
+const isImrWorkspaceSection = computed(() => ['imr', 'quality', 'service-level'].includes(activeSection.value))
+const showsMonthlyOperations = computed(() => ['monthly-summary', 'imr', 'quality', 'service-level', 'daily-entry'].includes(activeSection.value))
 const qualitySummaryPreview = computed<ServiceQualitySummary | null>(() => {
   if (!monthlyImr.value) {
     return null
@@ -435,6 +495,15 @@ function handleSelectedEmployeeChange(event: Event) {
   updateSelectedEmployee(target?.value ?? '')
 }
 
+function activateSection(sectionKey: WorkspaceSectionKey) {
+  activeSection.value = sectionKey
+}
+
+function handleIndicatorRawValueInput(event: Event, item: IndicatorItem) {
+  const target = event.target as HTMLInputElement | null
+  item.raw_value = Number(target?.value ?? 0) || 0
+}
+
 function resetEmployeeForm() {
   editingEmployeeId.value = null
   employeeForm.value = {
@@ -444,6 +513,12 @@ function resetEmployeeForm() {
     daily_work_minutes: 480,
   }
 }
+
+watch(availableSections, (sections) => {
+  if (!sections.some((section) => section.key === activeSection.value) && sections[0]) {
+    activeSection.value = sections[0].key
+  }
+})
 
 function formatMinutes(totalMinutes: number): string {
   const sign = totalMinutes < 0 ? '-' : ''
@@ -1115,6 +1190,7 @@ onMounted(async () => {
       <div>
         <p class="eyebrow">IFC Jornada</p>
         <h1>FISCALIZACAO DE CONTRATO DE SERVICO DE LIMPEZA.</h1>
+        <p class="hero-copy">Navegue pelos modulos operacionais do contrato sem depender de uma pagina unica longa.</p>
       </div>
 
       <div class="hero-panel">
@@ -1136,6 +1212,32 @@ onMounted(async () => {
         </div>
       </div>
     </header>
+
+    <section class="workspace-nav-shell">
+      <div class="workspace-nav-header">
+        <div>
+          <p class="eyebrow">Modulos do sistema</p>
+          <h2>{{ activeSectionMeta?.label }}</h2>
+          <p class="workspace-nav-copy">{{ activeSectionMeta?.description }}</p>
+        </div>
+        <span class="pill subtle">{{ availableSections.length }} areas</span>
+      </div>
+
+      <div class="workspace-nav-grid">
+        <button
+          v-for="section in availableSections"
+          :key="section.key"
+          type="button"
+          class="workspace-nav-card"
+          :class="{ 'workspace-nav-card-active': activeSection === section.key }"
+          @click="activateSection(section.key)"
+        >
+          <span class="workspace-nav-eyebrow">{{ section.eyebrow }}</span>
+          <strong>{{ section.label }}</strong>
+          <small>{{ section.description }}</small>
+        </button>
+      </div>
+    </section>
 
     <p v-if="errorMessage" class="feedback feedback-error">{{ errorMessage }}</p>
     <p v-else-if="loading" class="feedback">Carregando dados do mes...</p>
@@ -1366,7 +1468,7 @@ onMounted(async () => {
       </article>
     </section>
 
-    <section class="content-grid">
+    <section v-if="activeSection === 'team'" class="content-grid single-focus-grid">
       <article v-if="isAdmin" class="panel">
         <div class="panel-heading">
           <div>
@@ -1426,6 +1528,9 @@ onMounted(async () => {
         </div>
       </article>
 
+    </section>
+
+    <section v-else-if="showsMonthlyOperations" class="content-grid single-focus-grid">
       <article class="panel wide">
         <div class="panel-heading">
           <div>
@@ -1525,7 +1630,7 @@ onMounted(async () => {
             </table>
           </div>
 
-          <div v-if="monthlyImr && monthlyIndicators" class="indicator-panel">
+          <div v-if="monthlyImr && monthlyIndicators && isImrWorkspaceSection" class="indicator-panel">
             <div class="panel-heading panel-heading-tight">
               <div>
                 <p class="eyebrow">IMR</p>
@@ -1559,7 +1664,7 @@ onMounted(async () => {
                 <div class="indicator-fields">
                   <label class="field">
                     <span>{{ item.input_kind === 'score' ? 'Pontuacao apurada no mes' : 'Ocorrencias no mes' }}</span>
-                    <input :value="getIndicatorRawValue(item)" @input="item.raw_value = Number(($event.target as HTMLInputElement).value) || 0" type="number" min="0" :step="item.input_kind === 'score' ? '0.01' : '1'" :max="item.input_kind === 'score' ? item.max_score : undefined" :disabled="!isAdmin" />
+                    <input :value="getIndicatorRawValue(item)" @input="handleIndicatorRawValueInput($event, item)" type="number" min="0" :step="item.input_kind === 'score' ? '0.01' : '1'" :max="item.input_kind === 'score' ? item.max_score : undefined" :disabled="!isAdmin" />
                     <small v-if="item.code === 'IND5'" class="field-help">Voce pode digitar a pontuacao manualmente. A planilha de avaliacao abaixo continua disponivel como apoio visual.</small>
                   </label>
                   <label class="field field-full">
@@ -1570,7 +1675,7 @@ onMounted(async () => {
               </article>
             </div>
 
-            <div class="imr-quality-panel">
+            <div v-if="activeSection === 'quality'" class="imr-quality-panel">
               <div class="panel-heading panel-heading-tight">
                 <div>
                   <p class="eyebrow">Planilha de Avaliacao</p>
@@ -1611,7 +1716,7 @@ onMounted(async () => {
               </div>
             </div>
 
-            <div class="imr-service-panel">
+            <div v-if="activeSection === 'service-level'" class="imr-service-panel">
               <div class="panel-heading panel-heading-tight">
                 <div>
                   <p class="eyebrow">Avaliacao de Nivel de Servico</p>
@@ -1628,7 +1733,7 @@ onMounted(async () => {
               </div>
             </div>
 
-            <div class="imr-vt-panel">
+            <div v-if="activeSection === 'service-level'" class="imr-vt-panel">
               <div class="panel-heading panel-heading-tight">
                 <div>
                   <p class="eyebrow">Apuracao VT</p>
@@ -1692,7 +1797,7 @@ onMounted(async () => {
               </div>
             </div>
 
-            <div class="action-row">
+            <div v-if="isImrWorkspaceSection" class="action-row">
               <button class="ghost-button report-button" :disabled="downloadingImrReport" type="button" @click="downloadImrReport">
                 {{ downloadingImrReport ? 'Gerando PDF do IMR...' : 'Baixar PDF do IMR' }}
               </button>
@@ -1702,7 +1807,7 @@ onMounted(async () => {
             </div>
           </div>
 
-          <form class="entry-form" @submit.prevent="saveEntry">
+          <form v-if="activeSection === 'daily-entry'" class="entry-form" @submit.prevent="saveEntry">
             <div class="entry-form-header">
               <div>
                 <strong>Lancamento diario</strong>
