@@ -129,7 +129,9 @@ O repositório agora inclui [render.yaml](render.yaml) para subir:
 - um static site do frontend Vue
 - um banco PostgreSQL gerenciado pelo Render
 
-Esse PostgreSQL do Render e persistente, entao os dados nao sao apagados a cada deploy.
+Para manter os dados sem expiracao automatica, o [render.yaml](render.yaml) usa banco PostgreSQL em plano pago. O banco gratis do Render expira e nao atende esse requisito.
+
+Mesmo com banco persistente, "nunca perder dados" na pratica exige backup. O caminho minimo correto e: banco pago + rotina de backup/exportacao.
 
 Passos:
 
@@ -143,4 +145,5 @@ Observacoes importantes para producao:
 
 - A URL da API no frontend vem de `VITE_API_BASE_URL`.
 - O backend aceita origens CORS pela variavel `CORS_ALLOWED_ORIGINS`.
+- Se o objetivo e nao ter expiracao do banco, mantenha o PostgreSQL em plano pago no Render.
 - A configuracao atual da fonte oficial usando caminho local do Windows nao funciona no Render. Em producao, use uma URL publica acessivel ou importacao manual pela interface.

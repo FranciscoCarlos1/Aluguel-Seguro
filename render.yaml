@@ -1,6 +1,6 @@
 databases:
   - name: ifc-jornada-db
-    plan: free
+    plan: basic-256mb
     databaseName: ifc_jornada
     user: ifc_jornada
 
@@ -26,7 +26,7 @@ services:
       - key: CORS_ALLOWED_ORIGINS
         value: https://ifc-jornada-frontend.onrender.com
       - key: IFC_JORNADA_OFFICIAL_SHEET_AUTO_SYNC
-        value: false
+        value: "false"
       - key: IFC_JORNADA_OFFICIAL_SHEET_SYNC_HOUR
         value: 23
 

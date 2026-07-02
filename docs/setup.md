@@ -92,6 +92,8 @@ Variaveis opcionais:
 
 O arquivo [render.yaml](../render.yaml) prepara o projeto para deploy com PostgreSQL gerenciado e persistente.
 
+Para atender a exigencia de manter os dados sem expiracao automatica, o banco no blueprint fica em plano pago. O banco gratis do Render expira e pode ser removido pela plataforma.
+
 Servicos previstos:
 
 - `ifc-jornada-api`: backend FastAPI
@@ -113,5 +115,6 @@ Variaveis relevantes:
 
 Atencao operacional:
 
+- Banco permanente exige plano pago e backup periodico; nao use o banco gratis se a informacao nao puder expirar.
 - A fonte oficial configurada com caminho local como `C:/...csv` nao pode ser lida no Render.
 - Para sincronizacao automatica em producao, use uma URL publica de CSV/XLSX/ODS acessivel pelo servidor.
