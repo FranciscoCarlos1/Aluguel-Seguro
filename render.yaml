@@ -1,0 +1,42 @@
+databases:
+  - name: ifc-jornada-db
+    databaseName: ifc_jornada
+    user: ifc_jornada
+
+services:
+  - type: web
+    name: ifc-jornada-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ifc-jornada-db
+          property: connectionString
+      - key: IFC_JORNADA_ADMIN_USERNAME
+        value: admin
+      - key: IFC_JORNADA_ADMIN_PASSWORD
+        sync: false
+      - key: IFC_JORNADA_ADMIN_DISPLAY_NAME
+        value: Administrador
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://ifc-jornada-frontend.onrender.com
+      - key: IFC_JORNADA_OFFICIAL_SHEET_AUTO_SYNC
+        value: false
+      - key: IFC_JORNADA_OFFICIAL_SHEET_SYNC_HOUR
+        value: 23
+
+  - type: static
+    name: ifc-jornada-frontend
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://ifc-jornada-api.onrender.com/api
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
