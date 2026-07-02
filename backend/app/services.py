@@ -146,9 +146,8 @@ IMR_REPORT_DEFAULTS = {
     "contract_number": "73/2026",
     "manager_name": "Francisco Carlos de Sousa",
     "contractor_name": "RGF Ambienta Ltda",
-    "monthly_with_vt": 35645.00,
-    "monthly_without_vt": 34847.73,
-    "monthly_reference_value": 35000.00,
+    "monthly_with_vt": 29767.24,
+    "monthly_without_vt": 28969.97,
     "creche_monthly_difference": 645.00,
 }
 QUALITY_RATINGS = {"O", "B", "R", "I", "N"}
@@ -600,15 +599,16 @@ def build_vt_apuracao(db: Session, year: int, month: int, service_level_factor: 
     cost_config = get_or_create_cost_config(db)
     employee_count = max(len(list(db.scalars(select(models.Employee.id).where(models.Employee.is_active.is_(True))))), 1)
     daily_denominator = max(cost_config.monthly_work_days, 1) * employee_count
-    vt_daily_difference_per_employee = round_currency(vt_monthly_difference / daily_denominator)
+    vt_daily_difference_exact = vt_monthly_difference / daily_denominator
+    vt_daily_difference_per_employee = round_currency(vt_daily_difference_exact)
     missing_vt_days = max(vt_record.missing_vt_days, 0)
-    vt_discount_value = round_currency(vt_daily_difference_per_employee * missing_vt_days)
+    vt_discount_value = round_currency(vt_daily_difference_exact * missing_vt_days)
     creche_monthly_difference = IMR_REPORT_DEFAULTS["creche_monthly_difference"]
     paid_creche_value = from_cents(vt_record.paid_creche_value)
     creche_discount_value = round_currency(max(creche_monthly_difference - paid_creche_value, 0))
-    monthly_reference_value = IMR_REPORT_DEFAULTS["monthly_reference_value"]
+    monthly_reference_value = round_currency(monthly_with_vt - vt_discount_value - creche_discount_value)
     monthly_due_with_imr = round_currency(monthly_reference_value * service_level_factor)
-    final_billed_value = round_currency(monthly_due_with_imr - vt_discount_value - creche_discount_value)
+    final_billed_value = monthly_due_with_imr
     return schemas.VtApuracaoRead(
         monthly_with_vt=monthly_with_vt,
         monthly_without_vt=monthly_without_vt,
