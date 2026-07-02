@@ -80,7 +80,7 @@ INDICATOR_DEFINITIONS = [
         "target_description": "Atendimento imediato",
         "periodicity": "Mensal",
         "input_kind": "occurrences",
-        "max_score": 20,
+        "max_score": 10,
     },
     {
         "code": "IND3",
@@ -89,7 +89,7 @@ INDICATOR_DEFINITIONS = [
         "target_description": "Nenhum atraso",
         "periodicity": "Mensal",
         "input_kind": "occurrences",
-        "max_score": 25,
+        "max_score": 35,
     },
     {
         "code": "IND4",
@@ -476,16 +476,18 @@ def score_indicator(code: str, raw_value: int, quality_score: float = 0) -> floa
         return max(10 - (min(max(raw_value, 0), 5) * 2), 0)
     if code == "IND2":
         if raw_value <= 0:
-            return 20
-        if raw_value == 1:
-            return 15
-        if raw_value == 2:
             return 10
+        if raw_value == 1:
+            return 8
+        if raw_value == 2:
+            return 6
         if raw_value == 3:
-            return 5
+            return 4
+        if raw_value == 4:
+            return 2
         return 0
     if code == "IND3":
-        return 25 if raw_value <= 0 else 0
+        return 35 if raw_value <= 0 else 0
     if code == "IND4":
         return 20 if raw_value <= 0 else 0
     if code == "IND5":
