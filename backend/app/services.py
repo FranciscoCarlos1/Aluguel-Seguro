@@ -339,8 +339,7 @@ def worked_minutes(entry: models.WorkEntry | None) -> int:
     if not entry:
         return 0
     total = minutes_between(entry.clock_in, entry.clock_out)
-    lunch = minutes_between(entry.lunch_out, entry.lunch_in)
-    return max(total - lunch, 0)
+    return min(max(total, 0), DEFAULT_DAILY_WORK_MINUTES)
 
 
 def month_bounds(year: int, month: int) -> tuple[date, date]:
@@ -1141,23 +1140,25 @@ def rows_from_uploaded_file(filename: str, content: bytes) -> list[list[str]]:
 
 def map_entry_values(columns: list[int], row: list[str]) -> dict[str, time | None]:
     values = [parse_time(row[index] if index < len(row) else None) for index in columns]
-    values = values[:4]
-    while len(values) < 4:
-        values.append(None)
+    entry_values = [value for index, value in enumerate(values) if index % 2 == 0 and value is not None]
+    exit_values = [value for index, value in enumerate(values) if index % 2 == 1 and value is not None]
 
-    if len(columns) <= 2:
+    if not entry_values and not exit_values:
         return {
-            "clock_in": values[0],
+            "clock_in": None,
             "lunch_out": None,
             "lunch_in": None,
-            "clock_out": values[1],
+            "clock_out": None,
         }
 
+    clock_in = entry_values[0] if entry_values else None
+    clock_out = exit_values[-1] if exit_values else (entry_values[-1] if entry_values else None)
+
     return {
-        "clock_in": values[0],
-        "lunch_out": values[1],
-        "lunch_in": values[2],
-        "clock_out": values[3],
+        "clock_in": clock_in,
+        "lunch_out": None,
+        "lunch_in": None,
+        "clock_out": clock_out,
     }
 
 
