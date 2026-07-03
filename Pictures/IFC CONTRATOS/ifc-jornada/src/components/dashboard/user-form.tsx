@@ -54,6 +54,16 @@ export function UserForm() {
         {state?.errors?.role ? <p className="text-sm text-red-700">{state.errors.role[0]}</p> : null}
       </div>
 
+      <label className="panel-muted lg:col-span-2 flex items-start gap-3 p-4">
+        <input className="mt-1 h-4 w-4" id="forcePasswordChange" name="forcePasswordChange" type="checkbox" />
+        <span className="space-y-1">
+          <span className="block text-sm font-semibold text-foreground">Exigir troca de senha no primeiro login</span>
+          <span className="block text-sm text-muted">
+            O usuário entra com a senha inicial e é direcionado imediatamente para definir uma nova senha.
+          </span>
+        </span>
+      </label>
+
       <div className="lg:col-span-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted">Perfis administram acessos, operação registra horários e auditoria visualiza.</p>
         <button className="primary-button" disabled={pending} type="submit">

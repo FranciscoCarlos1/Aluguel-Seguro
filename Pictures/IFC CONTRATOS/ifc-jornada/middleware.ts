@@ -7,7 +7,7 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const hasSession = Boolean(request.cookies.get(SESSION_COOKIE_NAME)?.value);
 
-  if (pathname.startsWith("/dashboard") && !hasSession) {
+  if ((pathname.startsWith("/dashboard") || pathname.startsWith("/primeiro-acesso")) && !hasSession) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
@@ -19,5 +19,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/login"],
+  matcher: ["/dashboard/:path*", "/login", "/primeiro-acesso"],
 };

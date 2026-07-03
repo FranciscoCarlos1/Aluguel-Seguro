@@ -50,35 +50,27 @@ async function main() {
 
   const admin = await prisma.user.upsert({
     where: { email: adminEmail },
-    update: {
-      name: "Administrador IFC Fiscaliza",
-      passwordHash,
-      role: Role.ADMIN,
-      isActive: true,
-    },
+    update: {},
     create: {
       name: "Administrador IFC Fiscaliza",
       email: adminEmail,
       passwordHash,
       role: Role.ADMIN,
       isActive: true,
+      forcePasswordChange: false,
     },
   });
 
   await prisma.user.upsert({
     where: { email: operatorEmail },
-    update: {
-      name: "Operação IFC Fiscaliza",
-      passwordHash: operatorHash,
-      role: Role.OPERATOR,
-      isActive: true,
-    },
+    update: {},
     create: {
       name: "Operação IFC Fiscaliza",
       email: operatorEmail,
       passwordHash: operatorHash,
       role: Role.OPERATOR,
       isActive: true,
+      forcePasswordChange: false,
     },
   });
 
@@ -87,16 +79,12 @@ async function main() {
   for (const name of employees) {
     const employee = await prisma.employee.upsert({
       where: { name },
-      update: { active: true },
+      update: {},
       create: { name, active: true },
     });
 
     employeeByName[name] = employee.id;
   }
-
-  await prisma.timePunch.deleteMany({
-    where: { source: RecordSource.IMPORT },
-  });
 
   await prisma.timePunch.createMany({
     data: initialPunches.map((punch) => ({
@@ -107,6 +95,7 @@ async function main() {
       source: RecordSource.IMPORT,
       createdById: admin.id,
     })),
+    skipDuplicates: true,
   });
 
   await prisma.auditLog.create({

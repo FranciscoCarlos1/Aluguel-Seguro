@@ -13,6 +13,7 @@ type SessionUser = {
   email: string;
   role: Role;
   isActive: boolean;
+  forcePasswordChange: boolean;
 };
 
 function hashToken(token: string) {
@@ -77,6 +78,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
           email: true,
           role: true,
           isActive: true,
+          forcePasswordChange: true,
         },
       },
     },
@@ -98,11 +100,19 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
   return session.user;
 }
 
-export async function requireUser(roles?: Role[]) {
+type RequireUserOptions = {
+  allowForcedPasswordChange?: boolean;
+};
+
+export async function requireUser(roles?: Role[], options?: RequireUserOptions) {
   const user = await getCurrentUser();
 
   if (!user) {
     redirect("/login");
+  }
+
+  if (user.forcePasswordChange && !options?.allowForcedPasswordChange) {
+    redirect("/primeiro-acesso");
   }
 
   if (roles && !roles.includes(user.role)) {

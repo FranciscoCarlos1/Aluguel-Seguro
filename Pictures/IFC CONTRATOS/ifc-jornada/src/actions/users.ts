@@ -19,6 +19,7 @@ export async function createUserAction(
     email: formData.get("email"),
     password: formData.get("password"),
     role: formData.get("role"),
+    forcePasswordChange: formData.get("forcePasswordChange") === "on",
   });
 
   if (!parsed.success) {
@@ -46,6 +47,7 @@ export async function createUserAction(
       passwordHash,
       role: parsed.data.role,
       isActive: true,
+      forcePasswordChange: parsed.data.forcePasswordChange,
     },
   });
 
@@ -55,6 +57,9 @@ export async function createUserAction(
       action: "USER_CREATED",
       entity: "user",
       entityId: user.id,
+      payload: {
+        forcePasswordChange: user.forcePasswordChange,
+      },
     },
   });
 

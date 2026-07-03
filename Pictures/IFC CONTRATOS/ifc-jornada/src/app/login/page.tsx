@@ -24,7 +24,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
   return (
     <main className="flex min-h-screen items-center justify-center px-5 py-10 sm:px-8">
-      <div className="grid w-full max-w-6xl gap-8 lg:grid-cols-[1.15fr_0.85fr]">
+      <div className="w-full max-w-6xl space-y-6">
+        <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
         <section className="panel flex flex-col justify-between gap-10 overflow-hidden p-8 sm:p-10 lg:p-14">
           <div className="flex items-center gap-3 text-accent-strong">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-accent text-white">
@@ -43,12 +44,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 Controle de Avaliação de Contrato de Serviço
               </h2>
             </div>
-            <div className="overflow-hidden rounded-3xl border border-line bg-white/70 p-3">
+            <div className="max-w-xl overflow-hidden rounded-3xl border border-line bg-white/70 p-2 sm:p-3">
               <Image
                 src="/ifc-sbs-mark.svg"
                 alt="Identidade IFC SBS"
-                width={960}
-                height={320}
+                width={720}
+                height={240}
                 className="h-auto w-full rounded-2xl"
                 priority
               />
@@ -75,6 +76,11 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             <LoginForm />
           </div>
         </section>
+        </div>
+
+        <p className="text-center text-sm text-muted">
+          Sistema desenvolvido na CTI do IFC Campus São Bento do Sul.
+        </p>
       </div>
     </main>
   );
