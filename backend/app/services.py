@@ -146,8 +146,8 @@ IMR_REPORT_DEFAULTS = {
     "contract_number": "73/2026",
     "manager_name": "Francisco Carlos de Sousa",
     "contractor_name": "RGF Ambienta Ltda",
-    "monthly_with_vt": 29767.24,
-    "monthly_without_vt": 28969.97,
+    "monthly_with_vt": 35645.00,
+    "monthly_without_vt": 34847.73,
     "creche_monthly_difference": 645.00,
 }
 QUALITY_RATINGS = {"O", "B", "R", "I", "N"}
