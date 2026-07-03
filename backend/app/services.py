@@ -1133,7 +1133,7 @@ def rows_from_xlsx(content: bytes) -> list[list[str]]:
     return rows
 
 
-def rows_from_ods(content: bytes) -> list[list[str]]:
+def rows_from_ods_sheets(content: bytes) -> list[list[list[str]]]:
     with tempfile.NamedTemporaryFile(suffix=".ods", delete=False) as temp_file:
         temp_file.write(content)
         temp_path = temp_file.name
@@ -1148,18 +1148,26 @@ def rows_from_ods(content: bytes) -> list[list[str]]:
     sheets = document.spreadsheet.getElementsByType(Table)
     if not sheets:
         return []
-    sheet = sheets[0]
-    rows: list[list[str]] = []
-    for row in sheet.getElementsByType(TableRow):
-        repeated_rows = int(row.getAttribute("numberrowsrepeated") or 1)
-        parsed_row: list[str] = []
-        for cell in row.getElementsByType(TableCell):
-            repeated_columns = int(cell.getAttribute("numbercolumnsrepeated") or 1)
-            value = cell_text_from_ods(cell)
-            parsed_row.extend([value] * repeated_columns)
-        for _ in range(repeated_rows):
-            rows.append(parsed_row.copy())
-    return rows
+
+    parsed_sheets: list[list[list[str]]] = []
+    for sheet in sheets:
+        rows: list[list[str]] = []
+        for row in sheet.getElementsByType(TableRow):
+            repeated_rows = int(row.getAttribute("numberrowsrepeated") or 1)
+            parsed_row: list[str] = []
+            for cell in row.getElementsByType(TableCell):
+                repeated_columns = int(cell.getAttribute("numbercolumnsrepeated") or 1)
+                value = cell_text_from_ods(cell)
+                parsed_row.extend([value] * repeated_columns)
+            for _ in range(repeated_rows):
+                rows.append(parsed_row.copy())
+        parsed_sheets.append(rows)
+    return parsed_sheets
+
+
+def rows_from_ods(content: bytes) -> list[list[str]]:
+    sheets = rows_from_ods_sheets(content)
+    return sheets[0] if sheets else []
 
 
 def rows_from_uploaded_file(filename: str, content: bytes) -> list[list[str]]:
@@ -1278,6 +1286,24 @@ def import_rows(db: Session, rows: list[list[str]]) -> schemas.ImportResult:
 
 
 def import_uploaded_file(db: Session, filename: str, content: bytes) -> schemas.ImportResult:
+    extension = os.path.splitext(filename.lower())[1]
+    if extension == ".ods":
+        sheet_results: list[schemas.ImportResult] = []
+        for rows in rows_from_ods_sheets(content):
+            if not rows or not any(any(cell.strip() for cell in row) for row in rows):
+                continue
+            sheet_results.append(import_rows(db, rows))
+
+        if not sheet_results:
+            raise ValueError("Arquivo ODS vazio.")
+
+        return schemas.ImportResult(
+            imported_employees=sum(item.imported_employees for item in sheet_results),
+            imported_entries=sum(item.imported_entries for item in sheet_results),
+            updated_entries=sum(item.updated_entries for item in sheet_results),
+            skipped_rows=sum(item.skipped_rows for item in sheet_results),
+        )
+
     rows = rows_from_uploaded_file(filename, content)
     return import_rows(db, rows)
 
