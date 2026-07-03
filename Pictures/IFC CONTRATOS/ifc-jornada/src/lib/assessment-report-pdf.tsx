@@ -263,9 +263,14 @@ export function AssessmentReportPdf({ report }: { report: MonthlyAssessmentRepor
           <View style={styles.row}><Text style={styles.rowLabel}>IND4 | Falta de Materiais Previstos em Contrato</Text><Text style={styles.rowValue}>{activeAssessment.indicator4Occurrences} ocorrência(s) | {activeAssessment.indicator4Score.toFixed(2)}/20.00</Text></View>
           <View style={styles.row}><Text style={styles.rowLabel}>IND5 | Qualidade dos Serviços Prestados</Text><Text style={styles.rowValue}>{qualityApplicableCount} quesito(s) | {activeAssessment.qualityDisplayScore.toFixed(2)}/25.00</Text></View>
           <View style={styles.row}><Text style={styles.rowLabel}>Comentário</Text><Text style={styles.rowValue}>{REPORT_DEFAULT_COMMENT}</Text></View>
-          <View style={styles.row}><Text style={styles.rowLabel}>Contrato com VT</Text><Text style={styles.rowValue}>{formatCurrencyBRL(activeAssessment.contractMonthlyWithVt)}</Text></View>
-          <View style={styles.row}><Text style={styles.rowLabel}>Desconto VT</Text><Text style={styles.rowValue}>{formatCurrencyBRL(activeAssessment.vtDiscountAmount)}</Text></View>
+          <View style={styles.row}><Text style={styles.rowLabel}>Valor mensal com VT</Text><Text style={styles.rowValue}>{formatCurrencyBRL(activeAssessment.contractMonthlyWithVt)}</Text></View>
+          <View style={styles.row}><Text style={styles.rowLabel}>Valor mensal sem VT</Text><Text style={styles.rowValue}>{formatCurrencyBRL(activeAssessment.contractMonthlyWithoutVt)}</Text></View>
+          <View style={styles.row}><Text style={styles.rowLabel}>Diferença VT mensal</Text><Text style={styles.rowValue}>{formatCurrencyBRL(activeAssessment.vtMonthlyDifference)}</Text></View>
+          <View style={styles.row}><Text style={styles.rowLabel}>Diferença VT diário por funcionário</Text><Text style={styles.rowValue}>{formatCurrencyBRL(activeAssessment.vtDailyDifference)}</Text></View>
+          <View style={styles.row}><Text style={styles.rowLabel}>Quantidade de dias sem VT</Text><Text style={styles.rowValue}>{activeAssessment.vtDaysNotPaid}</Text></View>
+          <View style={styles.row}><Text style={styles.rowLabel}>Valor a descontar VT</Text><Text style={styles.rowValue}>{formatCurrencyBRL(activeAssessment.vtDiscountAmount)}</Text></View>
           <View style={styles.row}><Text style={styles.rowLabel}>Desconto creche</Text><Text style={styles.rowValue}>{formatCurrencyBRL(activeAssessment.crecheDiscountAmount)}</Text></View>
+          <View style={styles.row}><Text style={styles.rowLabel}>Valor mensal (sem IMR)</Text><Text style={styles.rowValue}>{formatCurrencyBRL(activeAssessment.contractMonthlyValue)}</Text></View>
           <View style={styles.row}><Text style={styles.rowLabel}>Glosa total de jornada</Text><Text style={styles.rowValue}>{formatCurrencyBRL(activeAssessment.journeyGlosaTotal)}</Text></View>
           <View style={styles.row}><Text style={styles.rowLabel}>Desconto total estimado</Text><Text style={styles.rowValue}>{formatCurrencyBRL(activeAssessment.estimatedDiscount)}</Text></View>
         </View>

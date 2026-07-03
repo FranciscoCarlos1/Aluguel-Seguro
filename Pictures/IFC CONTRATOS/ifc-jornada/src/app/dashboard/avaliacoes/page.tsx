@@ -330,11 +330,12 @@ export default async function AvaliacoesPage({ searchParams }: AvaliacoesPagePro
         <article className="panel p-6">
           <h3 className="text-xl font-bold">Apuração VT</h3>
           <div className="mt-5 grid gap-3 text-sm">
-            <div className="flex items-center justify-between"><span className="text-muted">Contrato com VT</span><span>{formatCurrencyBRL(activeAssessment.contractMonthlyWithVt)}</span></div>
-            <div className="flex items-center justify-between"><span className="text-muted">Diferença mensal VT</span><span>{formatCurrencyBRL(activeAssessment.vtMonthlyDifference)}</span></div>
-            <div className="flex items-center justify-between"><span className="text-muted">Diferença diária VT</span><span>{formatCurrencyBRL(activeAssessment.vtDailyDifference)}</span></div>
-            <div className="flex items-center justify-between"><span className="text-muted">Dias sem VT</span><span>{activeAssessment.vtDaysNotPaid}</span></div>
-            <div className="flex items-center justify-between font-semibold"><span>Desconto VT</span><span>{formatCurrencyBRL(activeAssessment.vtDiscountAmount)}</span></div>
+            <div className="flex items-center justify-between"><span className="text-muted">Valor mensal com VT</span><span>{formatCurrencyBRL(activeAssessment.contractMonthlyWithVt)}</span></div>
+            <div className="flex items-center justify-between"><span className="text-muted">Valor mensal sem VT</span><span>{formatCurrencyBRL(activeAssessment.contractMonthlyWithoutVt)}</span></div>
+            <div className="flex items-center justify-between"><span className="text-muted">Diferença VT mensal</span><span>{formatCurrencyBRL(activeAssessment.vtMonthlyDifference)}</span></div>
+            <div className="flex items-center justify-between"><span className="text-muted">Diferença VT diário por funcionário</span><span>{formatCurrencyBRL(activeAssessment.vtDailyDifference)}</span></div>
+            <div className="flex items-center justify-between"><span className="text-muted">Quantidade de dias sem VT</span><span>{activeAssessment.vtDaysNotPaid}</span></div>
+            <div className="flex items-center justify-between font-semibold"><span>Valor a descontar VT</span><span>{formatCurrencyBRL(activeAssessment.vtDiscountAmount)}</span></div>
           </div>
         </article>
 
@@ -351,8 +352,8 @@ export default async function AvaliacoesPage({ searchParams }: AvaliacoesPagePro
         <article className="panel p-6">
           <h3 className="text-xl font-bold">Fechamento Financeiro</h3>
           <div className="mt-5 grid gap-3 text-sm">
-            <div className="flex items-center justify-between"><span className="text-muted">Contrato sem VT</span><span>{formatCurrencyBRL(activeAssessment.contractMonthlyWithoutVt)}</span></div>
-            <div className="flex items-center justify-between"><span className="text-muted">Base líquida p/ IMR</span><span>{formatCurrencyBRL(activeAssessment.contractMonthlyValue)}</span></div>
+            <div className="flex items-center justify-between"><span className="text-muted">Valor mensal sem VT</span><span>{formatCurrencyBRL(activeAssessment.contractMonthlyWithoutVt)}</span></div>
+            <div className="flex items-center justify-between"><span className="text-muted">Valor mensal (sem IMR)</span><span>{formatCurrencyBRL(activeAssessment.contractMonthlyValue)}</span></div>
             <div className="flex items-center justify-between"><span className="text-muted">Glosa total de jornada</span><span>{formatCurrencyBRL(activeAssessment.journeyGlosaTotal)}</span></div>
             <div className="flex items-center justify-between font-semibold"><span>Desconto total estimado</span><span>{formatCurrencyBRL(activeAssessment.estimatedDiscount)}</span></div>
           </div>
