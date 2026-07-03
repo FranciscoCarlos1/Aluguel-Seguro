@@ -616,6 +616,24 @@ tbody tr {
   gap: 16px;
 }
 
+.imr-scenario-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.imr-scenario-card {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.imr-scenario-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--accent-strong);
+}
+
 .indicator-sheet-wrap,
 .payment-band-table-wrap {
   border-radius: 18px;
@@ -801,6 +819,7 @@ tbody tr {
   .entry-form-grid,
   .indicator-fields,
   .imr-section-grid,
+  .imr-scenario-grid,
   .quality-summary-grid,
   .vt-grid,
   .holiday-form,

@@ -489,6 +489,33 @@ const previewVtApuracao = computed<VtApuracao | null>(() => {
     final_billed_value: monthlyDueWithImr,
   }
 })
+const billingScenarios = computed(() => {
+  if (!previewVtApuracao.value) {
+    return []
+  }
+
+  const vt = previewVtApuracao.value
+  const noAbsenceReferenceValue = roundCurrency(vt.monthly_with_vt - vt.creche_discount_value)
+  const noAbsenceFinalValue = roundCurrency(noAbsenceReferenceValue * vt.service_level_factor)
+
+  return [
+    {
+      title: 'Cenario atual do sistema',
+      value: vt.final_billed_value,
+      description: 'Considera a pontuacao atual do IMR e os descontos de VT/creche registrados no mes.',
+    },
+    {
+      title: 'Sem faltas no mes',
+      value: noAbsenceFinalValue,
+      description: 'Remove o desconto de VT por ausencia, mantendo o fator atual do IMR e o desconto de creche, se existir.',
+    },
+    {
+      title: 'Cenario perfeito',
+      value: vt.monthly_with_vt,
+      description: 'Sem nenhum desconto e com fator 1,00, usando o valor mensal integral do contrato.',
+    },
+  ]
+})
 
 function formatIndicatorRawValue(item: IndicatorItem): string {
   const rawValue = getIndicatorRawValue(item)
@@ -1832,6 +1859,14 @@ onMounted(async () => {
                   <span>Valor mensal a faturar</span>
                   <strong>{{ formatCurrency(previewVtApuracao?.final_billed_value ?? 0) }}</strong>
                 </label>
+              </div>
+
+              <div class="imr-scenario-grid">
+                <article v-for="scenario in billingScenarios" :key="scenario.title" class="summary-box imr-scenario-card">
+                  <strong>{{ scenario.title }}</strong>
+                  <p>{{ scenario.description }}</p>
+                  <span class="imr-scenario-value">{{ formatCurrency(scenario.value) }}</span>
+                </article>
               </div>
             </div>
 
