@@ -1,12 +1,14 @@
+import { Role } from "@prisma/client";
 import { startOfMonth } from "date-fns";
 
+import { toggleEmployeeStatusAction } from "@/actions/employees";
 import { EmployeeForm } from "@/components/dashboard/employee-form";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { formatWorkDate } from "@/lib/utils";
 
 export default async function FuncionariasPage() {
-  await requireUser();
+  const currentUser = await requireUser([Role.ADMIN, Role.OPERATOR, Role.AUDITOR]);
 
   const monthStart = startOfMonth(new Date());
 
@@ -59,6 +61,7 @@ export default async function FuncionariasPage() {
                 <th className="pb-3">Situação</th>
                 <th className="pb-3">Batidas no mês</th>
                 <th className="pb-3">Último registro</th>
+                <th className="pb-3 text-right">Ação</th>
               </tr>
             </thead>
             <tbody>
@@ -75,6 +78,18 @@ export default async function FuncionariasPage() {
                     {employee.punches[0]
                       ? `${formatWorkDate(employee.punches[0].workDate)} às ${employee.punches[0].time}`
                       : "Sem registros"}
+                  </td>
+                  <td className="py-3 text-right">
+                    {currentUser.role === Role.ADMIN ? (
+                      <form action={toggleEmployeeStatusAction}>
+                        <input name="employeeId" type="hidden" value={employee.id} />
+                        <button className="secondary-button px-4 py-2 text-xs" type="submit">
+                          {employee.active ? "Inativar" : "Reativar"}
+                        </button>
+                      </form>
+                    ) : (
+                      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">Somente admin</span>
+                    )}
                   </td>
                 </tr>
               ))}

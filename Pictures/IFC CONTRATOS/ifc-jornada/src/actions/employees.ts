@@ -56,3 +56,35 @@ export async function createEmployeeAction(
     message: "Funcionária cadastrada com sucesso.",
   };
 }
+
+export async function toggleEmployeeStatusAction(formData: FormData) {
+  const currentUser = await requireUser([Role.ADMIN]);
+  const employeeId = String(formData.get("employeeId") || "");
+
+  if (!employeeId) {
+    return;
+  }
+
+  const employee = await db.employee.findUnique({ where: { id: employeeId } });
+
+  if (!employee) {
+    return;
+  }
+
+  await db.employee.update({
+    where: { id: employeeId },
+    data: { active: !employee.active },
+  });
+
+  await db.auditLog.create({
+    data: {
+      actorId: currentUser.id,
+      action: employee.active ? "EMPLOYEE_DISABLED" : "EMPLOYEE_ENABLED",
+      entity: "employee",
+      entityId: employee.id,
+    },
+  });
+
+  revalidatePath("/dashboard/funcionarias");
+  revalidatePath("/dashboard/jornadas");
+}
