@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Role } from "@prisma/client";
 import { startOfMonth } from "date-fns";
 
@@ -61,6 +62,7 @@ export default async function FuncionariasPage() {
                 <th className="pb-3">Situação</th>
                 <th className="pb-3">Batidas no mês</th>
                 <th className="pb-3">Último registro</th>
+                <th className="pb-3">Jornada</th>
                 <th className="pb-3 text-right">Ação</th>
               </tr>
             </thead>
@@ -78,6 +80,11 @@ export default async function FuncionariasPage() {
                     {employee.punches[0]
                       ? `${formatWorkDate(employee.punches[0].workDate)} às ${employee.punches[0].time}`
                       : "Sem registros"}
+                  </td>
+                  <td className="py-3">
+                    <Link className="secondary-button px-4 py-2 text-xs" href={`/dashboard/jornadas?employeeId=${employee.id}`}>
+                      Ver jornada
+                    </Link>
                   </td>
                   <td className="py-3 text-right">
                     {currentUser.role === Role.ADMIN ? (

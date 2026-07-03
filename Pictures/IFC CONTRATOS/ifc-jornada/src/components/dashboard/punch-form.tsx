@@ -10,9 +10,10 @@ type PunchFormProps = {
     id: string;
     name: string;
   }>;
+  defaultEmployeeId?: string;
 };
 
-export function PunchForm({ employees }: PunchFormProps) {
+export function PunchForm({ employees, defaultEmployeeId }: PunchFormProps) {
   const [state, action, pending] = useActionState(createPunchAction, undefined);
 
   return (
@@ -21,7 +22,7 @@ export function PunchForm({ employees }: PunchFormProps) {
         <label className="text-sm font-semibold" htmlFor="employeeId">
           Funcionária
         </label>
-        <select className="field" defaultValue="" id="employeeId" name="employeeId">
+        <select className="field" defaultValue={defaultEmployeeId ?? ""} id="employeeId" name="employeeId">
           <option value="" disabled>
             Selecione a funcionária
           </option>
