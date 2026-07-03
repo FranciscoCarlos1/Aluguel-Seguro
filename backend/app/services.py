@@ -63,7 +63,7 @@ COST_DEFAULTS = {
     "salary_base": 1707.75,
     "monthly_work_days": 22,
     "weekly_hours": 40,
-    "monthly_post_value": 2049.30,
+    "monthly_post_value": 35645.00,
 }
 INDICATOR_DEFINITIONS = [
     {
@@ -467,8 +467,26 @@ def get_or_create_cost_config(db: Session) -> models.CostConfig:
     return config
 
 
+def normalize_cost_config_defaults(db: Session) -> None:
+    config = get_or_create_cost_config(db)
+    changed = False
+
+    if config.monthly_post_value < to_cents(10000):
+        config.monthly_post_value = to_cents(COST_DEFAULTS["monthly_post_value"])
+        changed = True
+
+    if config.contract_months <= 0:
+        config.contract_months = COST_DEFAULTS["contract_months"]
+        changed = True
+
+    if changed:
+        db.commit()
+        db.refresh(config)
+
+
 def get_cost_config_payload(db: Session) -> schemas.CostConfigRead:
     config = get_or_create_cost_config(db)
+    monthly_post_value = from_cents(config.monthly_post_value)
     return schemas.CostConfigRead(
         municipality=config.municipality,
         cct_code=config.cct_code,
@@ -478,7 +496,8 @@ def get_cost_config_payload(db: Session) -> schemas.CostConfigRead:
         salary_base=from_cents(config.salary_base),
         monthly_work_days=config.monthly_work_days,
         weekly_hours=config.weekly_hours,
-        monthly_post_value=from_cents(config.monthly_post_value),
+        monthly_post_value=monthly_post_value,
+        total_contract_value=round_currency(monthly_post_value * config.contract_months),
     )
 
 

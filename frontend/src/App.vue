@@ -120,6 +120,7 @@ type CostConfig = {
   monthly_work_days: number
   weekly_hours: number
   monthly_post_value: number
+  total_contract_value: number
 }
 
 type IndicatorItem = {
@@ -328,7 +329,8 @@ const costConfig = ref<CostConfig>({
   salary_base: 1707.75,
   monthly_work_days: 22,
   weekly_hours: 40,
-  monthly_post_value: 2049.3,
+  monthly_post_value: 35645,
+  total_contract_value: 1069350,
 })
 const monthSummary = ref<MonthSummaryResponse | null>(null)
 const dashboard = ref<DashboardResponse | null>(null)
@@ -389,6 +391,7 @@ const monthInput = computed({
     }
   },
 })
+const costConfigTotalContractValue = computed(() => roundCurrency((costConfig.value.monthly_post_value || 0) * (costConfig.value.contract_months || 0)))
 
 const isAdmin = computed(() => currentUser.value?.role === 'admin')
 const selectedEmployeeSummary = computed(() => {
@@ -779,7 +782,8 @@ async function loadData() {
         salary_base: 1707.75,
         monthly_work_days: 22,
         weekly_hours: 40,
-        monthly_post_value: 2049.3,
+        monthly_post_value: 35645,
+        total_contract_value: 1069350,
       }
     }
 
@@ -928,7 +932,17 @@ async function saveCostConfig() {
   try {
     costConfig.value = await requestJson<CostConfig>('/cost-config', {
       method: 'PUT',
-      body: JSON.stringify(costConfig.value),
+      body: JSON.stringify({
+        municipality: costConfig.value.municipality,
+        cct_code: costConfig.value.cct_code,
+        contract_months: costConfig.value.contract_months,
+        service_type: costConfig.value.service_type,
+        cbo_code: costConfig.value.cbo_code,
+        salary_base: costConfig.value.salary_base,
+        monthly_work_days: costConfig.value.monthly_work_days,
+        weekly_hours: costConfig.value.weekly_hours,
+        monthly_post_value: costConfig.value.monthly_post_value,
+      }),
     })
     await loadData()
   } catch (error) {
@@ -1411,7 +1425,7 @@ onMounted(async () => {
             <input v-model.number="costConfig.salary_base" type="number" min="0" step="0.01" />
           </label>
           <label class="field">
-            <span>Valor mensal do posto</span>
+            <span>Valor mensal do contrato</span>
             <input v-model.number="costConfig.monthly_post_value" type="number" min="0" step="0.01" />
           </label>
           <label class="field">
@@ -1426,6 +1440,10 @@ onMounted(async () => {
             <span>Meses de execucao contratual</span>
             <input v-model.number="costConfig.contract_months" type="number" min="1" step="1" />
           </label>
+          <div class="field static-field field-full">
+            <span>Valor total do contrato</span>
+            <strong>{{ formatCurrency(costConfigTotalContractValue) }}</strong>
+          </div>
           <button class="primary-button" :disabled="savingCostConfig" type="submit">
             {{ savingCostConfig ? 'Salvando base...' : 'Salvar base de custo' }}
           </button>

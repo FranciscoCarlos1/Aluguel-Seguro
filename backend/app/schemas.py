@@ -86,6 +86,7 @@ class CostConfigRead(BaseModel):
     monthly_work_days: int
     weekly_hours: int
     monthly_post_value: float
+    total_contract_value: float
 
 
 class CostConfigUpdate(BaseModel):

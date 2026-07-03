@@ -41,6 +41,7 @@ def startup() -> None:
     with SessionLocal() as db:
         services.ensure_default_admin(db)
         services.normalize_existing_employee_defaults(db)
+        services.normalize_cost_config_defaults(db)
         services.auto_sync_official_sheet_if_enabled(db)
         services.ensure_monthly_rollover(db)
     if scheduler_thread is None or not scheduler_thread.is_alive():

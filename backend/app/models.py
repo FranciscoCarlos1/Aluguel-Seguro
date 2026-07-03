@@ -94,7 +94,7 @@ class CostConfig(Base):
     salary_base: Mapped[int] = mapped_column(Integer, default=170775)
     monthly_work_days: Mapped[int] = mapped_column(Integer, default=22)
     weekly_hours: Mapped[int] = mapped_column(Integer, default=40)
-    monthly_post_value: Mapped[int] = mapped_column(Integer, default=204930)
+    monthly_post_value: Mapped[int] = mapped_column(Integer, default=3564500)
 
 
 class IndicatorMonthlyRecord(Base):
