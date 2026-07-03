@@ -129,7 +129,7 @@ export function AssessmentForm({ defaultMonthKey, defaults, isReadOnly = false }
         </div>
       </section>
 
-      <section className="panel-muted grid gap-4 p-5 xl:grid-cols-4">
+      <section className="panel-muted grid gap-4 p-5 xl:grid-cols-5">
         <div className="space-y-2">
           <label className="text-sm font-semibold" htmlFor="indicator1Occurrences">Indicador 1: ocorrências de EPI/uniforme</label>
           <input className="field" id="indicator1Occurrences" name="indicator1Occurrences" type="number" min="0" step="1" defaultValue={defaults?.indicator1Occurrences ?? 0} />
@@ -145,6 +145,15 @@ export function AssessmentForm({ defaultMonthKey, defaults, isReadOnly = false }
         <div className="space-y-2">
           <label className="text-sm font-semibold" htmlFor="indicator4Occurrences">Indicador 4: faltas de materiais previstos</label>
           <input className="field" id="indicator4Occurrences" name="indicator4Occurrences" type="number" min="0" step="1" defaultValue={defaults?.indicator4Occurrences ?? 0} />
+        </div>
+        <div className="rounded-3xl border border-line bg-white/70 p-4">
+          <p className="text-sm font-semibold text-foreground">Indicador 5: qualidade dos serviços prestados</p>
+          <p className="mt-2 text-sm text-muted">
+            Calculado automaticamente pela pesquisa de qualidade logo abaixo, com base nos quesitos aplicáveis.
+          </p>
+          <p className="mt-4 text-xs font-semibold uppercase tracking-[0.16em] text-accent-strong">
+            Métrica explícita: média aritmética das avaliações válidas
+          </p>
         </div>
       </section>
 
