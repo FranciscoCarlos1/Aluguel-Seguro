@@ -3,13 +3,17 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { DEFAULT_MINUTES_PER_WORKDAY } from "@/lib/constants";
 import { db } from "@/lib/db";
-import { formatWorkDate } from "@/lib/utils";
+import { calculateWorkedMinutesForPunches, formatMinutesAsHours } from "@/lib/journey";
+import { formatWorkDate, getCurrentMonthKey, parseIsoDateToUtcDate } from "@/lib/utils";
 import { CsvImportForm } from "@/components/dashboard/csv-import-form";
 import { PunchForm } from "@/components/dashboard/punch-form";
 
 type JornadasPageProps = {
   searchParams?: Promise<{
     employeeId?: string;
+    month?: string;
+    startDate?: string;
+    endDate?: string;
   }>;
 };
 
@@ -18,55 +22,6 @@ type PunchRecord = {
   type: "ENTRY" | "EXIT";
   time: string;
 };
-
-function parseTimeToMinutes(value: string) {
-  const [hours, minutes] = value.split(":").map(Number);
-  return hours * 60 + minutes;
-}
-
-function formatMinutesAsHours(minutes: number) {
-  const safeMinutes = Math.max(minutes, 0);
-  const hoursPart = String(Math.floor(safeMinutes / 60)).padStart(2, "0");
-  const minutesPart = String(safeMinutes % 60).padStart(2, "0");
-  return `${hoursPart}:${minutesPart}`;
-}
-
-function calculateWorkedMinutesForPunches(punches: PunchRecord[]) {
-  const sorted = [...punches].sort((left, right) => left.time.localeCompare(right.time));
-  let openEntry: number | null = null;
-  let workedMinutes = 0;
-  let incomplete = false;
-
-  for (const punch of sorted) {
-    const minutes = parseTimeToMinutes(punch.time);
-
-    if (punch.type === "ENTRY") {
-      if (openEntry !== null) {
-        incomplete = true;
-      }
-
-      openEntry = minutes;
-      continue;
-    }
-
-    if (openEntry === null) {
-      incomplete = true;
-      continue;
-    }
-
-    if (minutes > openEntry) {
-      workedMinutes += minutes - openEntry;
-    }
-
-    openEntry = null;
-  }
-
-  if (openEntry !== null) {
-    incomplete = true;
-  }
-
-  return { workedMinutes, incomplete };
-}
 
 function buildJourneyDays(punches: PunchRecord[]) {
   const punchesByDay = new Map<string, PunchRecord[]>();
@@ -100,11 +55,39 @@ function buildJourneyDays(punches: PunchRecord[]) {
     });
 }
 
+function isValidMonthKey(value: string | undefined): value is string {
+  return typeof value === "string" && /^\d{4}-\d{2}$/.test(value);
+}
+
+function isValidIsoDate(value: string | undefined): value is string {
+  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
+function getMonthRange(monthKey: string) {
+  const [year, month] = monthKey.split("-").map(Number);
+  const startDate = `${monthKey}-01`;
+  const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const endDate = `${monthKey}-${String(lastDay).padStart(2, "0")}`;
+
+  return { startDate, endDate };
+}
+
 export default async function JornadasPage({ searchParams }: JornadasPageProps) {
   await requireUser();
 
   const resolvedSearchParams = (await searchParams) ?? {};
   const selectedEmployeeId = typeof resolvedSearchParams.employeeId === "string" ? resolvedSearchParams.employeeId : undefined;
+  const monthParam = typeof resolvedSearchParams.month === "string" ? resolvedSearchParams.month : undefined;
+  const selectedMonthKey = isValidMonthKey(monthParam) ? monthParam : getCurrentMonthKey();
+  const monthRange = getMonthRange(selectedMonthKey);
+  const selectedStartDate = isValidIsoDate(resolvedSearchParams.startDate)
+    ? resolvedSearchParams.startDate
+    : monthRange.startDate;
+  const selectedEndDate = isValidIsoDate(resolvedSearchParams.endDate)
+    ? resolvedSearchParams.endDate
+    : monthRange.endDate;
+  const selectedStartUtcDate = parseIsoDateToUtcDate(selectedStartDate);
+  const selectedEndUtcDate = parseIsoDateToUtcDate(selectedEndDate);
 
   const [employees, punches, selectedEmployee] = await Promise.all([
     db.employee.findMany({
@@ -128,6 +111,12 @@ export default async function JornadasPage({ searchParams }: JornadasPageProps) 
             name: true,
             punches: {
               take: 120,
+              where: {
+                workDate: {
+                  gte: selectedStartUtcDate,
+                  lte: selectedEndUtcDate,
+                },
+              },
               orderBy: [{ workDate: "desc" }, { time: "asc" }],
               select: {
                 workDate: true,
@@ -157,10 +146,10 @@ export default async function JornadasPage({ searchParams }: JornadasPageProps) 
         <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
           <div>
             <h3 className="text-xl font-bold">Consulta individual de jornada</h3>
-            <p className="mt-1 text-sm text-muted">Selecione uma funcionária para ver as batidas diárias e lançar novas entradas e saídas.</p>
+            <p className="mt-1 text-sm text-muted">Selecione a funcionária e o período para ver as batidas diárias e lançar novas entradas e saídas.</p>
           </div>
 
-          <form className="flex w-full flex-col gap-3 sm:flex-row xl:max-w-3xl" method="get">
+          <form className="grid w-full gap-3 xl:max-w-5xl xl:grid-cols-[minmax(0,2fr)_180px_170px_170px_auto_auto]" method="get">
             <select className="field" defaultValue={selectedEmployee?.id ?? ""} name="employeeId">
               <option value="">Selecione a funcionária</option>
               {employees.map((employee) => (
@@ -169,6 +158,9 @@ export default async function JornadasPage({ searchParams }: JornadasPageProps) 
                 </option>
               ))}
             </select>
+            <input className="field" defaultValue={selectedMonthKey} name="month" type="month" />
+            <input className="field" defaultValue={selectedStartDate} name="startDate" type="date" />
+            <input className="field" defaultValue={selectedEndDate} name="endDate" type="date" />
             <button className="secondary-button px-5 py-3" type="submit">Visualizar jornada</button>
             {selectedEmployee ? (
               <Link className="secondary-button px-5 py-3 text-center" href="/dashboard/jornadas">
@@ -189,7 +181,7 @@ export default async function JornadasPage({ searchParams }: JornadasPageProps) 
             <h3 className="text-xl font-bold">Jornada individual</h3>
             <p className="mt-1 text-sm text-muted">
               {selectedEmployee
-                ? `Espelho diário recente de ${selectedEmployee.name}.`
+                ? `Espelho diário de ${selectedEmployee.name} entre ${formatWorkDate(selectedStartUtcDate)} e ${formatWorkDate(selectedEndUtcDate)}.`
                 : "Escolha uma funcionária na consulta acima para ver o espelho individual."}
             </p>
           </div>

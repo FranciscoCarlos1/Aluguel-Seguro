@@ -10,6 +10,7 @@ import {
   DEFAULT_POST_MONTHLY_VALUE,
   DEFAULT_VT_MONTHLY_DIFFERENCE,
 } from "@/lib/constants";
+import { calculateWorkedMinutesForPunches } from "@/lib/journey";
 import { parseIsoDateToUtcDate } from "@/lib/utils";
 
 export type QualityRating = "O" | "B" | "R" | "I" | "N";
@@ -299,48 +300,6 @@ function getServiceLevelFactor(totalScore: number) {
   if (totalScore >= 60) return 0.95;
   if (totalScore >= 50) return 0.93;
   return 0.9;
-}
-
-function parseTimeToMinutes(value: string) {
-  const [hours, minutes] = value.split(":").map(Number);
-  return hours * 60 + minutes;
-}
-
-function calculateWorkedMinutesForPunches(punches: Pick<TimePunch, "type" | "time">[]) {
-  const sorted = [...punches].sort((left, right) => left.time.localeCompare(right.time));
-  let openEntry: number | null = null;
-  let workedMinutes = 0;
-  let incomplete = false;
-
-  for (const punch of sorted) {
-    const minutes = parseTimeToMinutes(punch.time);
-
-    if (punch.type === PunchType.ENTRY) {
-      if (openEntry !== null) {
-        incomplete = true;
-      }
-
-      openEntry = minutes;
-      continue;
-    }
-
-    if (openEntry === null) {
-      incomplete = true;
-      continue;
-    }
-
-    if (minutes > openEntry) {
-      workedMinutes += minutes - openEntry;
-    }
-
-    openEntry = null;
-  }
-
-  if (openEntry !== null) {
-    incomplete = true;
-  }
-
-  return { workedMinutes, incomplete };
 }
 
 function calculateEmployeeAssessment(

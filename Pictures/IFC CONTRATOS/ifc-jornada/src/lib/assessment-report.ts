@@ -14,6 +14,7 @@ import {
   DEFAULT_POST_MONTHLY_VALUE,
   DEFAULT_VT_MONTHLY_DIFFERENCE,
 } from "@/lib/constants";
+import { calculateWorkedMinutesForPunches, formatMinutesAsHours } from "@/lib/journey";
 import { formatMonthLabel, formatWorkDate, getCurrentMonthKey } from "@/lib/utils";
 
 type QualityCounts = {
@@ -96,62 +97,6 @@ function parseQualityResponses(value: unknown) {
   return value && typeof value === "object"
     ? (value as Record<string, QualityRating>)
     : {};
-}
-
-function parseTimeToMinutes(value: string) {
-  const [hours, minutes] = value.split(":").map(Number);
-  return hours * 60 + minutes;
-}
-
-function formatMinutesAsHours(minutes: number) {
-  const hours = Math.floor(minutes / 60);
-  const remainingMinutes = minutes % 60;
-  return `${String(hours).padStart(2, "0")}:${String(remainingMinutes).padStart(2, "0")}`;
-}
-
-function formatBalanceMinutesAsHours(minutes: number) {
-  if (minutes < 0) {
-    return `-${formatMinutesAsHours(Math.abs(minutes))}`;
-  }
-
-  return formatMinutesAsHours(minutes);
-}
-
-function calculateWorkedMinutesForPunches(punches: Array<{ type: "ENTRY" | "EXIT"; time: string }>) {
-  const sorted = [...punches].sort((left, right) => left.time.localeCompare(right.time));
-  let openEntry: number | null = null;
-  let workedMinutes = 0;
-  let incomplete = false;
-
-  for (const punch of sorted) {
-    const minutes = parseTimeToMinutes(punch.time);
-
-    if (punch.type === "ENTRY") {
-      if (openEntry !== null) {
-        incomplete = true;
-      }
-
-      openEntry = minutes;
-      continue;
-    }
-
-    if (openEntry === null) {
-      incomplete = true;
-      continue;
-    }
-
-    if (minutes > openEntry) {
-      workedMinutes += minutes - openEntry;
-    }
-
-    openEntry = null;
-  }
-
-  if (openEntry !== null) {
-    incomplete = true;
-  }
-
-  return { workedMinutes, incomplete };
 }
 
 function buildJourneyDays(
