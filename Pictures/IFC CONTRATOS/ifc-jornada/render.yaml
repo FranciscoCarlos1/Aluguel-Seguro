@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: ifc-fiscaliza
+    runtime: node
+    plan: starter
+    buildCommand: npm install && npm run db:generate && npm run build
+    preDeployCommand: npm run db:push && npm run db:seed
+    startCommand: npm run start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 22.16.0
+      - key: NODE_OPTIONS
+        value: --max-old-space-size=4096
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ifc-fiscaliza-db
+          property: connectionString
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: AUTH_URL
+        sync: false
+      - key: ADMIN_EMAIL
+        value: admin@ifcfiscaliza.local
+      - key: ADMIN_PASSWORD
+        sync: false
+
+databases:
+  - name: ifc-fiscaliza-db
+    plan: starter
+    databaseName: ifc_fiscaliza
+    user: ifc_fiscaliza
