@@ -88,6 +88,7 @@ model MonthlyAssessment {
   id                   String                      @id @default(cuid())
   monthKey             String                      @unique
   referenceDate        DateTime                    @db.Date
+  managerName          String                      @default("")
   contractMonthlyValue Decimal                     @db.Decimal(10, 2)
   contractMonthlyWithVt Decimal                    @default(0) @db.Decimal(10, 2)
   contractMonthlyWithoutVt Decimal                 @default(0) @db.Decimal(10, 2)

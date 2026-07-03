@@ -18,6 +18,7 @@ import {
   DEFAULT_EXPECTED_BUSINESS_DAYS,
   DEFAULT_MINUTES_PER_WORKDAY,
   DEFAULT_POST_MONTHLY_VALUE,
+  REPORT_MANAGER_NAME,
   DEFAULT_VT_MONTHLY_DIFFERENCE,
 } from "@/lib/constants";
 import { requireUser } from "@/lib/auth";
@@ -33,6 +34,17 @@ type AssessmentFormState =
 function parseNumber(value: FormDataEntryValue | null, fallback: number) {
   const parsed = Number(String(value ?? "").replace(",", "."));
   return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function parseOptionalNumber(value: FormDataEntryValue | null) {
+  const normalized = String(value ?? "").trim().replace(",", ".");
+
+  if (!normalized) {
+    return undefined;
+  }
+
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : undefined;
 }
 
 export async function generateMonthlyAssessmentAction(
@@ -56,11 +68,25 @@ export async function generateMonthlyAssessmentAction(
     }),
   );
 
+  const contractMonthlyWithVt = parseNumber(formData.get("contractMonthlyWithVt"), DEFAULT_CONTRACT_MONTHLY_VALUE);
+  const vtMonthlyDifference = parseNumber(formData.get("vtMonthlyDifference"), DEFAULT_VT_MONTHLY_DIFFERENCE);
+  const expectedBusinessDays = parseNumber(formData.get("expectedBusinessDays"), DEFAULT_EXPECTED_BUSINESS_DAYS);
+  const contractPosts = parseNumber(formData.get("contractPosts"), DEFAULT_CONTRACT_POSTS);
+  const rawVtDaysNotPaid = parseNumber(formData.get("vtDaysNotPaid"), 0);
+  const vtDiscountAmountOverride = parseOptionalNumber(formData.get("vtDiscountAmountOverride"));
+  const exactVtDailyDifference =
+    expectedBusinessDays > 0 && contractPosts > 0 ? vtMonthlyDifference / expectedBusinessDays / contractPosts : 0;
+  const vtDaysNotPaid =
+    vtDiscountAmountOverride !== undefined && exactVtDailyDifference > 0
+      ? Math.max(0, Math.round(vtDiscountAmountOverride / exactVtDailyDifference))
+      : rawVtDaysNotPaid;
+
   const assessmentInput = {
     monthKey,
-    contractMonthlyWithVt: parseNumber(formData.get("contractMonthlyWithVt"), DEFAULT_CONTRACT_MONTHLY_VALUE),
-    vtMonthlyDifference: parseNumber(formData.get("vtMonthlyDifference"), DEFAULT_VT_MONTHLY_DIFFERENCE),
-    vtDaysNotPaid: parseNumber(formData.get("vtDaysNotPaid"), 0),
+    managerName: String(formData.get("managerName") || REPORT_MANAGER_NAME).trim(),
+    contractMonthlyWithVt,
+    vtMonthlyDifference,
+    vtDaysNotPaid,
     crecheMonthlyDifference: parseNumber(formData.get("crecheMonthlyDifference"), DEFAULT_CRECHE_MONTHLY_DIFFERENCE),
     crechePaidAmount: parseNumber(formData.get("crechePaidAmount"), 0),
     crecheAdditionalPercentage: parseNumber(
@@ -68,9 +94,9 @@ export async function generateMonthlyAssessmentAction(
       DEFAULT_CRECHE_ADDITIONAL_PERCENTAGE,
     ),
     postMonthlyValue: parseNumber(formData.get("postMonthlyValue"), DEFAULT_POST_MONTHLY_VALUE),
-    expectedBusinessDays: parseNumber(formData.get("expectedBusinessDays"), DEFAULT_EXPECTED_BUSINESS_DAYS),
+    expectedBusinessDays,
     minutesPerWorkDay: parseNumber(formData.get("minutesPerWorkDay"), DEFAULT_MINUTES_PER_WORKDAY),
-    contractPosts: parseNumber(formData.get("contractPosts"), DEFAULT_CONTRACT_POSTS),
+    contractPosts,
     indicator1Occurrences: parseNumber(formData.get("indicator1Occurrences"), 0),
     indicator2Occurrences: parseNumber(formData.get("indicator2Occurrences"), 0),
     indicator3Occurrences: parseNumber(formData.get("indicator3Occurrences"), 0),
@@ -125,6 +151,7 @@ export async function generateMonthlyAssessmentAction(
       where: { monthKey },
       update: {
         referenceDate: assessment.referenceDate,
+        managerName: assessment.managerName,
         contractMonthlyValue: new Prisma.Decimal(assessment.contractMonthlyValue),
         contractMonthlyWithVt: new Prisma.Decimal(assessment.contractMonthlyWithVt),
         contractMonthlyWithoutVt: new Prisma.Decimal(assessment.contractMonthlyWithoutVt),
@@ -163,6 +190,7 @@ export async function generateMonthlyAssessmentAction(
       create: {
         monthKey: assessment.monthKey,
         referenceDate: assessment.referenceDate,
+        managerName: assessment.managerName,
         contractMonthlyValue: new Prisma.Decimal(assessment.contractMonthlyValue),
         contractMonthlyWithVt: new Prisma.Decimal(assessment.contractMonthlyWithVt),
         contractMonthlyWithoutVt: new Prisma.Decimal(assessment.contractMonthlyWithoutVt),

@@ -22,9 +22,11 @@ type AssessmentFormProps = {
   defaultMonthKey: string;
   isReadOnly?: boolean;
   defaults?: {
+    managerName?: string;
     contractMonthlyWithVt?: number;
     vtMonthlyDifference?: number;
     vtDaysNotPaid?: number;
+    vtDiscountAmount?: number;
     crecheMonthlyDifference?: number;
     crechePaidAmount?: number;
     crecheAdditionalPercentage?: number;
@@ -60,12 +62,18 @@ export function AssessmentForm({ defaultMonthKey, defaults, isReadOnly = false }
       ) : null}
 
       <fieldset disabled={isReadOnly || pending} className="grid gap-6">
-      <section className="grid gap-4 xl:grid-cols-4">
+      <section className="grid gap-4 xl:grid-cols-5">
         <div className="space-y-2">
           <label className="text-sm font-semibold" htmlFor="monthKey">
             Mês de referência
           </label>
           <input className="field" id="monthKey" name="monthKey" type="month" defaultValue={defaultMonthKey} />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-semibold" htmlFor="managerName">
+            Gestor/Responsável
+          </label>
+          <input className="field" id="managerName" name="managerName" defaultValue={defaults?.managerName ?? ""} />
         </div>
         <div className="space-y-2">
           <label className="text-sm font-semibold" htmlFor="contractMonthlyWithVt">
@@ -97,6 +105,11 @@ export function AssessmentForm({ defaultMonthKey, defaults, isReadOnly = false }
           <div className="space-y-2">
             <label className="text-sm font-semibold" htmlFor="vtDaysNotPaid">Dias proporcionais sem VT</label>
             <input className="field" id="vtDaysNotPaid" name="vtDaysNotPaid" type="number" min="0" step="1" defaultValue={defaults?.vtDaysNotPaid ?? 0} />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-semibold" htmlFor="vtDiscountAmountOverride">Valor a descontar VT da planilha</label>
+            <input className="field" id="vtDiscountAmountOverride" name="vtDiscountAmountOverride" type="number" min="0" step="0.01" defaultValue={defaults?.vtDiscountAmount ?? 0} />
+            <p className="text-xs text-muted">Se este valor for preenchido, o sistema recalcula automaticamente a quantidade proporcional de dias sem VT.</p>
           </div>
         </div>
 

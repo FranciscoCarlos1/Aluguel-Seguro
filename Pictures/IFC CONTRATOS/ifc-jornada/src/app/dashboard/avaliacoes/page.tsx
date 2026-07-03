@@ -12,7 +12,6 @@ import {
   REPORT_CONTRACT_CODE,
   REPORT_CONTRACTOR_NAME,
   REPORT_DEFAULT_COMMENT,
-  REPORT_MANAGER_NAME,
   REPORT_ORGANIZATION_UNIT,
 } from "@/lib/constants";
 import { formatCurrencyBRL } from "@/lib/utils";
@@ -159,7 +158,7 @@ export default async function AvaliacoesPage({ searchParams }: AvaliacoesPagePro
           <p><span className="font-semibold text-foreground">Competência:</span> {activeAssessment.monthKey}</p>
           <p><span className="font-semibold text-foreground">Órgão/Unidade:</span> {REPORT_ORGANIZATION_UNIT}</p>
           <p><span className="font-semibold text-foreground">Contrato:</span> {REPORT_CONTRACT_CODE}</p>
-          <p><span className="font-semibold text-foreground">Gestor/Responsável:</span> {REPORT_MANAGER_NAME}</p>
+          <p><span className="font-semibold text-foreground">Gestor/Responsável:</span> {activeAssessment.managerName}</p>
           <p><span className="font-semibold text-foreground">Contratada:</span> {REPORT_CONTRACTOR_NAME}</p>
           <p><span className="font-semibold text-foreground">Comentário:</span> {REPORT_DEFAULT_COMMENT}</p>
         </div>
@@ -169,9 +168,11 @@ export default async function AvaliacoesPage({ searchParams }: AvaliacoesPagePro
         defaultMonthKey={activeAssessment.monthKey}
         isReadOnly={currentUser.role !== Role.ADMIN}
         defaults={{
+          managerName: activeAssessment.managerName,
           contractMonthlyWithVt: activeAssessment.contractMonthlyWithVt,
           vtMonthlyDifference: activeAssessment.vtMonthlyDifference,
           vtDaysNotPaid: activeAssessment.vtDaysNotPaid,
+          vtDiscountAmount: activeAssessment.vtDiscountAmount,
           crecheMonthlyDifference: activeAssessment.crecheMonthlyDifference,
           crechePaidAmount: activeAssessment.crechePaidAmount,
           crecheAdditionalPercentage: activeAssessment.crecheAdditionalPercentage,

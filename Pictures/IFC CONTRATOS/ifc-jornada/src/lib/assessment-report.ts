@@ -13,6 +13,7 @@ import {
   JOURNEY_MISSING_TOLERANCE_MINUTES,
   DEFAULT_MINUTES_PER_WORKDAY,
   DEFAULT_POST_MONTHLY_VALUE,
+  REPORT_MANAGER_NAME,
   DEFAULT_VT_MONTHLY_DIFFERENCE,
 } from "@/lib/constants";
 import { calculateWorkedMinutesForPunches, formatMinutesAsHours } from "@/lib/journey";
@@ -230,6 +231,7 @@ export async function getMonthlyAssessmentReport(monthKey?: string): Promise<Mon
     ? {
         monthKey: selectedAssessment.monthKey,
         referenceDate: selectedAssessment.referenceDate,
+        managerName: selectedAssessment.managerName || REPORT_MANAGER_NAME,
         contractMonthlyValue: Number(selectedAssessment.contractMonthlyValue),
         contractMonthlyWithVt: Number(selectedAssessment.contractMonthlyWithVt),
         contractMonthlyWithoutVt: Number(selectedAssessment.contractMonthlyWithoutVt),
@@ -285,6 +287,7 @@ export async function getMonthlyAssessmentReport(monthKey?: string): Promise<Mon
     : (() => {
         const preview = calculateMonthlyAssessment({
           monthKey: targetMonthKey,
+          managerName: REPORT_MANAGER_NAME,
           contractMonthlyWithVt: DEFAULT_CONTRACT_MONTHLY_VALUE,
           vtMonthlyDifference: DEFAULT_VT_MONTHLY_DIFFERENCE,
           vtDaysNotPaid: 0,

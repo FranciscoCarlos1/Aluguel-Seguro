@@ -7,7 +7,6 @@ import {
   REPORT_CONTRACT_CODE,
   REPORT_CONTRACTOR_NAME,
   REPORT_DEFAULT_COMMENT,
-  REPORT_MANAGER_NAME,
   REPORT_ORGANIZATION_UNIT,
 } from "@/lib/constants";
 import { formatCurrencyBRL } from "@/lib/utils";
@@ -241,7 +240,7 @@ export function AssessmentReportPdf({ report }: { report: MonthlyAssessmentRepor
           <Text style={styles.subtitle}>Referência: {activeAssessment.displayMonthLabel}</Text>
           <Text style={styles.subtitle}>Órgão/Unidade: {REPORT_ORGANIZATION_UNIT}</Text>
           <Text style={styles.subtitle}>Contrato: {REPORT_CONTRACT_CODE}</Text>
-          <Text style={styles.subtitle}>Gestor/Responsável: {REPORT_MANAGER_NAME}</Text>
+          <Text style={styles.subtitle}>Gestor/Responsável: {activeAssessment.managerName}</Text>
           <Text style={styles.subtitle}>Contratada: {REPORT_CONTRACTOR_NAME}</Text>
         </View>
 

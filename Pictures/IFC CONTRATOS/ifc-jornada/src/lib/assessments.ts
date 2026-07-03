@@ -9,6 +9,7 @@ import {
   JOURNEY_MISSING_TOLERANCE_MINUTES,
   DEFAULT_MINUTES_PER_WORKDAY,
   DEFAULT_POST_MONTHLY_VALUE,
+  REPORT_MANAGER_NAME,
   DEFAULT_VT_MONTHLY_DIFFERENCE,
 } from "@/lib/constants";
 import { calculateWorkedMinutesForPunches } from "@/lib/journey";
@@ -164,6 +165,7 @@ type EmployeeAssessmentInput = {
 
 export type AssessmentFormInput = {
   monthKey: string;
+  managerName?: string;
   contractMonthlyWithVt?: number;
   vtMonthlyDifference?: number;
   vtDaysNotPaid?: number;
@@ -201,6 +203,7 @@ export type CalculatedEmployeeAssessment = {
 export type CalculatedMonthlyAssessment = {
   monthKey: string;
   referenceDate: Date;
+  managerName: string;
   contractMonthlyValue: number;
   contractMonthlyWithVt: number;
   contractMonthlyWithoutVt: number;
@@ -372,6 +375,7 @@ function calculateEmployeeAssessment(
 }
 
 export function calculateMonthlyAssessment(input: AssessmentFormInput) {
+  const managerName = input.managerName?.trim() || REPORT_MANAGER_NAME;
   const contractMonthlyWithVt = input.contractMonthlyWithVt ?? DEFAULT_CONTRACT_MONTHLY_VALUE;
   const vtMonthlyDifference = input.vtMonthlyDifference ?? DEFAULT_VT_MONTHLY_DIFFERENCE;
   const vtDaysNotPaid = input.vtDaysNotPaid ?? 0;
@@ -418,6 +422,7 @@ export function calculateMonthlyAssessment(input: AssessmentFormInput) {
   return {
     monthKey: input.monthKey,
     referenceDate: parseIsoDateToUtcDate(`${input.monthKey}-01`),
+    managerName,
     contractMonthlyValue,
     contractMonthlyWithVt,
     contractMonthlyWithoutVt,
