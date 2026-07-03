@@ -167,6 +167,12 @@ type ServiceLevelBand = {
   selected: boolean
 }
 
+type IndicatorDisplayMeta = {
+  measurementInstrument: string
+  periodicityLabel: string
+  criteriaLines: string[]
+}
+
 type VtApuracao = {
   monthly_with_vt: number
   monthly_without_vt: number
@@ -209,6 +215,53 @@ const weekdayOptions = [
   { value: 6, label: 'Domingo' },
 ]
 const qualityRatingOptions = ['O', 'B', 'R', 'I', 'N'] as const
+const indicatorDisplayMeta: Record<string, IndicatorDisplayMeta> = {
+  IND1: {
+    measurementInstrument: 'Constatacao formal de ocorrencias',
+    periodicityLabel: 'Diaria, com afericao mensal do trabalho',
+    criteriaLines: [
+      'Sem ocorrencias = 10 pontos',
+      '1 ocorrencia = 8 pontos',
+      '2 ocorrencias = 6 pontos',
+      '3 ocorrencias = 4 pontos',
+      '4 ocorrencias = 2 pontos',
+      '5 ou mais ocorrencias = 0 pontos',
+    ],
+  },
+  IND2: {
+    measurementInstrument: 'Registro de solicitacoes e notificacoes',
+    periodicityLabel: 'Mensal',
+    criteriaLines: [
+      'Sem ocorrencias = 10 pontos',
+      '1 notificacao/resposta fora do prazo = 8 pontos',
+      '2 notificacoes/respostas fora do prazo = 6 pontos',
+      '3 notificacoes/respostas fora do prazo = 4 pontos',
+      '4 notificacoes/respostas fora do prazo = 2 pontos',
+      '5 ou mais notificacoes/respostas fora do prazo = 0 pontos',
+    ],
+  },
+  IND3: {
+    measurementInstrument: 'Analise documental e notificacoes',
+    periodicityLabel: 'Mensal',
+    criteriaLines: [
+      'Sem ocorrencias = 35 pontos',
+      '1 ou mais ocorrencias = 0 pontos',
+    ],
+  },
+  IND4: {
+    measurementInstrument: 'Registro de ocorrencias e notificacoes',
+    periodicityLabel: 'Mensal',
+    criteriaLines: [
+      'Sem ocorrencias = 20 pontos',
+      '1 ou mais ocorrencias = 0 pontos',
+    ],
+  },
+  IND5: {
+    measurementInstrument: 'Pesquisa de satisfacao realizada pela contratante',
+    periodicityLabel: 'Mensal',
+    criteriaLines: ['De 0 a 25 pontos conforme resultado da pesquisa'],
+  },
+}
 const serviceLevelBands = [
   { label: 'De 80 a 100 pontos', min_score: 80, payment_description: '100% do valor previsto', factor: 1.0 },
   { label: 'De 70 a 79 pontos', min_score: 70, payment_description: '97% do valor previsto', factor: 0.97 },
@@ -369,6 +422,17 @@ const previewIndicatorMaxScore = computed(() => {
   }
   return roundCurrency(monthlyIndicators.value.items.reduce((sum, item) => sum + item.max_score, 0))
 })
+const indicatorEvaluationRows = computed(() => {
+  return monthlyIndicators.value?.items.map((item) => {
+    const display = indicatorDisplayMeta[item.code]
+    return {
+      ...item,
+      display,
+      rawValue: getIndicatorRawValue(item),
+      score: getIndicatorScore(item),
+    }
+  }) ?? []
+})
 const qualityGroups = computed(() => {
   const groups = new Map<string, ServiceQualityItem[]>()
   for (const item of monthlyImr.value?.quality_items ?? []) {
@@ -425,6 +489,14 @@ const previewVtApuracao = computed<VtApuracao | null>(() => {
     final_billed_value: monthlyDueWithImr,
   }
 })
+
+function formatIndicatorRawValue(item: IndicatorItem): string {
+  const rawValue = getIndicatorRawValue(item)
+  if (item.input_kind === 'score') {
+    return formatNumber(rawValue, 2)
+  }
+  return String(Math.trunc(rawValue))
+}
 
 function updateSelectedEmployee(value: string) {
   selectedEmployeeId.value = value ? Number(value) : null
@@ -1558,7 +1630,7 @@ onMounted(async () => {
                 <p class="indicator-meta">Meta: {{ item.target_description }}</p>
                 <div class="indicator-fields">
                   <label class="field">
-                    <span>{{ item.input_kind === 'score' ? 'Pontuacao apurada no mes' : 'Ocorrencias no mes' }}</span>
+                    <span>{{ item.input_kind === 'score' ? 'Pontuacao apurada no mes' : 'Valor apurado (notificacoes/ocorrencias)' }}</span>
                     <input :value="getIndicatorRawValue(item)" @input="item.raw_value = Number(($event.target as HTMLInputElement).value) || 0" type="number" min="0" :step="item.input_kind === 'score' ? '0.01' : '1'" :max="item.input_kind === 'score' ? item.max_score : undefined" :disabled="!isAdmin" />
                     <small v-if="item.code === 'IND5'" class="field-help">Voce pode digitar a pontuacao manualmente. A planilha de avaliacao abaixo continua disponivel como apoio visual.</small>
                   </label>
@@ -1568,6 +1640,77 @@ onMounted(async () => {
                   </label>
                 </div>
               </article>
+            </div>
+
+            <div class="imr-evaluation-panel">
+              <div class="panel-heading panel-heading-tight">
+                <div>
+                  <p class="eyebrow">Indicadores de Avaliacao/Medicao</p>
+                  <h3>Calculo automatico da pontuacao por valor apurado</h3>
+                </div>
+              </div>
+
+              <div class="table-wrap indicator-sheet-wrap">
+                <table class="indicator-sheet-table">
+                  <thead>
+                    <tr>
+                      <th>Indicador</th>
+                      <th>Criterio / forma de medicao</th>
+                      <th>Pontos maximos</th>
+                      <th>Valor apurado</th>
+                      <th>Avaliacao</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="row in indicatorEvaluationRows" :key="row.code">
+                      <td>
+                        <strong>{{ row.code }}</strong>
+                        <div class="table-support-copy">{{ row.title }}</div>
+                      </td>
+                      <td>
+                        <div class="table-support-copy"><strong>Instrumento:</strong> {{ row.display?.measurementInstrument }}</div>
+                        <div class="table-support-copy"><strong>Periodicidade:</strong> {{ row.display?.periodicityLabel }}</div>
+                        <ul class="criteria-list">
+                          <li v-for="criteriaLine in row.display?.criteriaLines ?? []" :key="criteriaLine">{{ criteriaLine }}</li>
+                        </ul>
+                      </td>
+                      <td>{{ formatNumber(row.max_score, 2) }}</td>
+                      <td>{{ formatIndicatorRawValue(row) }}</td>
+                      <td><strong>{{ formatNumber(row.score, 2) }}</strong></td>
+                    </tr>
+                    <tr class="indicator-sheet-total-row">
+                      <td colspan="2"><strong>Pontuacao total</strong></td>
+                      <td><strong>{{ formatNumber(previewIndicatorMaxScore, 2) }}</strong></td>
+                      <td></td>
+                      <td><strong>{{ formatNumber(previewIndicatorTotalScore, 2) }}</strong></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="table-wrap payment-band-table-wrap">
+                <table class="indicator-sheet-table payment-band-table">
+                  <thead>
+                    <tr>
+                      <th>Faixa de pontuacao</th>
+                      <th>Pagamento devido</th>
+                      <th>Fator de ajuste</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="band in previewServiceLevelBands" :key="band.label" :class="{ 'payment-band-selected-row': band.selected }">
+                      <td>{{ band.label }}</td>
+                      <td>{{ band.payment_description }}</td>
+                      <td>{{ formatNumber(band.factor, 2) }}</td>
+                    </tr>
+                    <tr class="indicator-sheet-total-row">
+                      <td><strong>Faixa aplicavel</strong></td>
+                      <td><strong>{{ previewServiceLevelBands.find((band) => band.selected)?.payment_description ?? '--' }}</strong></td>
+                      <td><strong>{{ formatNumber(previewVtApuracao?.service_level_factor ?? 0, 2) }}</strong></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             <div class="imr-quality-panel">

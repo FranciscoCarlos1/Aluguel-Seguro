@@ -610,9 +610,50 @@ tbody tr {
 
 .imr-quality-panel,
 .imr-service-panel,
-.imr-vt-panel {
+.imr-vt-panel,
+.imr-evaluation-panel {
   display: grid;
   gap: 16px;
+}
+
+.indicator-sheet-wrap,
+.payment-band-table-wrap {
+  border-radius: 18px;
+  border: 1px solid rgba(32, 48, 58, 0.1);
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.indicator-sheet-table th {
+  background: rgba(13, 108, 99, 0.08);
+  color: #16353a;
+}
+
+.indicator-sheet-table td {
+  vertical-align: top;
+}
+
+.table-support-copy {
+  margin-top: 6px;
+  color: var(--text-soft);
+  line-height: 1.45;
+}
+
+.criteria-list {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  color: var(--text-soft);
+}
+
+.criteria-list li + li {
+  margin-top: 4px;
+}
+
+.indicator-sheet-total-row {
+  background: rgba(13, 108, 99, 0.08);
+}
+
+.payment-band-selected-row {
+  background: linear-gradient(180deg, rgba(13, 108, 99, 0.14), rgba(13, 108, 99, 0.04));
 }
 
 .quality-groups {
