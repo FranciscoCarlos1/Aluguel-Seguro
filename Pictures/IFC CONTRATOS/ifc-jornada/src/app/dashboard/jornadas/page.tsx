@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { requireUser } from "@/lib/auth";
-import { DEFAULT_MINUTES_PER_WORKDAY } from "@/lib/constants";
+import { DEFAULT_MINUTES_PER_WORKDAY, JOURNEY_MISSING_TOLERANCE_MINUTES } from "@/lib/constants";
 import { db } from "@/lib/db";
 import { calculateWorkedMinutesForPunches, formatMinutesAsHours } from "@/lib/journey";
 import { formatWorkDate, getCurrentMonthKey, parseIsoDateToUtcDate } from "@/lib/utils";
@@ -41,7 +41,8 @@ function buildJourneyDays(punches: PunchRecord[]) {
       const exitTimes = sortedPunches.filter((punch) => punch.type === "EXIT").map((punch) => punch.time);
       const calculation = calculateWorkedMinutesForPunches(sortedPunches);
       const consideredWorkedMinutes = Math.min(calculation.workedMinutes, DEFAULT_MINUTES_PER_WORKDAY);
-      const missingMinutes = Math.max(DEFAULT_MINUTES_PER_WORKDAY - consideredWorkedMinutes, 0);
+      const rawMissingMinutes = Math.max(DEFAULT_MINUTES_PER_WORKDAY - consideredWorkedMinutes, 0);
+      const missingMinutes = rawMissingMinutes <= JOURNEY_MISSING_TOLERANCE_MINUTES ? 0 : rawMissingMinutes;
 
       return {
         workDate,

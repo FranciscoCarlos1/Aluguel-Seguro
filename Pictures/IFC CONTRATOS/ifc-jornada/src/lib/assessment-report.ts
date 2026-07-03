@@ -10,6 +10,7 @@ import {
   DEFAULT_CRECHE_ADDITIONAL_PERCENTAGE,
   DEFAULT_CRECHE_MONTHLY_DIFFERENCE,
   DEFAULT_EXPECTED_BUSINESS_DAYS,
+  JOURNEY_MISSING_TOLERANCE_MINUTES,
   DEFAULT_MINUTES_PER_WORKDAY,
   DEFAULT_POST_MONTHLY_VALUE,
   DEFAULT_VT_MONTHLY_DIFFERENCE,
@@ -120,7 +121,8 @@ function buildJourneyDays(
       const exitTimes = sortedPunches.filter((punch) => punch.type === "EXIT").map((punch) => punch.time);
       const calculation = calculateWorkedMinutesForPunches(sortedPunches);
       const consideredWorkedMinutes = Math.min(calculation.workedMinutes, minutesPerWorkDay);
-      const missingMinutes = Math.max(minutesPerWorkDay - consideredWorkedMinutes, 0);
+      const rawMissingMinutes = Math.max(minutesPerWorkDay - consideredWorkedMinutes, 0);
+      const missingMinutes = rawMissingMinutes <= JOURNEY_MISSING_TOLERANCE_MINUTES ? 0 : rawMissingMinutes;
       const date = new Date(`${workDate}T00:00:00.000Z`);
 
       return {

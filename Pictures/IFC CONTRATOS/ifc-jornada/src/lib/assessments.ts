@@ -6,6 +6,7 @@ import {
   DEFAULT_CRECHE_ADDITIONAL_PERCENTAGE,
   DEFAULT_CRECHE_MONTHLY_DIFFERENCE,
   DEFAULT_EXPECTED_BUSINESS_DAYS,
+  JOURNEY_MISSING_TOLERANCE_MINUTES,
   DEFAULT_MINUTES_PER_WORKDAY,
   DEFAULT_POST_MONTHLY_VALUE,
   DEFAULT_VT_MONTHLY_DIFFERENCE,
@@ -326,7 +327,8 @@ function calculateEmployeeAssessment(
   for (const dayPunches of punchesByDay.values()) {
     const result = calculateWorkedMinutesForPunches(dayPunches);
     const consideredWorkedMinutes = Math.min(result.workedMinutes, minutesPerWorkDay);
-    const dayMissingMinutes = Math.max(minutesPerWorkDay - consideredWorkedMinutes, 0);
+    const rawMissingMinutes = Math.max(minutesPerWorkDay - consideredWorkedMinutes, 0);
+    const dayMissingMinutes = rawMissingMinutes <= JOURNEY_MISSING_TOLERANCE_MINUTES ? 0 : rawMissingMinutes;
 
     workedDays += 1;
     workedMinutes += consideredWorkedMinutes;
