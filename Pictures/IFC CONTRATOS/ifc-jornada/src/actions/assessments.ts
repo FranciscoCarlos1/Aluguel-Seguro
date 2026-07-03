@@ -2,6 +2,7 @@
 
 import { Prisma, PunchType, Role } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 import {
   calculateMonthlyAssessment,
@@ -236,9 +237,5 @@ export async function generateMonthlyAssessmentAction(
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/avaliacoes");
-
-  return {
-    success: true,
-    message: `Avaliação mensal de ${monthKey} atualizada com sucesso conforme IMR e jornada.`,
-  };
+  redirect(`/dashboard/avaliacoes?month=${monthKey}`);
 }
