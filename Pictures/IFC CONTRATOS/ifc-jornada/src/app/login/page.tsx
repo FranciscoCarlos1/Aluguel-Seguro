@@ -44,12 +44,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 Controle de Avaliação de Contrato de Serviço
               </h2>
             </div>
-            <div className="max-w-xl overflow-hidden rounded-3xl border border-line bg-white/70 p-2 sm:p-3">
+            <div className="max-w-[16rem] overflow-hidden rounded-3xl border border-line bg-white/70 p-1.5">
               <Image
                 src="/ifc-sbs-mark.svg"
                 alt="Identidade IFC SBS"
-                width={720}
-                height={240}
+                width={420}
+                height={140}
                 className="h-auto w-full rounded-2xl"
                 priority
               />
