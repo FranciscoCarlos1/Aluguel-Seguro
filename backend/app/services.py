@@ -42,6 +42,8 @@ OFFICIAL_SHEET_SYNC_HOUR = min(max(int(os.getenv("IFC_JORNADA_OFFICIAL_SHEET_SYN
 DEFAULT_ADMIN_USERNAME = os.getenv("IFC_JORNADA_ADMIN_USERNAME", "admin")
 DEFAULT_ADMIN_PASSWORD = os.getenv("IFC_JORNADA_ADMIN_PASSWORD", "admin123")
 DEFAULT_ADMIN_DISPLAY_NAME = os.getenv("IFC_JORNADA_ADMIN_DISPLAY_NAME", "Administrador")
+DEFAULT_EMPLOYEE_ROLE = "Auxiliar de limpeza"
+DEFAULT_EMPLOYEE_DEPARTMENT = "Administrativo"
 WEEKDAY_LABELS = [
     "Segunda",
     "Terca",
@@ -174,6 +176,16 @@ def canonicalize_employee_name(value: str) -> str:
     return " ".join(formatted)
 
 
+def normalize_employee_role(value: str | None) -> str:
+    normalized = " ".join((value or "").split()).strip()
+    return normalized or DEFAULT_EMPLOYEE_ROLE
+
+
+def normalize_employee_department(value: str | None) -> str:
+    normalized = " ".join((value or "").split()).strip()
+    return normalized or DEFAULT_EMPLOYEE_DEPARTMENT
+
+
 def to_cents(value: float) -> int:
     return int(round(value * 100))
 
@@ -217,6 +229,22 @@ def ensure_default_admin(db: Session) -> None:
     )
     db.add(admin)
     db.commit()
+
+
+def normalize_existing_employee_defaults(db: Session) -> None:
+    employees = list(db.scalars(select(models.Employee)))
+    changed = False
+    for employee in employees:
+        target_role = normalize_employee_role(employee.role)
+        target_department = normalize_employee_department(employee.department)
+        if employee.role != target_role:
+            employee.role = target_role
+            changed = True
+        if employee.department != target_department:
+            employee.department = target_department
+            changed = True
+    if changed:
+        db.commit()
 
 
 def list_users(db: Session) -> list[models.User]:
@@ -1035,12 +1063,19 @@ def import_single_employee_summary_rows(db: Session, rows: list[list[str]]) -> s
     employee = find_employee_by_normalized_name(db, employee_name)
     imported_employees = 0
     if employee is None:
-        employee = models.Employee(name=employee_name, daily_work_minutes=daily_work_minutes)
+        employee = models.Employee(
+            name=employee_name,
+            role=DEFAULT_EMPLOYEE_ROLE,
+            department=DEFAULT_EMPLOYEE_DEPARTMENT,
+            daily_work_minutes=daily_work_minutes,
+        )
         db.add(employee)
         db.flush()
         imported_employees = 1
     else:
         employee.name = employee_name
+        employee.role = normalize_employee_role(employee.role)
+        employee.department = normalize_employee_department(employee.department)
         employee.daily_work_minutes = daily_work_minutes
 
     imported_entries = 0
@@ -1201,13 +1236,19 @@ def import_rows(db: Session, rows: list[list[str]]) -> schemas.ImportResult:
             normalized_name = normalize_text(name)
             employee = employees_by_name.get(normalized_name)
             if employee is None:
-                employee = models.Employee(name=canonical_name)
+                employee = models.Employee(
+                    name=canonical_name,
+                    role=DEFAULT_EMPLOYEE_ROLE,
+                    department=DEFAULT_EMPLOYEE_DEPARTMENT,
+                )
                 db.add(employee)
                 db.flush()
                 employees_by_name[normalized_name] = employee
                 imported_employees += 1
             else:
                 employee.name = canonical_name
+                employee.role = normalize_employee_role(employee.role)
+                employee.department = normalize_employee_department(employee.department)
 
             payload = map_entry_values(columns, row)
             if not any(payload.values()):
@@ -1261,8 +1302,8 @@ def list_employees(db: Session) -> list[models.Employee]:
 def create_employee(db: Session, payload: schemas.EmployeeCreate) -> models.Employee:
     employee = models.Employee(
         name=canonicalize_employee_name(payload.name),
-        role=payload.role,
-        department=payload.department,
+        role=normalize_employee_role(payload.role),
+        department=normalize_employee_department(payload.department),
         daily_work_minutes=DEFAULT_DAILY_WORK_MINUTES,
     )
     db.add(employee)
@@ -1276,8 +1317,8 @@ def update_employee(db: Session, employee_id: int, payload: schemas.EmployeeUpda
     if employee is None:
         return None
     employee.name = canonicalize_employee_name(payload.name)
-    employee.role = payload.role
-    employee.department = payload.department
+    employee.role = normalize_employee_role(payload.role)
+    employee.department = normalize_employee_department(payload.department)
     employee.daily_work_minutes = DEFAULT_DAILY_WORK_MINUTES
     db.commit()
     db.refresh(employee)

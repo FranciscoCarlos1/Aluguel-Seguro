@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
+import MonthlyStatsGrid from './components/MonthlyStatsGrid.vue'
+import SectionIntro from './components/SectionIntro.vue'
+import WorkspaceNav from './components/WorkspaceNav.vue'
 
 type Employee = {
   id: number
@@ -1263,67 +1266,26 @@ onMounted(async () => {
       </div>
     </header>
 
-    <section class="workspace-nav panel">
-      <div class="panel-heading workspace-nav-heading">
-        <div>
-          <p class="eyebrow">Mapa do sistema</p>
-          <h2>Cada coisa no seu lugar</h2>
-        </div>
-        <span class="pill subtle">Acesso direto</span>
-      </div>
-
-      <div class="workspace-nav-grid">
-        <a v-for="section in workspaceSections" :key="section.id" class="workspace-link-card" :href="`#${section.id}`">
-          <span class="workspace-link-kicker">{{ section.eyebrow }}</span>
-          <strong>{{ section.title }}</strong>
-          <p>{{ section.description }}</p>
-        </a>
-      </div>
-    </section>
+    <WorkspaceNav :sections="workspaceSections" />
 
     <p v-if="errorMessage" class="feedback feedback-error">{{ errorMessage }}</p>
     <p v-else-if="loading" class="feedback">Carregando dados do mes...</p>
 
-    <div class="section-copy" id="visao-geral">
-      <p class="eyebrow">Painel central</p>
-      <h2>Visao geral do mes</h2>
-      <p>Resumo executivo da competencia para leitura rapida antes de entrar nos detalhes operacionais.</p>
-    </div>
+    <SectionIntro
+      id="visao-geral"
+      eyebrow="Painel central"
+      title="Visao geral do mes"
+      description="Resumo executivo da competencia para leitura rapida antes de entrar nos detalhes operacionais."
+    />
 
-    <section class="stats-grid">
-      <article class="stat-card accent">
-        <span>Funcionarias ativas</span>
-        <strong>{{ dashboard?.active_employees ?? 0 }}</strong>
-      </article>
-      <article class="stat-card">
-        <span>Horas previstas</span>
-        <strong>{{ formatMinutes(dashboard?.expected_minutes ?? 0) }}</strong>
-      </article>
-      <article class="stat-card">
-        <span>Horas lancadas</span>
-        <strong>{{ formatMinutes(dashboard?.worked_minutes ?? 0) }}</strong>
-      </article>
-      <article class="stat-card">
-        <span>Saldo do mes</span>
-        <strong :class="(dashboard?.balance_minutes ?? 0) < 0 ? 'negative' : 'positive'">
-          {{ formatMinutes(dashboard?.balance_minutes ?? 0) }}
-        </strong>
-      </article>
-      <article class="stat-card">
-        <span>Glosa estimada</span>
-        <strong>{{ formatCurrency(dashboard?.total_glosa_value ?? 0) }}</strong>
-      </article>
-      <article class="stat-card">
-        <span>IMR do mes</span>
-        <strong>{{ dashboard?.indicator_score ?? 0 }}/{{ dashboard?.indicator_max_score ?? 0 }}</strong>
-      </article>
-    </section>
+    <MonthlyStatsGrid :dashboard="dashboard" :format-minutes="formatMinutes" :format-currency="formatCurrency" />
 
-    <div class="section-copy" id="cadastros">
-      <p class="eyebrow">Base de apoio</p>
-      <h2>Equipe, calendario e configuracoes</h2>
-      <p>Area administrativa para manter a estrutura contratual, a equipe oficial e os parametros do sistema.</p>
-    </div>
+    <SectionIntro
+      id="cadastros"
+      eyebrow="Base de apoio"
+      title="Equipe, calendario e configuracoes"
+      description="Area administrativa para manter a estrutura contratual, a equipe oficial e os parametros do sistema."
+    />
 
     <section class="rules-grid">
       <article v-if="isAdmin" class="panel">
@@ -1522,11 +1484,12 @@ onMounted(async () => {
       </article>
     </section>
 
-    <div class="section-copy" id="operacao">
-      <p class="eyebrow">Rotina diaria</p>
-      <h2>Jornada mensal por funcionaria</h2>
-      <p>Conferencia diaria baseada no periodo do dia 1 ao ultimo dia do mes, com entrada e saida final.</p>
-    </div>
+    <SectionIntro
+      id="operacao"
+      eyebrow="Rotina diaria"
+      title="Jornada mensal por funcionaria"
+      description="Conferencia diaria baseada no periodo do dia 1 ao ultimo dia do mes, com entrada e saida final."
+    />
 
     <section class="content-grid">
       <article v-if="isAdmin" class="panel">
@@ -1688,11 +1651,13 @@ onMounted(async () => {
           </div>
 
           <div v-if="monthlyImr && monthlyIndicators" class="indicator-panel">
-            <div class="section-copy section-copy-embedded" id="imr">
-              <p class="eyebrow">Fiscalizacao contratual</p>
-              <h2>IMR, avaliacao e faturamento</h2>
-              <p>Os valores apurados alimentam automaticamente a pontuacao, a faixa aplicavel e a projecao de faturamento.</p>
-            </div>
+            <SectionIntro
+              id="imr"
+              eyebrow="Fiscalizacao contratual"
+              title="IMR, avaliacao e faturamento"
+              description="Os valores apurados alimentam automaticamente a pontuacao, a faixa aplicavel e a projecao de faturamento."
+              :embedded="true"
+            />
 
             <div class="panel-heading panel-heading-tight">
               <div>

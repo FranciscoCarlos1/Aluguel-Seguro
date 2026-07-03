@@ -40,6 +40,7 @@ def startup() -> None:
     Base.metadata.create_all(bind=engine)
     with SessionLocal() as db:
         services.ensure_default_admin(db)
+        services.normalize_existing_employee_defaults(db)
         services.auto_sync_official_sheet_if_enabled(db)
         services.ensure_monthly_rollover(db)
     if scheduler_thread is None or not scheduler_thread.is_alive():
