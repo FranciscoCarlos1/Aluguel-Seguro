@@ -11,7 +11,7 @@ class Employee(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String(120), unique=True, index=True)
-    role: Mapped[str] = mapped_column(String(120), default="Auxiliar")
+    role: Mapped[str] = mapped_column(String(120), default="Auxiliar de limpeza")
     department: Mapped[str] = mapped_column(String(120), default="Administrativo")
     daily_work_minutes: Mapped[int] = mapped_column(Integer, default=480)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)

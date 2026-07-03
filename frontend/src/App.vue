@@ -215,6 +215,32 @@ const weekdayOptions = [
   { value: 6, label: 'Domingo' },
 ]
 const qualityRatingOptions = ['O', 'B', 'R', 'I', 'N'] as const
+const workspaceSections = [
+  {
+    id: 'visao-geral',
+    eyebrow: 'Painel central',
+    title: 'Visao geral do mes',
+    description: 'Resumo rapido da competencia, glosa, horas e nota consolidada do IMR.',
+  },
+  {
+    id: 'cadastros',
+    eyebrow: 'Base de apoio',
+    title: 'Equipe, calendario e configuracoes',
+    description: 'Cadastros, fonte oficial, custo contratual e acessos do sistema.',
+  },
+  {
+    id: 'operacao',
+    eyebrow: 'Rotina diaria',
+    title: 'Jornada e lancamentos',
+    description: 'Fechamento mensal por funcionaria com selecao diaria e ajuste de jornada.',
+  },
+  {
+    id: 'imr',
+    eyebrow: 'Fiscalizacao contratual',
+    title: 'IMR, avaliacao e faturamento',
+    description: 'Pontuacao, planilha de avaliacao, faixa de servico e cenarios de faturamento.',
+  },
+] as const
 const indicatorDisplayMeta: Record<string, IndicatorDisplayMeta> = {
   IND1: {
     measurementInstrument: 'Constatacao formal de ocorrencias',
@@ -323,7 +349,7 @@ const editingEmployeeId = ref<number | null>(null)
 
 const employeeForm = ref({
   name: '',
-  role: 'Auxiliar',
+  role: 'Auxiliar de limpeza',
   department: 'Administrativo',
   daily_work_minutes: 480,
 })
@@ -538,7 +564,7 @@ function resetEmployeeForm() {
   editingEmployeeId.value = null
   employeeForm.value = {
     name: '',
-    role: 'Auxiliar',
+    role: 'Auxiliar de limpeza',
     department: 'Administrativo',
     daily_work_minutes: 480,
   }
@@ -1214,6 +1240,7 @@ onMounted(async () => {
       <div>
         <p class="eyebrow">IFC Jornada</p>
         <h1>FISCALIZACAO DE CONTRATO DE SERVICO DE LIMPEZA.</h1>
+        <p class="hero-copy">Tudo em um fluxo unico: jornada, planilha oficial, glosa, IMR e faturamento mensal organizados por area.</p>
       </div>
 
       <div class="hero-panel">
@@ -1236,8 +1263,32 @@ onMounted(async () => {
       </div>
     </header>
 
+    <section class="workspace-nav panel">
+      <div class="panel-heading workspace-nav-heading">
+        <div>
+          <p class="eyebrow">Mapa do sistema</p>
+          <h2>Cada coisa no seu lugar</h2>
+        </div>
+        <span class="pill subtle">Acesso direto</span>
+      </div>
+
+      <div class="workspace-nav-grid">
+        <a v-for="section in workspaceSections" :key="section.id" class="workspace-link-card" :href="`#${section.id}`">
+          <span class="workspace-link-kicker">{{ section.eyebrow }}</span>
+          <strong>{{ section.title }}</strong>
+          <p>{{ section.description }}</p>
+        </a>
+      </div>
+    </section>
+
     <p v-if="errorMessage" class="feedback feedback-error">{{ errorMessage }}</p>
     <p v-else-if="loading" class="feedback">Carregando dados do mes...</p>
+
+    <div class="section-copy" id="visao-geral">
+      <p class="eyebrow">Painel central</p>
+      <h2>Visao geral do mes</h2>
+      <p>Resumo executivo da competencia para leitura rapida antes de entrar nos detalhes operacionais.</p>
+    </div>
 
     <section class="stats-grid">
       <article class="stat-card accent">
@@ -1267,6 +1318,12 @@ onMounted(async () => {
         <strong>{{ dashboard?.indicator_score ?? 0 }}/{{ dashboard?.indicator_max_score ?? 0 }}</strong>
       </article>
     </section>
+
+    <div class="section-copy" id="cadastros">
+      <p class="eyebrow">Base de apoio</p>
+      <h2>Equipe, calendario e configuracoes</h2>
+      <p>Area administrativa para manter a estrutura contratual, a equipe oficial e os parametros do sistema.</p>
+    </div>
 
     <section class="rules-grid">
       <article v-if="isAdmin" class="panel">
@@ -1465,6 +1522,12 @@ onMounted(async () => {
       </article>
     </section>
 
+    <div class="section-copy" id="operacao">
+      <p class="eyebrow">Rotina diaria</p>
+      <h2>Jornada mensal por funcionaria</h2>
+      <p>Conferencia diaria baseada no periodo do dia 1 ao ultimo dia do mes, com entrada e saida final.</p>
+    </div>
+
     <section class="content-grid">
       <article v-if="isAdmin" class="panel">
         <div class="panel-heading">
@@ -1625,6 +1688,12 @@ onMounted(async () => {
           </div>
 
           <div v-if="monthlyImr && monthlyIndicators" class="indicator-panel">
+            <div class="section-copy section-copy-embedded" id="imr">
+              <p class="eyebrow">Fiscalizacao contratual</p>
+              <h2>IMR, avaliacao e faturamento</h2>
+              <p>Os valores apurados alimentam automaticamente a pontuacao, a faixa aplicavel e a projecao de faturamento.</p>
+            </div>
+
             <div class="panel-heading panel-heading-tight">
               <div>
                 <p class="eyebrow">IMR</p>

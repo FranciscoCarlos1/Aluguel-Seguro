@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict
 
 class EmployeeBase(BaseModel):
     name: str
-    role: str = "Auxiliar"
+    role: str = "Auxiliar de limpeza"
     department: str = "Administrativo"
     daily_work_minutes: int = 480
 
@@ -16,7 +16,7 @@ class EmployeeCreate(EmployeeBase):
 
 class EmployeeUpdate(BaseModel):
     name: str
-    role: str = "Auxiliar"
+    role: str = "Auxiliar de limpeza"
     department: str = "Administrativo"
     daily_work_minutes: int = 480
 
