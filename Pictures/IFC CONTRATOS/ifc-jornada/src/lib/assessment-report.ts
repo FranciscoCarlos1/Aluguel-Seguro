@@ -174,7 +174,8 @@ function buildJourneyDays(
       const entryTimes = sortedPunches.filter((punch) => punch.type === "ENTRY").map((punch) => punch.time);
       const exitTimes = sortedPunches.filter((punch) => punch.type === "EXIT").map((punch) => punch.time);
       const calculation = calculateWorkedMinutesForPunches(sortedPunches);
-      const missingMinutes = Math.max(minutesPerWorkDay - calculation.workedMinutes, 0);
+      const consideredWorkedMinutes = Math.min(calculation.workedMinutes, minutesPerWorkDay);
+      const missingMinutes = Math.max(minutesPerWorkDay - consideredWorkedMinutes, 0);
       const date = new Date(`${workDate}T00:00:00.000Z`);
 
       return {
@@ -182,9 +183,9 @@ function buildJourneyDays(
         dateLabel: formatWorkDate(date),
         entryTimes,
         exitTimes,
-        workedMinutes: calculation.workedMinutes,
+        workedMinutes: consideredWorkedMinutes,
         missingMinutes,
-        workedHoursLabel: formatMinutesAsHours(calculation.workedMinutes),
+        workedHoursLabel: formatMinutesAsHours(consideredWorkedMinutes),
         missingHoursLabel: formatMinutesAsHours(missingMinutes),
         statusLabel:
           missingMinutes > 0 || calculation.incomplete

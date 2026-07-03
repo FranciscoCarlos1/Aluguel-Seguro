@@ -366,10 +366,11 @@ function calculateEmployeeAssessment(
 
   for (const dayPunches of punchesByDay.values()) {
     const result = calculateWorkedMinutesForPunches(dayPunches);
-    const dayMissingMinutes = Math.max(minutesPerWorkDay - result.workedMinutes, 0);
+    const consideredWorkedMinutes = Math.min(result.workedMinutes, minutesPerWorkDay);
+    const dayMissingMinutes = Math.max(minutesPerWorkDay - consideredWorkedMinutes, 0);
 
     workedDays += 1;
-    workedMinutes += result.workedMinutes;
+    workedMinutes += consideredWorkedMinutes;
     missingMinutes += dayMissingMinutes;
 
     if (dayMissingMinutes === 0 && !result.incomplete) {
