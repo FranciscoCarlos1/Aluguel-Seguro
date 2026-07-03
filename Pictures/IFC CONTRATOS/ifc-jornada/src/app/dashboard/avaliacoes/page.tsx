@@ -5,6 +5,7 @@ import { AlertTriangle, Calculator, ClipboardList, FileBarChart2, FileDown, Wall
 
 import { AssessmentForm } from "@/components/dashboard/assessment-form";
 import { getMonthlyAssessmentReport } from "@/lib/assessment-report";
+import { getQualityApplicableCount, getQualityIndexes, IMR_INDICATORS } from "@/lib/assessments";
 import { requireUser } from "@/lib/auth";
 import {
   DEFAULT_CONTRACT_POSTS,
@@ -32,6 +33,8 @@ export default async function AvaliacoesPage({ searchParams }: AvaliacoesPagePro
       : undefined;
 
   const { activeAssessment } = await getMonthlyAssessmentReport(selectedMonthKey);
+  const qualityApplicableCount = getQualityApplicableCount(activeAssessment.qualityCounts);
+  const qualityIndexes = getQualityIndexes(activeAssessment.qualityCounts);
 
   const indicatorCards = [
     {
@@ -61,12 +64,41 @@ export default async function AvaliacoesPage({ searchParams }: AvaliacoesPagePro
     {
       title: "Indicador 5",
       subtitle: "Pesquisa de qualidade",
-      occurrences:
-        activeAssessment.qualityCounts.O +
-        activeAssessment.qualityCounts.B +
-        activeAssessment.qualityCounts.R +
-        activeAssessment.qualityCounts.I,
+      occurrences: qualityApplicableCount,
       score: activeAssessment.qualityDisplayScore,
+    },
+  ];
+
+  const indicatorRows = [
+    {
+      definition: IMR_INDICATORS[0],
+      metricValue: `${activeAssessment.indicator1Occurrences} ocorrência(s)`,
+      score: activeAssessment.indicator1Score,
+      notes: IMR_INDICATORS[0].scoreBands.join(" | "),
+    },
+    {
+      definition: IMR_INDICATORS[1],
+      metricValue: `${activeAssessment.indicator2Occurrences} ocorrência(s)`,
+      score: activeAssessment.indicator2Score,
+      notes: IMR_INDICATORS[1].scoreBands.join(" | "),
+    },
+    {
+      definition: IMR_INDICATORS[2],
+      metricValue: `${activeAssessment.indicator3Occurrences} ocorrência(s)`,
+      score: activeAssessment.indicator3Score,
+      notes: IMR_INDICATORS[2].scoreBands.join(" | "),
+    },
+    {
+      definition: IMR_INDICATORS[3],
+      metricValue: `${activeAssessment.indicator4Occurrences} ocorrência(s)`,
+      score: activeAssessment.indicator4Score,
+      notes: IMR_INDICATORS[3].scoreBands.join(" | "),
+    },
+    {
+      definition: IMR_INDICATORS[4],
+      metricValue: `${qualityApplicableCount} quesito(s) aplicável(is)`,
+      score: activeAssessment.qualityDisplayScore,
+      notes: `O=${qualityIndexes.O.toFixed(2)} | B=${qualityIndexes.B.toFixed(2)} | R=${qualityIndexes.R.toFixed(2)} | I=${qualityIndexes.I.toFixed(2)}`,
     },
   ];
 
@@ -202,47 +234,24 @@ export default async function AvaliacoesPage({ searchParams }: AvaliacoesPagePro
                 <tr>
                   <th className="pb-3">Código</th>
                   <th className="pb-3">Indicador</th>
-                  <th className="pb-3">Valor apurado</th>
+                  <th className="pb-3">Métrica apurada</th>
                   <th className="pb-3">Pontuação</th>
-                  <th className="pb-3">Observações</th>
+                  <th className="pb-3">Critério explícito</th>
                 </tr>
               </thead>
               <tbody>
-                <tr className="border-t border-line/70">
-                  <td className="py-3 font-semibold">IND1</td>
-                  <td className="py-3">Uso dos EPI&apos;s e Uniformes</td>
-                  <td className="py-3">{activeAssessment.indicator1Occurrences}</td>
-                  <td className="py-3">{activeAssessment.indicator1Score.toFixed(2)}/10.00</td>
-                  <td className="py-3">-</td>
-                </tr>
-                <tr className="border-t border-line/70">
-                  <td className="py-3 font-semibold">IND2</td>
-                  <td className="py-3">Tempo de Respostas às Solicitações</td>
-                  <td className="py-3">{activeAssessment.indicator2Occurrences}</td>
-                  <td className="py-3">{activeAssessment.indicator2Score.toFixed(2)}/10.00</td>
-                  <td className="py-3">-</td>
-                </tr>
-                <tr className="border-t border-line/70">
-                  <td className="py-3 font-semibold">IND3</td>
-                  <td className="py-3">Atraso no Pagamento de Salários e Benefícios</td>
-                  <td className="py-3">{activeAssessment.indicator3Occurrences}</td>
-                  <td className="py-3">{activeAssessment.indicator3Score.toFixed(2)}/35.00</td>
-                  <td className="py-3">-</td>
-                </tr>
-                <tr className="border-t border-line/70">
-                  <td className="py-3 font-semibold">IND4</td>
-                  <td className="py-3">Falta de Materiais Previstos em Contrato</td>
-                  <td className="py-3">{activeAssessment.indicator4Occurrences}</td>
-                  <td className="py-3">{activeAssessment.indicator4Score.toFixed(2)}/20.00</td>
-                  <td className="py-3">-</td>
-                </tr>
-                <tr className="border-t border-line/70">
-                  <td className="py-3 font-semibold">IND5</td>
-                  <td className="py-3">Qualidade dos Serviços Prestados</td>
-                  <td className="py-3">{activeAssessment.qualityDisplayScore.toFixed(2)}</td>
-                  <td className="py-3">{activeAssessment.qualityDisplayScore.toFixed(2)}/25.00</td>
-                  <td className="py-3">-</td>
-                </tr>
+                {indicatorRows.map(({ definition, metricValue, score, notes }) => (
+                  <tr key={definition.code} className="border-t border-line/70 align-top">
+                    <td className="py-3 font-semibold">{definition.code}</td>
+                    <td className="py-3">
+                      <p className="font-semibold">{definition.title}</p>
+                      <p className="mt-1 text-xs text-muted">{definition.reportMetric}</p>
+                    </td>
+                    <td className="py-3">{metricValue}</td>
+                    <td className="py-3">{score.toFixed(2)}/{definition.maxPoints.toFixed(2)}</td>
+                    <td className="py-3 text-xs text-muted">{notes}</td>
+                  </tr>
+                ))}
                 <tr className="border-t border-line/70 font-semibold">
                   <td className="py-3">Total</td>
                   <td className="py-3" colSpan={2}></td>
@@ -279,14 +288,42 @@ export default async function AvaliacoesPage({ searchParams }: AvaliacoesPagePro
             </div>
           </div>
           <div className="mt-5 grid gap-2 text-sm text-muted">
-            <p>Quesitos avaliados: <span className="font-semibold text-foreground">21</span></p>
-            <p>Índice Ótimo: <span className="font-semibold text-foreground">{(activeAssessment.qualityCounts.O / 21).toFixed(4)}</span></p>
-            <p>Índice Bom: <span className="font-semibold text-foreground">{(activeAssessment.qualityCounts.B / 21).toFixed(4)}</span></p>
-            <p>Índice Regular: <span className="font-semibold text-foreground">{(activeAssessment.qualityCounts.R / 21).toFixed(4)}</span></p>
-            <p>Índice Insatisfatório: <span className="font-semibold text-foreground">{(activeAssessment.qualityCounts.I / 21).toFixed(4)}</span></p>
+            <p>Quesitos avaliados: <span className="font-semibold text-foreground">{qualityApplicableCount}</span></p>
+            <p>Índice Ótimo: <span className="font-semibold text-foreground">{qualityIndexes.O.toFixed(2)}</span></p>
+            <p>Índice Bom: <span className="font-semibold text-foreground">{qualityIndexes.B.toFixed(2)}</span></p>
+            <p>Índice Regular: <span className="font-semibold text-foreground">{qualityIndexes.R.toFixed(2)}</span></p>
+            <p>Índice Insatisfatório: <span className="font-semibold text-foreground">{qualityIndexes.I.toFixed(2)}</span></p>
             <p>Pontuação de qualidade: <span className="font-semibold text-foreground">{activeAssessment.qualityDisplayScore.toFixed(2)}/25.00</span></p>
           </div>
         </article>
+      </section>
+
+      <section className="panel p-6">
+        <h3 className="text-xl font-bold">Métricas oficiais do IMR</h3>
+        <p className="mt-2 text-sm text-muted">
+          Cada indicador abaixo está ligado diretamente à planilha do IMR e mostra explicitamente a finalidade, a meta, o instrumento, a periodicidade e a faixa de pontuação usada no relatório.
+        </p>
+        <div className="mt-5 grid gap-4 xl:grid-cols-2">
+          {IMR_INDICATORS.map((indicator) => (
+            <article key={indicator.code} className="panel-muted rounded-3xl p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">{indicator.code}</p>
+                  <h4 className="mt-1 text-base font-bold">{indicator.title}</h4>
+                </div>
+                <span className="badge bg-accent-soft text-accent-strong">Até {indicator.maxPoints} pts</span>
+              </div>
+              <div className="mt-4 grid gap-2 text-sm">
+                <p><span className="font-semibold text-foreground">Finalidade:</span> {indicator.finalidade}</p>
+                <p><span className="font-semibold text-foreground">Meta a cumprir:</span> {indicator.target}</p>
+                <p><span className="font-semibold text-foreground">Instrumento de medição:</span> {indicator.measurementInstrument}</p>
+                <p><span className="font-semibold text-foreground">Periodicidade:</span> {indicator.periodicity}</p>
+                <p><span className="font-semibold text-foreground">Métrica no relatório:</span> {indicator.reportMetric}</p>
+                <p><span className="font-semibold text-foreground">Faixa de pontuação:</span> {indicator.scoreBands.join(" | ")}</p>
+              </div>
+            </article>
+          ))}
+        </div>
       </section>
 
       <section className="grid gap-6 xl:grid-cols-3">

@@ -2,7 +2,7 @@ import React from "react";
 import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 
 import type { MonthlyAssessmentReportData } from "@/lib/assessment-report";
-import { QUALITY_QUESTIONS } from "@/lib/assessments";
+import { getQualityApplicableCount, getQualityIndexes, IMR_INDICATORS, QUALITY_QUESTIONS } from "@/lib/assessments";
 import {
   REPORT_CONTRACT_CODE,
   REPORT_CONTRACTOR_NAME,
@@ -190,6 +190,23 @@ const styles = StyleSheet.create({
     textAlign: "right",
     fontWeight: 700,
   },
+  metricCard: {
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderRadius: 6,
+    padding: 8,
+    marginBottom: 10,
+  },
+  metricTitle: {
+    fontSize: 11,
+    fontWeight: 700,
+    marginBottom: 6,
+  },
+  metricLine: {
+    fontSize: 9,
+    marginBottom: 3,
+    color: "#374151",
+  },
 });
 
 function qualityLabel(value?: string) {
@@ -209,6 +226,8 @@ function qualityLabel(value?: string) {
 
 export function AssessmentReportPdf({ report }: { report: MonthlyAssessmentReportData }) {
   const { activeAssessment } = report;
+  const qualityApplicableCount = getQualityApplicableCount(activeAssessment.qualityCounts);
+  const qualityIndexes = getQualityIndexes(activeAssessment.qualityCounts);
 
   return (
     <Document>
@@ -238,11 +257,11 @@ export function AssessmentReportPdf({ report }: { report: MonthlyAssessmentRepor
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Indicadores e Apuração Financeira</Text>
-          <View style={styles.row}><Text style={styles.rowLabel}>IND1 | Uso dos EPI's e Uniformes</Text><Text style={styles.rowValue}>{activeAssessment.indicator1Occurrences} | {activeAssessment.indicator1Score.toFixed(2)}/10.00</Text></View>
-          <View style={styles.row}><Text style={styles.rowLabel}>IND2 | Tempo de Respostas às Solicitações</Text><Text style={styles.rowValue}>{activeAssessment.indicator2Occurrences} | {activeAssessment.indicator2Score.toFixed(2)}/10.00</Text></View>
-          <View style={styles.row}><Text style={styles.rowLabel}>IND3 | Atraso no Pagamento de Salários e Benefícios</Text><Text style={styles.rowValue}>{activeAssessment.indicator3Occurrences} | {activeAssessment.indicator3Score.toFixed(2)}/35.00</Text></View>
-          <View style={styles.row}><Text style={styles.rowLabel}>IND4 | Falta de Materiais Previstos em Contrato</Text><Text style={styles.rowValue}>{activeAssessment.indicator4Occurrences} | {activeAssessment.indicator4Score.toFixed(2)}/20.00</Text></View>
-          <View style={styles.row}><Text style={styles.rowLabel}>IND5 | Qualidade dos Serviços Prestados</Text><Text style={styles.rowValue}>{activeAssessment.qualityDisplayScore.toFixed(2)}/25.00</Text></View>
+          <View style={styles.row}><Text style={styles.rowLabel}>IND1 | Uso dos EPI's e Uniformes</Text><Text style={styles.rowValue}>{activeAssessment.indicator1Occurrences} ocorrência(s) | {activeAssessment.indicator1Score.toFixed(2)}/10.00</Text></View>
+          <View style={styles.row}><Text style={styles.rowLabel}>IND2 | Tempo de Respostas às Solicitações</Text><Text style={styles.rowValue}>{activeAssessment.indicator2Occurrences} ocorrência(s) | {activeAssessment.indicator2Score.toFixed(2)}/10.00</Text></View>
+          <View style={styles.row}><Text style={styles.rowLabel}>IND3 | Atraso no Pagamento de Salários e Benefícios</Text><Text style={styles.rowValue}>{activeAssessment.indicator3Occurrences} ocorrência(s) | {activeAssessment.indicator3Score.toFixed(2)}/35.00</Text></View>
+          <View style={styles.row}><Text style={styles.rowLabel}>IND4 | Falta de Materiais Previstos em Contrato</Text><Text style={styles.rowValue}>{activeAssessment.indicator4Occurrences} ocorrência(s) | {activeAssessment.indicator4Score.toFixed(2)}/20.00</Text></View>
+          <View style={styles.row}><Text style={styles.rowLabel}>IND5 | Qualidade dos Serviços Prestados</Text><Text style={styles.rowValue}>{qualityApplicableCount} quesito(s) | {activeAssessment.qualityDisplayScore.toFixed(2)}/25.00</Text></View>
           <View style={styles.row}><Text style={styles.rowLabel}>Comentário</Text><Text style={styles.rowValue}>{REPORT_DEFAULT_COMMENT}</Text></View>
           <View style={styles.row}><Text style={styles.rowLabel}>Contrato com VT</Text><Text style={styles.rowValue}>{formatCurrencyBRL(activeAssessment.contractMonthlyWithVt)}</Text></View>
           <View style={styles.row}><Text style={styles.rowLabel}>Desconto VT</Text><Text style={styles.rowValue}>{formatCurrencyBRL(activeAssessment.vtDiscountAmount)}</Text></View>
@@ -258,7 +277,27 @@ export function AssessmentReportPdf({ report }: { report: MonthlyAssessmentRepor
           <View style={styles.row}><Text style={styles.rowLabel}>Regular</Text><Text style={styles.rowValue}>{activeAssessment.qualityCounts.R}</Text></View>
           <View style={styles.row}><Text style={styles.rowLabel}>Insatisfatório</Text><Text style={styles.rowValue}>{activeAssessment.qualityCounts.I}</Text></View>
           <View style={styles.row}><Text style={styles.rowLabel}>Não se aplica</Text><Text style={styles.rowValue}>{activeAssessment.qualityCounts.N}</Text></View>
+          <View style={styles.row}><Text style={styles.rowLabel}>Quesitos avaliados</Text><Text style={styles.rowValue}>{qualityApplicableCount}</Text></View>
+          <View style={styles.row}><Text style={styles.rowLabel}>Índice Ótimo</Text><Text style={styles.rowValue}>{qualityIndexes.O.toFixed(2)}</Text></View>
+          <View style={styles.row}><Text style={styles.rowLabel}>Índice Bom</Text><Text style={styles.rowValue}>{qualityIndexes.B.toFixed(2)}</Text></View>
+          <View style={styles.row}><Text style={styles.rowLabel}>Índice Regular</Text><Text style={styles.rowValue}>{qualityIndexes.R.toFixed(2)}</Text></View>
+          <View style={styles.row}><Text style={styles.rowLabel}>Índice Insatisfatório</Text><Text style={styles.rowValue}>{qualityIndexes.I.toFixed(2)}</Text></View>
           <View style={styles.row}><Text style={styles.rowLabel}>Pontuação de qualidade</Text><Text style={styles.rowValue}>{activeAssessment.qualityDisplayScore.toFixed(2)}/25.00</Text></View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Métricas Oficiais do IMR</Text>
+          {IMR_INDICATORS.map((indicator) => (
+            <View key={indicator.code} style={styles.metricCard}>
+              <Text style={styles.metricTitle}>{indicator.code} | {indicator.title}</Text>
+              <Text style={styles.metricLine}>Finalidade: {indicator.finalidade}</Text>
+              <Text style={styles.metricLine}>Meta a cumprir: {indicator.target}</Text>
+              <Text style={styles.metricLine}>Instrumento de medição: {indicator.measurementInstrument}</Text>
+              <Text style={styles.metricLine}>Periodicidade: {indicator.periodicity}</Text>
+              <Text style={styles.metricLine}>Métrica no relatório: {indicator.reportMetric}</Text>
+              <Text style={styles.metricLine}>Faixa de pontuação: {indicator.scoreBands.join(" | ")}</Text>
+            </View>
+          ))}
         </View>
 
         <View style={styles.section}>

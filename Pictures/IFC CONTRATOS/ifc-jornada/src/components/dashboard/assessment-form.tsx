@@ -131,19 +131,19 @@ export function AssessmentForm({ defaultMonthKey, defaults, isReadOnly = false }
 
       <section className="panel-muted grid gap-4 p-5 xl:grid-cols-4">
         <div className="space-y-2">
-          <label className="text-sm font-semibold" htmlFor="indicator1Occurrences">Indicador 1: ocorrências EPI/uniforme</label>
+          <label className="text-sm font-semibold" htmlFor="indicator1Occurrences">Indicador 1: ocorrências de EPI/uniforme</label>
           <input className="field" id="indicator1Occurrences" name="indicator1Occurrences" type="number" min="0" step="1" defaultValue={defaults?.indicator1Occurrences ?? 0} />
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-semibold" htmlFor="indicator2Occurrences">Indicador 2: ocorrências resposta</label>
+          <label className="text-sm font-semibold" htmlFor="indicator2Occurrences">Indicador 2: respostas tardias ou dias de atraso</label>
           <input className="field" id="indicator2Occurrences" name="indicator2Occurrences" type="number" min="0" step="1" defaultValue={defaults?.indicator2Occurrences ?? 0} />
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-semibold" htmlFor="indicator3Occurrences">Indicador 3: atrasos salariais</label>
+          <label className="text-sm font-semibold" htmlFor="indicator3Occurrences">Indicador 3: atrasos salariais e benefícios</label>
           <input className="field" id="indicator3Occurrences" name="indicator3Occurrences" type="number" min="0" step="1" defaultValue={defaults?.indicator3Occurrences ?? 0} />
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-semibold" htmlFor="indicator4Occurrences">Indicador 4: falta de materiais</label>
+          <label className="text-sm font-semibold" htmlFor="indicator4Occurrences">Indicador 4: faltas de materiais previstos</label>
           <input className="field" id="indicator4Occurrences" name="indicator4Occurrences" type="number" min="0" step="1" defaultValue={defaults?.indicator4Occurrences ?? 0} />
         </div>
       </section>

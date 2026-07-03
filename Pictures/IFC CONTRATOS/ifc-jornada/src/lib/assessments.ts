@@ -14,6 +14,102 @@ import { parseIsoDateToUtcDate } from "@/lib/utils";
 
 export type QualityRating = "O" | "B" | "R" | "I" | "N";
 
+export type ImrIndicatorDefinition = {
+  code: "IND1" | "IND2" | "IND3" | "IND4" | "IND5";
+  title: string;
+  shortTitle: string;
+  finalidade: string;
+  target: string;
+  measurementInstrument: string;
+  periodicity: string;
+  reportMetric: string;
+  maxPoints: number;
+  scoreBands: string[];
+};
+
+export const IMR_INDICATORS: ImrIndicatorDefinition[] = [
+  {
+    code: "IND1",
+    title: "Uso dos EPI's e Uniformes",
+    shortTitle: "EPI e uniforme",
+    finalidade:
+      "Mensurar o atendimento às exigências específicas relacionadas à segurança do trabalho, fornecimento e uso dos uniformes.",
+    target: "Nenhuma ocorrência no mês.",
+    measurementInstrument: "Constatação formal de ocorrências.",
+    periodicity: "Diária, com aferição mensal do trabalho.",
+    reportMetric: "Número de ocorrências registradas no mês.",
+    maxPoints: 10,
+    scoreBands: [
+      "Sem ocorrências = 10 pontos",
+      "1 ocorrência = 8 pontos",
+      "2 ocorrências = 6 pontos",
+      "3 ocorrências = 4 pontos",
+      "4 ocorrências = 2 pontos",
+      "5 ou mais ocorrências = 0 pontos",
+    ],
+  },
+  {
+    code: "IND2",
+    title: "Tempo de Respostas às Solicitações da Contratante",
+    shortTitle: "Tempo de resposta",
+    finalidade: "Avaliar a agilidade da contratada no atendimento às solicitações da contratante.",
+    target: "Atendimento imediato.",
+    measurementInstrument: "Registro de solicitações.",
+    periodicity: "Mensal.",
+    reportMetric: "Quantidade de respostas tardias ou de dias de atraso apurados no mês.",
+    maxPoints: 10,
+    scoreBands: [
+      "Sem ocorrências = 10 pontos",
+      "1 resposta ou 1 dia de atraso = 8 pontos",
+      "2 respostas ou 2 dias de atraso = 6 pontos",
+      "3 respostas ou 3 dias de atraso = 4 pontos",
+      "4 respostas ou 4 dias de atraso = 2 pontos",
+      "5 ou mais respostas ou dias de atraso = 0 pontos",
+    ],
+  },
+  {
+    code: "IND3",
+    title: "Atraso no Pagamento de Salários e Outros Benefícios",
+    shortTitle: "Pagamento de salários e benefícios",
+    finalidade: "Verificar o cumprimento das obrigações trabalhistas e sociais da contratada.",
+    target: "Nenhum atraso.",
+    measurementInstrument: "Análise documental.",
+    periodicity: "Mensal.",
+    reportMetric: "Número de ocorrências de atraso no pagamento de salários e benefícios.",
+    maxPoints: 35,
+    scoreBands: ["Sem ocorrências = 35 pontos", "1 ou mais ocorrências = 0 pontos"],
+  },
+  {
+    code: "IND4",
+    title: "Falta de Materiais Previstos no Contrato",
+    shortTitle: "Falta de materiais",
+    finalidade: "Garantir a disponibilidade dos materiais necessários à execução dos serviços.",
+    target: "Nenhuma falta.",
+    measurementInstrument: "Registro de ocorrências.",
+    periodicity: "Mensal.",
+    reportMetric: "Número de ocorrências de falta de materiais previstos no contrato.",
+    maxPoints: 20,
+    scoreBands: ["Sem ocorrências = 20 pontos", "1 ou mais ocorrências = 0 pontos"],
+  },
+  {
+    code: "IND5",
+    title: "Qualidade dos Serviços Prestados",
+    shortTitle: "Pesquisa de qualidade",
+    finalidade: "Avaliar a qualidade global dos serviços executados.",
+    target: "Resultado da pesquisa de satisfação da contratante.",
+    measurementInstrument: "Pesquisa de satisfação realizada pela contratante.",
+    periodicity: "Mensal.",
+    reportMetric: "Média aritmética das avaliações dos quesitos aplicáveis, com peso de até 25 pontos.",
+    maxPoints: 25,
+    scoreBands: [
+      "Índice O = número de Ótimo / quesitos avaliados",
+      "Índice B = número de Bom / quesitos avaliados",
+      "Pontuação = (Índice O + Índice B) x 25",
+      "Quesitos com N não entram no divisor",
+    ],
+  },
+];
+
 export const QUALITY_QUESTIONS = [
   { key: "q1", section: "Execução dos Serviços", label: "Avaliação direta dos banheiros em geral" },
   { key: "q2", section: "Execução dos Serviços", label: "Avaliação direta dos móveis" },
@@ -37,6 +133,26 @@ export const QUALITY_QUESTIONS = [
   { key: "q20", section: "Empresa Contratada", label: "Presença e fiscalização periódica do preposto" },
   { key: "q21", section: "Empresa Contratada", label: "Atendimento em tempo hábil de documentação exigida pela contratante" },
 ] as const;
+
+export function getQualityApplicableCount(counts: Record<QualityRating, number>) {
+  return counts.O + counts.B + counts.R + counts.I;
+}
+
+export function getQualityIndexes(counts: Record<QualityRating, number>) {
+  const applicable = getQualityApplicableCount(counts);
+
+  if (applicable === 0) {
+    return { applicable, O: 0, B: 0, R: 0, I: 0 };
+  }
+
+  return {
+    applicable,
+    O: roundToTwo(counts.O / applicable),
+    B: roundToTwo(counts.B / applicable),
+    R: roundToTwo(counts.R / applicable),
+    I: roundToTwo(counts.I / applicable),
+  };
+}
 
 type EmployeeAssessmentInput = {
   employeeId: string;
@@ -154,11 +270,7 @@ function scoreIndicator3(occurrences: number) {
 }
 
 function scoreIndicator4(occurrences: number) {
-  if (occurrences <= 0) return 20;
-  if (occurrences === 1) return 15;
-  if (occurrences === 2) return 10;
-  if (occurrences === 3) return 5;
-  return 0;
+  return occurrences <= 0 ? 20 : 0;
 }
 
 function scoreIndicator5(responses: Record<string, QualityRating>) {
