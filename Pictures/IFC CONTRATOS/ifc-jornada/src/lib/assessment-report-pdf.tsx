@@ -376,7 +376,7 @@ export function AssessmentReportPdf({ report }: { report: MonthlyAssessmentRepor
                 <Text style={styles.miniWide}>Entradas</Text>
                 <Text style={styles.miniWide}>Saídas</Text>
                 <Text style={styles.miniMedium}>Trab.</Text>
-                <Text style={styles.miniMedium}>Saldo</Text>
+                <Text style={styles.miniMedium}>Falta</Text>
                 <Text style={styles.miniStatus}>Status</Text>
               </View>
               {item.days.length > 0 ? (

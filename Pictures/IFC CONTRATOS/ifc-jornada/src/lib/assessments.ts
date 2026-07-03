@@ -362,15 +362,17 @@ function calculateEmployeeAssessment(
   let completeDays = 0;
   let incompleteDays = 0;
   let workedMinutes = 0;
+  let missingMinutes = 0;
 
   for (const dayPunches of punchesByDay.values()) {
     const result = calculateWorkedMinutesForPunches(dayPunches);
-    const dayBalance = result.workedMinutes - minutesPerWorkDay;
+    const dayMissingMinutes = Math.max(minutesPerWorkDay - result.workedMinutes, 0);
 
     workedDays += 1;
     workedMinutes += result.workedMinutes;
+    missingMinutes += dayMissingMinutes;
 
-    if (dayBalance >= 0 && !result.incomplete) {
+    if (dayMissingMinutes === 0 && !result.incomplete) {
       completeDays += 1;
     } else {
       incompleteDays += 1;
@@ -378,7 +380,6 @@ function calculateEmployeeAssessment(
   }
 
   const missingDays = Math.max(expectedBusinessDays - workedDays, 0);
-  const missingMinutes = Math.max(workedDays * minutesPerWorkDay - workedMinutes, 0);
   const journeyGlosaAmount = roundToTwo(((postMonthlyValue / expectedBusinessDays) / minutesPerWorkDay) * missingMinutes);
   const employeeReferenceValue = roundToTwo(postMonthlyValue);
   const complianceScore =

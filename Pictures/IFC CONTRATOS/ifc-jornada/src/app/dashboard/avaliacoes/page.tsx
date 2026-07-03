@@ -426,7 +426,7 @@ export default async function AvaliacoesPage({ searchParams }: AvaliacoesPagePro
                       <th className="pb-3">Entradas</th>
                       <th className="pb-3">Saídas</th>
                       <th className="pb-3">Horas trabalhadas</th>
-                      <th className="pb-3">Saldo diário</th>
+                      <th className="pb-3">Horas faltantes</th>
                       <th className="pb-3">Situação</th>
                     </tr>
                   </thead>

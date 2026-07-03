@@ -174,7 +174,7 @@ function buildJourneyDays(
       const entryTimes = sortedPunches.filter((punch) => punch.type === "ENTRY").map((punch) => punch.time);
       const exitTimes = sortedPunches.filter((punch) => punch.type === "EXIT").map((punch) => punch.time);
       const calculation = calculateWorkedMinutesForPunches(sortedPunches);
-      const balanceMinutes = minutesPerWorkDay - calculation.workedMinutes;
+      const missingMinutes = Math.max(minutesPerWorkDay - calculation.workedMinutes, 0);
       const date = new Date(`${workDate}T00:00:00.000Z`);
 
       return {
@@ -183,15 +183,13 @@ function buildJourneyDays(
         entryTimes,
         exitTimes,
         workedMinutes: calculation.workedMinutes,
-        missingMinutes: Math.max(balanceMinutes, 0),
+        missingMinutes,
         workedHoursLabel: formatMinutesAsHours(calculation.workedMinutes),
-        missingHoursLabel: formatBalanceMinutesAsHours(balanceMinutes),
+        missingHoursLabel: formatMinutesAsHours(missingMinutes),
         statusLabel:
-          balanceMinutes > 0 || calculation.incomplete
+          missingMinutes > 0 || calculation.incomplete
             ? "Incompleta"
-            : balanceMinutes < 0
-              ? "Compensação"
-              : "Completa",
+            : "Completa",
       } satisfies JourneyDayReport;
     });
 }
