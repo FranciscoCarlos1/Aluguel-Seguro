@@ -150,27 +150,35 @@ export default async function JornadasPage({ searchParams }: JornadasPageProps) 
             <p className="mt-1 text-sm text-muted">Selecione a funcionária e o período para ver as batidas diárias e lançar novas entradas e saídas.</p>
           </div>
 
-          <form className="grid w-full gap-3 lg:grid-cols-2 xl:max-w-5xl xl:grid-cols-[minmax(0,2fr)_180px_170px_170px_auto]" method="get">
-            <select className="field" defaultValue={selectedEmployee?.id ?? ""} name="employeeId">
-              <option value="">Selecione a funcionária</option>
-              {employees.map((employee) => (
-                <option key={employee.id} value={employee.id}>
-                  {employee.name}
-                </option>
-              ))}
-            </select>
-            <input className="field" defaultValue={selectedMonthKey} name="month" type="month" />
-            <input className="field" defaultValue={selectedStartDate} name="startDate" type="date" />
-            <input className="field" defaultValue={selectedEndDate} name="endDate" type="date" />
-            <div className="flex flex-col gap-3 sm:flex-row lg:col-span-2 xl:col-span-1 xl:justify-end">
-              <button className="secondary-button px-5 py-3" type="submit">Visualizar jornada</button>
-              {selectedEmployee ? (
-                <Link className="secondary-button px-5 py-3 text-center" href="/dashboard/jornadas">
-                  Limpar filtro
-                </Link>
-              ) : null}
-            </div>
-          </form>
+          <form className="grid w-full gap-3 lg:grid-cols-2 xl:max-w-5xl xl:grid-cols-[minmax(0,2fr)_180px_170px_170px_auto] overflow-visible" method="get">
+  <div className="relative z-50 w-full">
+    <select 
+      className="field w-full cursor-pointer relative z-50" 
+      defaultValue={selectedEmployee?.id ?? ""} 
+      name="employeeId"
+    >
+      <option value="">Selecione a funcionária</option>
+      {employees.map((employee) => (
+        <option key={employee.id} value={employee.id} className="bg-[#121214] text-white py-2">
+          {employee.name}
+        </option>
+      ))}
+    </select>
+  </div>
+  
+  <input className="field" defaultValue={selectedMonthKey} name="month" type="month" />
+  <input className="field" defaultValue={selectedStartDate} name="startDate" type="date" />
+  <input className="field" defaultValue={selectedEndDate} name="endDate" type="date" />
+  
+  <div className="flex flex-col gap-3 sm:flex-row lg:col-span-2 xl:col-span-1 xl:justify-end">
+    <button className="secondary-button px-5 py-3" type="submit">Visualizar jornada</button>
+    {selectedEmployee ? (
+      <Link className="secondary-button px-5 py-3 text-center" href="/dashboard/jornadas">
+        Limpar filtro
+      </Link>
+    ) : null}
+  </div>
+</form>
         </div>
       </section>
 
