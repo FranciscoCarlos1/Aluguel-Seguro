@@ -46,6 +46,7 @@ model Employee {
   name      String      @unique
   active    Boolean     @default(true)
   punches   TimePunch[]
+  absences  Absence[]
   assessmentItems EmployeeMonthlyAssessment[]
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
@@ -64,6 +65,27 @@ model TimePunch {
   createdBy   User?        @relation("CreatedPunches", fields: [createdById], references: [id], onDelete: SetNull)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
+
+  @@index([employeeId, workDate])
+  @@index([workDate])
+  @@unique([employeeId, workDate, type, time])
+}
+
+model Absence {
+  id          String   @id @default(cuid())
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  workDate    DateTime @db.Date
+  notes       String?
+  createdById String?
+  createdBy   User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
+
+  @@unique([employeeId, workDate])
+  @@index([employeeId])
+  @@index([workDate])
+}
 
   @@index([employeeId, workDate])
   @@index([workDate])

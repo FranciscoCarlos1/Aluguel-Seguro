@@ -95,6 +95,120 @@ export async function createPunchAction(
   };
 }
 
+export async function toggleAbsenceAction(
+  _state: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const currentUser = await requireUser([Role.ADMIN, Role.OPERATOR]);
+  const employeeId = String(formData.get("employeeId") ?? "");
+  const workDate = String(formData.get("workDate") ?? "");
+  const action = String(formData.get("action") ?? "");
+
+  if (!employeeId || !/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(workDate)) {
+    return {
+      message: "Funcionária ou data inválida.",
+    };
+  }
+
+  if (action !== "add" && action !== "remove") {
+    return {
+      message: "Ação inválida.",
+    };
+  }
+
+  const employee = await db.employee.findFirst({
+    where: { id: employeeId, active: true },
+  });
+
+  if (!employee) {
+    return {
+      message: "Funcionária inválida ou inativa.",
+    };
+  }
+
+  const absenceDate = parseIsoDateToUtcDate(workDate);
+  const existingAbsence = await db.absence.findUnique({
+    where: {
+      employeeId_workDate: {
+        employeeId,
+        workDate: absenceDate,
+      },
+    },
+  });
+
+  if (action === "add") {
+    const existingPunch = await db.timePunch.findFirst({
+      where: { employeeId, workDate: absenceDate },
+    });
+
+    if (existingPunch) {
+      return {
+        message: "Não é possível marcar falta quando já há registro nesta data.",
+      };
+    }
+
+    if (existingAbsence) {
+      return {
+        success: true,
+        message: "Falta já está marcada para esta data.",
+      };
+    }
+
+    const absence = await db.absence.create({
+      data: {
+        employeeId,
+        workDate: absenceDate,
+        notes: "Falta marcada no espelho de jornada.",
+        createdById: currentUser.id,
+      },
+    });
+
+    await db.auditLog.create({
+      data: {
+        actorId: currentUser.id,
+        action: "ABSENCE_CREATED",
+        entity: "absence",
+        entityId: absence.id,
+      },
+    });
+
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/jornadas");
+    revalidatePath("/dashboard/funcionarias");
+
+    return {
+      success: true,
+      message: "Falta registrada com sucesso.",
+    };
+  }
+
+  if (!existingAbsence) {
+    return {
+      message: "Não há falta marcada para esta data.",
+    };
+  }
+
+  await db.absence.delete({ where: { id: existingAbsence.id } });
+
+  await db.auditLog.create({
+    data: {
+      actorId: currentUser.id,
+      action: "ABSENCE_REMOVED",
+      entity: "absence",
+      entityId: existingAbsence.id,
+    },
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/jornadas");
+  revalidatePath("/dashboard/funcionarias");
+
+  return {
+    success: true,
+    message: "Falta removida com sucesso.",
+  };
+}
+
 function inferPunchTypeByOffset(offset: number) {
   return offset % 2 === 0 ? PunchType.ENTRY : PunchType.EXIT;
 }

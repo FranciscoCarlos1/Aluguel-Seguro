@@ -7,6 +7,7 @@ import { calculateWorkedMinutesForPunches, formatMinutesAsHours } from "@/lib/jo
 import { formatWorkDate, getCurrentMonthKey, parseIsoDateToUtcDate } from "@/lib/utils";
 import { CsvImportForm } from "@/components/dashboard/csv-import-form";
 import { PunchForm } from "@/components/dashboard/punch-form";
+import { AbsenceMarkForm } from "@/components/dashboard/absence-mark-form";
 
 type JornadasPageProps = {
   searchParams?: Promise<{
@@ -23,7 +24,25 @@ type PunchRecord = {
   time: string;
 };
 
-function buildJourneyDays(punches: PunchRecord[]) {
+type JourneyDay = {
+  workDate: string;
+  dateLabel: string;
+  entryTimes: string[];
+  exitTimes: string[];
+  workedHoursLabel: string;
+  missingHoursLabel: string;
+  statusLabel: string;
+  hasAbsence: boolean;
+};
+
+type SelectedEmployee = {
+  id: string;
+  name: string;
+  punches: PunchRecord[];
+  absences: Array<{ workDate: Date }>;
+};
+
+function buildJourneyDays(punches: PunchRecord[], absenceDates: Set<string>, startDate: Date, endDate: Date) {
   const punchesByDay = new Map<string, PunchRecord[]>();
 
   for (const punch of punches) {
@@ -33,27 +52,43 @@ function buildJourneyDays(punches: PunchRecord[]) {
     punchesByDay.set(key, current);
   }
 
-  return [...punchesByDay.entries()]
-    .sort(([left], [right]) => right.localeCompare(left))
-    .map(([workDate, dayPunches]) => {
-      const sortedPunches = [...dayPunches].sort((left, right) => left.time.localeCompare(right.time));
-      const entryTimes = sortedPunches.filter((punch) => punch.type === "ENTRY").map((punch) => punch.time);
-      const exitTimes = sortedPunches.filter((punch) => punch.type === "EXIT").map((punch) => punch.time);
-      const calculation = calculateWorkedMinutesForPunches(sortedPunches);
-      const consideredWorkedMinutes = Math.min(calculation.workedMinutes, DEFAULT_MINUTES_PER_WORKDAY);
-      const rawMissingMinutes = Math.max(DEFAULT_MINUTES_PER_WORKDAY - consideredWorkedMinutes, 0);
-      const missingMinutes = rawMissingMinutes <= JOURNEY_MISSING_TOLERANCE_MINUTES ? 0 : rawMissingMinutes;
+  const days: JourneyDay[] = [];
+  const currentDate = new Date(startDate);
 
-      return {
-        workDate,
-        dateLabel: formatWorkDate(new Date(`${workDate}T00:00:00.000Z`)),
-        entryTimes,
-        exitTimes,
-        workedHoursLabel: formatMinutesAsHours(consideredWorkedMinutes),
-        missingHoursLabel: formatMinutesAsHours(missingMinutes),
-        statusLabel: missingMinutes > 0 || calculation.incomplete ? "Incompleta" : "Completa",
-      };
+  while (currentDate <= endDate) {
+    const workDate = currentDate.toISOString().slice(0, 10);
+    const dayPunches = [...(punchesByDay.get(workDate) ?? [])].sort((left, right) => left.time.localeCompare(right.time));
+    const entryTimes = dayPunches.filter((punch) => punch.type === "ENTRY").map((punch) => punch.time);
+    const exitTimes = dayPunches.filter((punch) => punch.type === "EXIT").map((punch) => punch.time);
+    const calculation = dayPunches.length > 0 ? calculateWorkedMinutesForPunches(dayPunches) : { workedMinutes: 0, incomplete: false };
+    const consideredWorkedMinutes = Math.min(calculation.workedMinutes, DEFAULT_MINUTES_PER_WORKDAY);
+    const rawMissingMinutes = dayPunches.length > 0 ? Math.max(DEFAULT_MINUTES_PER_WORKDAY - consideredWorkedMinutes, 0) : 0;
+    const missingMinutes = rawMissingMinutes <= JOURNEY_MISSING_TOLERANCE_MINUTES ? 0 : rawMissingMinutes;
+    const hasAbsence = absenceDates.has(workDate);
+
+    const statusLabel = hasAbsence
+      ? "Falta"
+      : dayPunches.length > 0
+      ? missingMinutes > 0 || calculation.incomplete
+        ? "Incompleta"
+        : "Completa"
+      : "Sem registro";
+
+    days.push({
+      workDate,
+      dateLabel: formatWorkDate(new Date(`${workDate}T00:00:00.000Z`)),
+      entryTimes,
+      exitTimes,
+      workedHoursLabel: dayPunches.length > 0 ? formatMinutesAsHours(consideredWorkedMinutes) : "-",
+      missingHoursLabel: dayPunches.length > 0 ? formatMinutesAsHours(missingMinutes) : "-",
+      statusLabel,
+      hasAbsence,
     });
+
+    currentDate.setUTCDate(currentDate.getUTCDate() + 1);
+  }
+
+  return days.sort((left, right) => right.workDate.localeCompare(left.workDate));
 }
 
 function isValidMonthKey(value: string | undefined): value is string {
@@ -105,32 +140,49 @@ export default async function JornadasPage({ searchParams }: JornadasPageProps) 
       },
     }),
     selectedEmployeeId
-      ? db.employee.findFirst({
+      ? (db.employee.findFirst({
           where: { id: selectedEmployeeId, active: true },
           select: {
             id: true,
             name: true,
             punches: {
-              take: 120,
               where: {
                 workDate: {
                   gte: selectedStartUtcDate,
                   lte: selectedEndUtcDate,
                 },
               },
-              orderBy: [{ workDate: "desc" }, { time: "asc" }],
+              orderBy: [{ workDate: "asc" }, { time: "asc" }],
               select: {
                 workDate: true,
                 type: true,
                 time: true,
               },
             },
+            absences: {
+              where: {
+                workDate: {
+                  gte: selectedStartUtcDate,
+                  lte: selectedEndUtcDate,
+                },
+              },
+              orderBy: { workDate: "asc" },
+              select: {
+                workDate: true,
+              },
+            },
           },
-        })
+        }) as Promise<SelectedEmployee | null>)
       : Promise.resolve(null),
   ]);
 
-  const selectedEmployeeJourney = selectedEmployee ? buildJourneyDays(selectedEmployee.punches) : [];
+  const absenceDates = new Set(
+    selectedEmployee?.absences.map((absence) => absence.workDate.toISOString().slice(0, 10)) ?? [],
+  );
+
+  const selectedEmployeeJourney = selectedEmployee
+    ? buildJourneyDays(selectedEmployee.punches, absenceDates, selectedStartUtcDate, selectedEndUtcDate)
+    : [];
 
   return (
     <main className="flex flex-col gap-6">
@@ -151,34 +203,56 @@ export default async function JornadasPage({ searchParams }: JornadasPageProps) 
           </div>
 
           <form className="grid w-full gap-3 lg:grid-cols-2 xl:max-w-5xl xl:grid-cols-[minmax(0,2fr)_180px_170px_170px_auto] overflow-visible" method="get">
-  <div className="relative z-50 w-full">
-    <select 
-      className="field w-full cursor-pointer relative z-50" 
-      defaultValue={selectedEmployee?.id ?? ""} 
-      name="employeeId"
-    >
-      <option value="">Selecione a funcionária</option>
-      {employees.map((employee) => (
-        <option key={employee.id} value={employee.id} className="bg-[#121214] text-white py-2">
-          {employee.name}
-        </option>
-      ))}
-    </select>
-  </div>
-  
-  <input className="field" defaultValue={selectedMonthKey} name="month" type="month" />
-  <input className="field" defaultValue={selectedStartDate} name="startDate" type="date" />
-  <input className="field" defaultValue={selectedEndDate} name="endDate" type="date" />
-  
-  <div className="flex flex-col gap-3 sm:flex-row lg:col-span-2 xl:col-span-1 xl:justify-end">
-    <button className="secondary-button px-5 py-3" type="submit">Visualizar jornada</button>
-    {selectedEmployee ? (
-      <Link className="secondary-button px-5 py-3 text-center" href="/dashboard/jornadas">
-        Limpar filtro
-      </Link>
-    ) : null}
-  </div>
-</form>
+            <div className="grid gap-2 w-full">
+              <label className="text-sm font-semibold" htmlFor="employeeId">
+                Funcionária
+              </label>
+              <select
+                className="field w-full"
+                defaultValue={selectedEmployee?.id ?? ""}
+                id="employeeId"
+                name="employeeId"
+                aria-label="Selecione a funcionária"
+              >
+                <option value="">- Selecione a funcionária -</option>
+                {employees.map((employee) => (
+                  <option key={employee.id} value={employee.id}>
+                    {employee.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="grid gap-2">
+              <label className="text-sm font-semibold" htmlFor="month">
+                Mês
+              </label>
+              <input className="field" defaultValue={selectedMonthKey} id="month" name="month" type="month" />
+            </div>
+
+            <div className="grid gap-2">
+              <label className="text-sm font-semibold" htmlFor="startDate">
+                Início
+              </label>
+              <input className="field" defaultValue={selectedStartDate} id="startDate" name="startDate" type="date" />
+            </div>
+
+            <div className="grid gap-2">
+              <label className="text-sm font-semibold" htmlFor="endDate">
+                Fim
+              </label>
+              <input className="field" defaultValue={selectedEndDate} id="endDate" name="endDate" type="date" />
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row lg:col-span-2 xl:col-span-1 xl:justify-end">
+              <button className="secondary-button px-5 py-3" type="submit">Visualizar jornada</button>
+              {selectedEmployee ? (
+                <Link className="secondary-button px-5 py-3 text-center" href="/dashboard/jornadas">
+                  Limpar filtro
+                </Link>
+              ) : null}
+            </div>
+          </form>
         </div>
       </section>
 
@@ -211,6 +285,7 @@ export default async function JornadasPage({ searchParams }: JornadasPageProps) 
                   <th className="pb-3">Saídas</th>
                   <th className="pb-3">Horas consideradas</th>
                   <th className="pb-3">Horas faltantes</th>
+                  <th className="pb-3">Falta</th>
                   <th className="pb-3">Situação</th>
                 </tr>
               </thead>
@@ -223,6 +298,17 @@ export default async function JornadasPage({ searchParams }: JornadasPageProps) 
                       <td className="py-3">{day.exitTimes.join(", ") || "-"}</td>
                       <td className="py-3">{day.workedHoursLabel}</td>
                       <td className="py-3">{day.missingHoursLabel}</td>
+                      <td className="py-3">
+                        {day.entryTimes.length === 0 ? (
+                          <AbsenceMarkForm
+                            employeeId={selectedEmployee!.id}
+                            workDate={day.workDate}
+                            isAbsent={day.hasAbsence}
+                          />
+                        ) : (
+                          day.hasAbsence ? "Sim" : "-"
+                        )}
+                      </td>
                       <td className="py-3">{day.statusLabel}</td>
                     </tr>
                   ))
