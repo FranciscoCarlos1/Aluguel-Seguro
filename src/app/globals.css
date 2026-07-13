@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f4efe6;
+  --foreground: #142321;
+  --surface: rgba(255, 255, 255, 0.75);
+  --surface-strong: rgba(255, 255, 255, 0.92);
+  --line: rgba(20, 35, 33, 0.1);
+  --accent: #0f766e;
+  --accent-strong: #115e59;
+  --accent-soft: #d5f5f1;
+  --highlight: #f59e0b;
+  --danger: #b91c1c;
+  --muted: #58706d;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-strong: var(--surface-strong);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-soft: var(--accent-soft);
+  --color-highlight: var(--highlight);
+  --color-muted: var(--muted);
+  --font-sans: var(--font-space-grotesk);
+  --font-mono: var(--font-ibm-plex-mono);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  background-image:
+    radial-gradient(circle at top left, rgba(15, 118, 110, 0.14), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(245, 158, 11, 0.16), transparent 22%),
+    linear-gradient(180deg, #fbf8f2 0%, #f4efe6 42%, #efe7db 100%);
+  font-family: var(--font-space-grotesk), sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+::selection {
+  background: rgba(15, 118, 110, 0.18);
+}
+
+@layer components {
+  .panel {
+    @apply rounded-[28px] border border-line bg-surface-strong shadow-[0_18px_60px_rgba(20,35,33,0.08)] backdrop-blur;
+  }
+
+  .panel-muted {
+    @apply rounded-[24px] border border-line bg-surface shadow-[0_10px_35px_rgba(20,35,33,0.05)] backdrop-blur;
+  }
+
+  .field {
+    @apply w-full rounded-2xl border border-line bg-white/80 px-4 py-3 text-sm text-foreground outline-none transition focus:border-accent focus:ring-4 focus:ring-accent/10;
+  }
+
+  .primary-button {
+    @apply inline-flex items-center justify-center rounded-2xl bg-accent px-5 py-3 text-sm font-semibold text-white transition hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .secondary-button {
+    @apply inline-flex items-center justify-center rounded-2xl border border-line bg-white/80 px-5 py-3 text-sm font-semibold text-foreground transition hover:bg-white;
+  }
+
+  .badge {
+    @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold;
+  }
+}

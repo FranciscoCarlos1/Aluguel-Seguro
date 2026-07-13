@@ -1,0 +1,21 @@
+<svg width="720" height="720" viewBox="0 0 720 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="720" height="720" fill="#FFFFFF"/>
+  <g transform="translate(0 8)">
+    <circle cx="292" cy="92" r="23" fill="#D7262E"/>
+    <rect x="334" y="69" width="46" height="46" rx="7" fill="#39A84A"/>
+    <rect x="390" y="69" width="46" height="46" rx="7" fill="#39A84A"/>
+    <rect x="278" y="125" width="46" height="46" rx="7" fill="#39A84A"/>
+    <rect x="334" y="125" width="46" height="46" rx="7" fill="#39A84A"/>
+    <rect x="278" y="181" width="46" height="46" rx="7" fill="#39A84A"/>
+    <rect x="334" y="181" width="46" height="46" rx="7" fill="#39A84A"/>
+    <rect x="390" y="181" width="46" height="46" rx="7" fill="#39A84A"/>
+    <rect x="278" y="237" width="46" height="46" rx="7" fill="#39A84A"/>
+    <rect x="334" y="237" width="46" height="46" rx="7" fill="#39A84A"/>
+  </g>
+  <text x="360" y="382" text-anchor="middle" fill="#111111" font-family="Arial, Helvetica, sans-serif" font-size="73" font-weight="800" letter-spacing="1">INSTITUTO</text>
+  <text x="360" y="454" text-anchor="middle" fill="#111111" font-family="Arial, Helvetica, sans-serif" font-size="73" font-weight="800" letter-spacing="1">FEDERAL</text>
+  <text x="360" y="526" text-anchor="middle" fill="#222222" font-family="Arial, Helvetica, sans-serif" font-size="58" font-weight="400">Catarinense</text>
+  <line x1="158" y1="570" x2="562" y2="570" stroke="#3B8F5B" stroke-width="4"/>
+  <text x="360" y="624" text-anchor="middle" fill="#222222" font-family="Arial, Helvetica, sans-serif" font-size="58" font-weight="400">Campus</text>
+  <text x="360" y="684" text-anchor="middle" fill="#222222" font-family="Arial, Helvetica, sans-serif" font-size="58" font-weight="400">São Bento do Sul</text>
+</svg>
