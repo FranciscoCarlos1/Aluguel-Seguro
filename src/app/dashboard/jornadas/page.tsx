@@ -33,6 +33,7 @@ type JourneyDay = {
   missingHoursLabel: string;
   statusLabel: string;
   hasAbsence: boolean;
+  hasPunches: boolean;
 };
 
 type SelectedEmployee = {
@@ -52,10 +53,12 @@ function buildJourneyDays(punches: PunchRecord[], absenceDates: Set<string>, sta
     punchesByDay.set(key, current);
   }
 
+  const totalDays = Math.max(0, Math.round((endDate.getTime() - startDate.getTime()) / 86400000) + 1);
   const days: JourneyDay[] = [];
-  const currentDate = new Date(startDate);
 
-  while (currentDate <= endDate) {
+  for (let dayIndex = 0; dayIndex < totalDays; dayIndex++) {
+    const currentDate = new Date(startDate);
+    currentDate.setUTCDate(startDate.getUTCDate() + dayIndex);
     const workDate = currentDate.toISOString().slice(0, 10);
     const dayPunches = [...(punchesByDay.get(workDate) ?? [])].sort((left, right) => left.time.localeCompare(right.time));
     const entryTimes = dayPunches.filter((punch) => punch.type === "ENTRY").map((punch) => punch.time);
@@ -65,10 +68,11 @@ function buildJourneyDays(punches: PunchRecord[], absenceDates: Set<string>, sta
     const rawMissingMinutes = dayPunches.length > 0 ? Math.max(DEFAULT_MINUTES_PER_WORKDAY - consideredWorkedMinutes, 0) : 0;
     const missingMinutes = rawMissingMinutes <= JOURNEY_MISSING_TOLERANCE_MINUTES ? 0 : rawMissingMinutes;
     const hasAbsence = absenceDates.has(workDate);
+    const hasPunches = dayPunches.length > 0;
 
     const statusLabel = hasAbsence
       ? "Falta"
-      : dayPunches.length > 0
+      : hasPunches
       ? missingMinutes > 0 || calculation.incomplete
         ? "Incompleta"
         : "Completa"
@@ -79,13 +83,12 @@ function buildJourneyDays(punches: PunchRecord[], absenceDates: Set<string>, sta
       dateLabel: formatWorkDate(new Date(`${workDate}T00:00:00.000Z`)),
       entryTimes,
       exitTimes,
-      workedHoursLabel: dayPunches.length > 0 ? formatMinutesAsHours(consideredWorkedMinutes) : "-",
-      missingHoursLabel: dayPunches.length > 0 ? formatMinutesAsHours(missingMinutes) : "-",
+      workedHoursLabel: hasPunches ? formatMinutesAsHours(consideredWorkedMinutes) : "-",
+      missingHoursLabel: hasPunches ? formatMinutesAsHours(missingMinutes) : "-",
       statusLabel,
       hasAbsence,
+      hasPunches,
     });
-
-    currentDate.setUTCDate(currentDate.getUTCDate() + 1);
   }
 
   return days.sort((left, right) => right.workDate.localeCompare(left.workDate));
@@ -202,7 +205,7 @@ export default async function JornadasPage({ searchParams }: JornadasPageProps) 
             <p className="mt-1 text-sm text-muted">Selecione a funcionária e o período para ver as batidas diárias e lançar novas entradas e saídas.</p>
           </div>
 
-          <form className="grid w-full gap-3 lg:grid-cols-2 xl:max-w-5xl xl:grid-cols-[minmax(0,2fr)_180px_170px_170px_auto] overflow-visible" method="get">
+          <form className="grid w-full gap-3 sm:grid-cols-2 xl:max-w-5xl xl:grid-cols-[minmax(260px,1fr)_200px_200px_200px_auto]" method="get">
             <div className="grid gap-2 w-full">
               <label className="text-sm font-semibold" htmlFor="employeeId">
                 Funcionária
@@ -299,14 +302,16 @@ export default async function JornadasPage({ searchParams }: JornadasPageProps) 
                       <td className="py-3">{day.workedHoursLabel}</td>
                       <td className="py-3">{day.missingHoursLabel}</td>
                       <td className="py-3">
-                        {day.entryTimes.length === 0 ? (
+                        {!day.hasPunches ? (
                           <AbsenceMarkForm
                             employeeId={selectedEmployee!.id}
                             workDate={day.workDate}
                             isAbsent={day.hasAbsence}
                           />
+                        ) : day.hasAbsence ? (
+                          "Sim"
                         ) : (
-                          day.hasAbsence ? "Sim" : "-"
+                          "-"
                         )}
                       </td>
                       <td className="py-3">{day.statusLabel}</td>
