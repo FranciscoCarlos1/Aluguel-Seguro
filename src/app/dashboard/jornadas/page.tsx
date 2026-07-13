@@ -226,12 +226,7 @@ export default async function JornadasPage({ searchParams }: JornadasPageProps) 
               </select>
             </div>
 
-            <div className="grid gap-2">
-              <label className="text-sm font-semibold" htmlFor="month">
-                Mês
-              </label>
-              <input className="field" defaultValue={selectedMonthKey} id="month" name="month" type="month" />
-            </div>
+            
 
             <div className="grid gap-2">
               <label className="text-sm font-semibold" htmlFor="startDate">
