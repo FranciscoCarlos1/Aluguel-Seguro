@@ -254,7 +254,9 @@ export default async function JornadasPage({ searchParams }: JornadasPageProps) 
         </div>
       </section>
 
-      <PunchForm defaultEmployeeId={selectedEmployee?.id} employees={employees} />
+      {selectedEmployee ? (
+        <PunchForm defaultEmployeeId={selectedEmployee.id} employees={employees} />
+      ) : null}
 
       <CsvImportForm />
 
