@@ -19,7 +19,8 @@ export const REPORT_DEFAULT_COMMENT = "-";
 export const NAV_ITEMS = [
   { href: "/dashboard", label: "Visão Geral" },
   { href: "/dashboard/jornadas", label: "Jornadas" },
-  { href: "/dashboard/avaliacoes", label: "Avaliações" },
+  { href: "/dashboard/avaliacoes", label: "Avaliações / IMR" },
+  { href: "/dashboard/custos", label: "Custos do Contrato" },
   { href: "/dashboard/funcionarias", label: "Funcionárias" },
   { href: "/dashboard/usuarios", label: "Usuários" },
 ];
