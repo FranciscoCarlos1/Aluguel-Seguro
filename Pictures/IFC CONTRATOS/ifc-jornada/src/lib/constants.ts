@@ -1,7 +1,8 @@
 export const APP_NAME = "IFC FISCALIZA";
 export const SESSION_COOKIE_NAME = "ifc_fiscaliza_session";
 export const SESSION_DURATION_DAYS = 7;
-export const DEFAULT_CONTRACT_MONTHLY_VALUE = 29767.24;
+// Base used by the supplied IMR/VT workbook for the monthly measurement.
+export const DEFAULT_CONTRACT_MONTHLY_VALUE = 34009.08;
 export const DEFAULT_VT_MONTHLY_DIFFERENCE = 797.27;
 export const DEFAULT_CRECHE_MONTHLY_DIFFERENCE = 645;
 export const DEFAULT_CRECHE_ADDITIONAL_PERCENTAGE = 0.0164;
