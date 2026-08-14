@@ -6,18 +6,15 @@ export type MonthlyFlowInput = Omit<AssessmentFormInput, "contractMonthlyWithVt"
   postMonthlyValue?: number;
 };
 
-/** Single calculation pipeline used by the monthly screen/report:
- * jornada -> contractual deductions -> IMR -> journey glosa -> final amount.
- * The supplied spreadsheet bases remain explicit rather than being silently reconciled.
+/**
+ * Single calculation pipeline for the monthly measurement.
+ * Source bases remain explicit: contract-cost workbook and IMR/measurement workbook.
  */
 export function calculateUnifiedMonthlyFlow(input: MonthlyFlowInput): CalculatedMonthlyAssessment {
-  const base = input.contractMonthlyWithVt ?? CONTRACT_COST_SNAPSHOT.monthlyProposed;
-  const post = input.postMonthlyValue ?? CONTRACT_COST_SNAPSHOT.laborBase;
-
   return calculateMonthlyAssessment({
     ...input,
-    contractMonthlyWithVt: base,
-    postMonthlyValue: post,
+    contractMonthlyWithVt: input.contractMonthlyWithVt ?? CONTRACT_COST_SNAPSHOT.monthlyProposed,
+    postMonthlyValue: input.postMonthlyValue ?? CONTRACT_COST_SNAPSHOT.laborBase,
   });
 }
 
