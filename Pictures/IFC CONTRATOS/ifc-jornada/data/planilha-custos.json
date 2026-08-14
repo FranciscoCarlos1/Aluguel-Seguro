@@ -1,0 +1,1 @@
+{"source":"Planilha de Custos - Limpeza(1).xlsx","note":"Dados estruturados das abas da planilha fornecida. Fórmulas são preservadas como expressões quando presentes; cálculos operacionais do sistema usam a mesma lógica em TypeScript.","sheets":"+json.dumps(sheets,ensure_ascii=False)+
