@@ -4,12 +4,7 @@ import { Prisma, PunchType, Role } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import {
-  calculateMonthlyAssessment,
-  getMonthRange,
-  QUALITY_QUESTIONS,
-  type QualityRating,
-} from "@/lib/assessments";
+import { calculateMonthlyAssessment, getMonthRange, QUALITY_QUESTIONS, type QualityRating } from "@/lib/assessments";
 import {
   DEFAULT_CONTRACT_MONTHLY_VALUE,
   DEFAULT_CONTRACT_POSTS,
@@ -44,7 +39,6 @@ export async function generateMonthlyAssessmentAction(
 ): Promise<AssessmentFormState> {
   const currentUser = await requireUser([Role.ADMIN]);
   const monthKey = String(formData.get("monthKey") || "").trim();
-
   if (!/^\d{4}-\d{2}$/.test(monthKey)) return { message: "Informe um mês válido no formato AAAA-MM." };
 
   const qualityResponses = Object.fromEntries(
@@ -60,34 +54,27 @@ export async function generateMonthlyAssessmentAction(
   const submittedContractPosts = parseNumber(formData.get("contractPosts"), DEFAULT_CONTRACT_POSTS);
   const latestCost = await db.contractCostSnapshot.findFirst({
     orderBy: { createdAt: "desc" },
-    select: { monthlyProposed: true, costPerEmployee: true, calculatedEmployees: true },
+    select: { id: true, monthlyProposed: true, costPerEmployee: true, calculatedEmployees: true },
   });
 
-  // Uma avaliação nova nasce com os valores da última planilha importada.
-  // Se o administrador já abriu uma avaliação existente e alterou manualmente o valor,
-  // o valor enviado pelo formulário é preservado.
-  const contractMonthlyWithVt =
-    submittedContractMonthlyWithVt === DEFAULT_CONTRACT_MONTHLY_VALUE && latestCost
-      ? Number(latestCost.monthlyProposed)
-      : submittedContractMonthlyWithVt;
-  const postMonthlyValue =
-    submittedPostMonthlyValue === DEFAULT_POST_MONTHLY_VALUE && latestCost
-      ? Number(latestCost.costPerEmployee)
-      : submittedPostMonthlyValue;
-  const contractPosts =
-    submittedContractPosts === DEFAULT_CONTRACT_POSTS && latestCost?.calculatedEmployees
-      ? latestCost.calculatedEmployees
-      : submittedContractPosts;
+  const contractMonthlyWithVt = submittedContractMonthlyWithVt === DEFAULT_CONTRACT_MONTHLY_VALUE && latestCost
+    ? Number(latestCost.monthlyProposed)
+    : submittedContractMonthlyWithVt;
+  const postMonthlyValue = submittedPostMonthlyValue === DEFAULT_POST_MONTHLY_VALUE && latestCost
+    ? Number(latestCost.costPerEmployee)
+    : submittedPostMonthlyValue;
+  const contractPosts = submittedContractPosts === DEFAULT_CONTRACT_POSTS && latestCost?.calculatedEmployees
+    ? latestCost.calculatedEmployees
+    : submittedContractPosts;
 
   const vtMonthlyDifference = parseNumber(formData.get("vtMonthlyDifference"), DEFAULT_VT_MONTHLY_DIFFERENCE);
   const expectedBusinessDays = parseNumber(formData.get("expectedBusinessDays"), DEFAULT_EXPECTED_BUSINESS_DAYS);
   const rawVtDaysNotPaid = parseNumber(formData.get("vtDaysNotPaid"), 0);
   const vtDiscountAmountOverride = parseOptionalNumber(formData.get("vtDiscountAmountOverride"));
   const exactVtDailyDifference = expectedBusinessDays > 0 && contractPosts > 0 ? vtMonthlyDifference / expectedBusinessDays / contractPosts : 0;
-  const vtDaysNotPaid =
-    vtDiscountAmountOverride !== undefined && exactVtDailyDifference > 0
-      ? Math.max(0, Math.round(vtDiscountAmountOverride / exactVtDailyDifference))
-      : rawVtDaysNotPaid;
+  const vtDaysNotPaid = vtDiscountAmountOverride !== undefined && exactVtDailyDifference > 0
+    ? Math.max(0, Math.round(vtDiscountAmountOverride / exactVtDailyDifference))
+    : rawVtDaysNotPaid;
 
   const assessmentInput = {
     monthKey,
@@ -114,14 +101,8 @@ export async function generateMonthlyAssessmentAction(
   const employees = await db.employee.findMany({
     where: { active: true },
     orderBy: { name: "asc" },
-    include: {
-      punches: {
-        where: { workDate: { gte: start, lt: end } },
-        select: { workDate: true, type: true, time: true },
-      },
-    },
+    include: { punches: { where: { workDate: { gte: start, lt: end } }, select: { workDate: true, type: true, time: true } } },
   });
-
   assessmentInput.employees = employees.map((employee) => ({ employeeId: employee.id, employeeName: employee.name, punches: employee.punches }));
   const assessment = calculateMonthlyAssessment(assessmentInput);
 
@@ -132,6 +113,7 @@ export async function generateMonthlyAssessmentAction(
     const commonData = {
       referenceDate: assessment.referenceDate,
       managerName: assessment.managerName,
+      costSnapshotId: latestCost?.id,
       contractMonthlyValue: new Prisma.Decimal(assessment.contractMonthlyValue),
       contractMonthlyWithVt: new Prisma.Decimal(assessment.contractMonthlyWithVt),
       contractMonthlyWithoutVt: new Prisma.Decimal(assessment.contractMonthlyWithoutVt),
@@ -198,7 +180,7 @@ export async function generateMonthlyAssessmentAction(
         action: "MONTHLY_ASSESSMENT_GENERATED",
         entity: "monthly_assessment",
         entityId: monthlyAssessment.id,
-        payload: { monthKey, totalScore: assessment.totalScore, finalAmount: assessment.finalAmount, valueAfterImr: assessment.valueAfterImr, journeyGlosaTotal: assessment.journeyGlosaTotal },
+        payload: { monthKey, costSnapshotId: latestCost?.id, totalScore: assessment.totalScore, finalAmount: assessment.finalAmount, valueAfterImr: assessment.valueAfterImr, journeyGlosaTotal: assessment.journeyGlosaTotal },
       },
     });
   });
