@@ -6,149 +6,129 @@ datasource db {
   provider = "postgresql"
 }
 
-enum Role {
-  ADMIN
-  OPERATOR
-  AUDITOR
-}
-
-enum PunchType {
-  ENTRY
-  EXIT
-}
-
-enum RecordSource {
-  MANUAL
-  IMPORT
-}
-
 model User {
-  id            String      @id @default(cuid())
-  name          String
-  email         String      @unique
-  emailVerified DateTime?
-  image         String?
-  passwordHash  String
-  role          Role        @default(OPERATOR)
-  isActive      Boolean     @default(true)
-  forcePasswordChange Boolean @default(false)
-  accounts      Account[]
-  sessions      Session[]
-  createdPunches TimePunch[] @relation("CreatedPunches")
-  createdAssessments MonthlyAssessment[] @relation("CreatedAssessments")
-  auditLogs     AuditLog[]  @relation("ActorAuditLogs")
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id                  String              @id @default(cuid())
+  name                String
+  email               String              @unique
+  emailVerified       DateTime?
+  image               String?
+  passwordHash        String
+  role                Role                @default(OPERATOR)
+  isActive            Boolean             @default(true)
+  forcePasswordChange Boolean             @default(false)
+  createdAbsences     Absence[]           @relation("CreatedAbsences")
+  accounts            Account[]
+  auditLogs           AuditLog[]          @relation("ActorAuditLogs")
+  createdAssessments  MonthlyAssessment[] @relation("CreatedAssessments")
+  sessions            Session[]
+  createdPunches      TimePunch[]         @relation("CreatedPunches")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
 
 model Employee {
-  id        String      @id @default(cuid())
-  name      String      @unique
-  active    Boolean     @default(true)
-  punches   TimePunch[]
-  absences  Absence[]
+  id              String                      @id @default(cuid())
+  name            String                      @unique
+  active          Boolean                     @default(true)
+  createdAt       DateTime                    @default(now())
+  updatedAt       DateTime                    @updatedAt
+  absences        Absence[]
   assessmentItems EmployeeMonthlyAssessment[]
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  punches         TimePunch[]
 }
 
 model TimePunch {
   id          String       @id @default(cuid())
   employeeId  String
-  employee    Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   workDate    DateTime     @db.Date
   type        PunchType
   time        String
   source      RecordSource @default(MANUAL)
   notes       String?
   createdById String?
-  createdBy   User?        @relation("CreatedPunches", fields: [createdById], references: [id], onDelete: SetNull)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
+  createdBy   User?        @relation("CreatedPunches", fields: [createdById], references: [id])
+  employee    Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
+  @@unique([employeeId, workDate, type, time])
   @@index([employeeId, workDate])
   @@index([workDate])
-  @@unique([employeeId, workDate, type, time])
 }
 
 model Absence {
   id          String   @id @default(cuid())
   employeeId  String
-  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   workDate    DateTime @db.Date
   notes       String?
   createdById String?
-  createdBy   User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
   createdAt   DateTime @default(now())
-  updatedAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   User?    @relation("CreatedAbsences", fields: [createdById], references: [id])
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@unique([employeeId, workDate])
   @@index([employeeId])
   @@index([workDate])
 }
 
-  @@index([employeeId, workDate])
-  @@index([workDate])
-  @@unique([employeeId, workDate, type, time])
-}
-
 model AuditLog {
   id        String   @id @default(cuid())
   actorId   String?
-  actor     User?    @relation("ActorAuditLogs", fields: [actorId], references: [id], onDelete: SetNull)
   action    String
   entity    String
   entityId  String?
   payload   Json?
   createdAt DateTime @default(now())
+  actor     User?    @relation("ActorAuditLogs", fields: [actorId], references: [id])
 
   @@index([entity, entityId])
   @@index([createdAt])
 }
 
 model MonthlyAssessment {
-  id                   String                      @id @default(cuid())
-  monthKey             String                      @unique
-  referenceDate        DateTime                    @db.Date
-  managerName          String                      @default("")
-  contractMonthlyValue Decimal                     @db.Decimal(10, 2)
-  contractMonthlyWithVt Decimal                    @default(0) @db.Decimal(10, 2)
-  contractMonthlyWithoutVt Decimal                 @default(0) @db.Decimal(10, 2)
-  vtMonthlyDifference  Decimal                     @default(0) @db.Decimal(10, 2)
-  vtDailyDifference    Decimal                     @default(0) @db.Decimal(10, 2)
-  vtDaysNotPaid        Int                         @default(0)
-  vtDiscountAmount     Decimal                     @default(0) @db.Decimal(10, 2)
-  crecheMonthlyDifference Decimal                  @default(0) @db.Decimal(10, 2)
-  crechePaidAmount     Decimal                     @default(0) @db.Decimal(10, 2)
-  crecheAdditionalPercentage Decimal               @default(0) @db.Decimal(5, 4)
-  crecheDiscountAmount Decimal                     @default(0) @db.Decimal(10, 2)
-  postMonthlyValue     Decimal                     @default(0) @db.Decimal(10, 2)
-  minutesPerWorkDay    Int                         @default(480)
-  expectedBusinessDays Int
-  totalEmployees       Int
-  indicator1Occurrences Int                        @default(0)
-  indicator1Score      Decimal                     @default(0) @db.Decimal(5, 2)
-  indicator2Occurrences Int                        @default(0)
-  indicator2Score      Decimal                     @default(0) @db.Decimal(5, 2)
-  indicator3Occurrences Int                        @default(0)
-  indicator3Score      Decimal                     @default(0) @db.Decimal(5, 2)
-  indicator4Occurrences Int                        @default(0)
-  indicator4Score      Decimal                     @default(0) @db.Decimal(5, 2)
-  qualityResponses     Json?
-  qualityCounts        Json?
-  indicator5Score      Decimal                     @default(0) @db.Decimal(5, 2)
-  totalScore           Decimal                     @default(0) @db.Decimal(5, 2)
-  serviceLevelFactor   Decimal                     @default(0) @db.Decimal(5, 2)
-  valueAfterImr        Decimal                     @default(0) @db.Decimal(10, 2)
-  journeyGlosaTotal    Decimal                     @default(0) @db.Decimal(10, 2)
-  finalAmount          Decimal                     @default(0) @db.Decimal(10, 2)
-  overallScore         Decimal                     @db.Decimal(5, 2)
-  estimatedDiscount    Decimal                     @db.Decimal(10, 2)
-  createdById          String?
-  createdBy            User?                       @relation("CreatedAssessments", fields: [createdById], references: [id], onDelete: SetNull)
-  items                EmployeeMonthlyAssessment[]
-  createdAt            DateTime                    @default(now())
-  updatedAt            DateTime                    @updatedAt
+  id                         String                      @id @default(cuid())
+  monthKey                   String                      @unique
+  referenceDate              DateTime                    @db.Date
+  managerName                String                      @default("")
+  contractMonthlyValue       Decimal                     @db.Decimal(10, 2)
+  contractMonthlyWithVt      Decimal                     @default(0) @db.Decimal(10, 2)
+  contractMonthlyWithoutVt   Decimal                     @default(0) @db.Decimal(10, 2)
+  vtMonthlyDifference        Decimal                     @default(0) @db.Decimal(10, 2)
+  vtDailyDifference          Decimal                     @default(0) @db.Decimal(10, 2)
+  vtDaysNotPaid              Int                         @default(0)
+  vtDiscountAmount           Decimal                     @default(0) @db.Decimal(10, 2)
+  crecheMonthlyDifference    Decimal                     @default(0) @db.Decimal(10, 2)
+  crechePaidAmount           Decimal                     @default(0) @db.Decimal(10, 2)
+  crecheAdditionalPercentage Decimal                     @default(0) @db.Decimal(5, 4)
+  crecheDiscountAmount       Decimal                     @default(0) @db.Decimal(10, 2)
+  postMonthlyValue           Decimal                     @default(0) @db.Decimal(10, 2)
+  minutesPerWorkDay          Int                         @default(480)
+  expectedBusinessDays       Int
+  totalEmployees             Int
+  indicator1Occurrences      Int                         @default(0)
+  indicator1Score            Decimal                     @default(0) @db.Decimal(5, 2)
+  indicator2Occurrences      Int                         @default(0)
+  indicator2Score            Decimal                     @default(0) @db.Decimal(5, 2)
+  indicator3Occurrences      Int                         @default(0)
+  indicator3Score            Decimal                     @default(0) @db.Decimal(5, 2)
+  indicator4Occurrences      Int                         @default(0)
+  indicator4Score            Decimal                     @default(0) @db.Decimal(5, 2)
+  qualityResponses           Json?
+  qualityCounts              Json?
+  indicator5Score            Decimal                     @default(0) @db.Decimal(5, 2)
+  totalScore                 Decimal                     @default(0) @db.Decimal(5, 2)
+  serviceLevelFactor         Decimal                     @default(0) @db.Decimal(5, 2)
+  valueAfterImr              Decimal                     @default(0) @db.Decimal(10, 2)
+  journeyGlosaTotal          Decimal                     @default(0) @db.Decimal(10, 2)
+  finalAmount                Decimal                     @default(0) @db.Decimal(10, 2)
+  overallScore               Decimal                     @db.Decimal(5, 2)
+  estimatedDiscount          Decimal                     @db.Decimal(10, 2)
+  createdById                String?
+  createdAt                  DateTime                    @default(now())
+  updatedAt                  DateTime                    @updatedAt
+  items                      EmployeeMonthlyAssessment[]
+  createdBy                  User?                       @relation("CreatedAssessments", fields: [createdById], references: [id])
 
   @@index([referenceDate])
 }
@@ -156,9 +136,7 @@ model MonthlyAssessment {
 model EmployeeMonthlyAssessment {
   id                     String            @id @default(cuid())
   assessmentId           String
-  assessment             MonthlyAssessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
   employeeId             String
-  employee               Employee          @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   expectedDays           Int
   workedDays             Int
   completeDays           Int
@@ -172,6 +150,8 @@ model EmployeeMonthlyAssessment {
   estimatedDiscount      Decimal           @db.Decimal(10, 2)
   createdAt              DateTime          @default(now())
   updatedAt              DateTime          @updatedAt
+  assessment             MonthlyAssessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  employee               Employee          @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@unique([assessmentId, employeeId])
   @@index([employeeId])
@@ -211,4 +191,20 @@ model VerificationToken {
   expires    DateTime
 
   @@id([identifier, token])
+}
+
+enum Role {
+  ADMIN
+  OPERATOR
+  AUDITOR
+}
+
+enum PunchType {
+  ENTRY
+  EXIT
+}
+
+enum RecordSource {
+  MANUAL
+  IMPORT
 }
