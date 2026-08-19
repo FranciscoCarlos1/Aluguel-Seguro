@@ -1,70 +1,76 @@
 # IFC FISCALIZA
 
-Sistema completo para controle de usuários e registro de horários de entrada e saída, construído para o cenário do IFC com foco em arquitetura robusta, segurança e operação simples.
+Sistema integrado para fiscalização de contrato de limpeza do IFC, com autenticação, jornada, importação de planilhas, custos, IMR, glosas e medição mensal.
+
+## Funcionalidades
+
+- Autenticação segura com perfis `ADMIN`, `OPERATOR` e `AUDITOR`.
+- Cadastro de funcionárias e controle de entradas/saídas.
+- Importação de CSV no formato real `NOME`, `DIA`, `ENTRADAS`, `SAÍDAS`.
+- Compatibilidade com o layout antigo de controle de acesso.
+- Criação automática de funcionárias encontradas na importação.
+- Deduplicação de batidas importadas.
+- Cálculo de jornada, horas trabalhadas, horas faltantes e glosa.
+- Importação nativa da Planilha de Custos `.xlsx`, sem pacote externo de Excel.
+- Leitura das abas `RESUMO`, `Custos por posto`, `Cálculo custoM²`, `MAT.UTEN`, `EQU`, `UNI.EPI`, `UTE` e `Locais`.
+- Armazenamento da versão integral da planilha importada no PostgreSQL para auditoria.
+- Custos por posto, módulos 1 a 6, materiais, equipamentos, uniformes, EPIs, utensílios e produtividade.
+- IMR calculado automaticamente pelas ocorrências e respostas dos indicadores.
+- Fator de nível de serviço aplicado ao valor contratual.
+- Nova avaliação mensal usa automaticamente a última Planilha de Custos importada como base.
+- Cada avaliação registra qual snapshot de custos foi usado.
+- Relatório PDF e trilha de auditoria.
+
+## Fluxo integrado
+
+```text
+Planilha de Custos XLSX
+        ↓
+Snapshot contratual no PostgreSQL
+        ↓
+Valor mensal / postos / custos / áreas
+        ↓
+CSV de jornadas
+        ↓
+Funcionárias + entradas + saídas
+        ↓
+Horas trabalhadas e faltantes
+        ↓
+Glosa de jornada
+        ↓
+Indicadores IMR + pesquisa de qualidade
+        ↓
+Pontuação IMR
+        ↓
+Fator de nível de serviço
+        ↓
+Valor após IMR
+        ↓
+Glosas / ajustes
+        ↓
+Valor final da medição
+        ↓
+Relatório PDF
+```
 
 ## Stack
 
-- Next.js 16 com App Router
+- Next.js 16 / App Router
 - TypeScript
 - PostgreSQL
-- Prisma 7 com adapter PostgreSQL oficial
-- Server Actions para mutações seguras
-- Sessão própria com cookie HTTP-only e armazenamento em banco
+- Prisma 7 + adapter PostgreSQL
+- Server Actions
 - Tailwind CSS 4
+- React 19
 
-## Escopo funcional
+## Usuários padrão
 
-- Autenticação com sessão segura
-- Controle de usuários com perfis `ADMIN`, `OPERATOR` e `AUDITOR`
-- Cadastro de funcionárias
-- Registro de batidas considerando somente entrada e saída
-- Dashboard com visão operacional
-- Trilha de auditoria para eventos principais
-- Seed inicial com funcionárias e usuários padrão
+- Administrador: `admin@ifcfiscaliza.local` / `Admin@12345`
+- Operação: `operacao@ifcfiscaliza.local` / `Operacao@12345`
 
-## Arquitetura
-
-### Camadas principais
-
-- `src/app`: páginas, layouts e route handlers
-- `src/actions`: mutações server-side com validação e autorização
-- `src/lib`: autenticação, banco, constantes e utilidades
-- `src/components`: componentes de interface e formulários
-- `prisma`: schema, configuração e seed
-
-### Segurança aplicada
-
-- Cookies de sessão `HTTP-only`
-- Hash de senha com `bcryptjs`
-- Token de sessão persistido em banco com hash SHA-256
-- Middleware de proteção para rotas privadas
-- Headers de endurecimento no `next.config.ts`
-- Auditoria para login, criação de usuário, cadastro de funcionária e lançamento de batidas
-
-## Usuários semeados
-
-- Administrador
-	- E-mail: `admin@ifcfiscaliza.local`
-	- Senha: `Admin@12345`
-- Operação
-	- E-mail: `operacao@ifcfiscaliza.local`
-	- Senha: `Operacao@12345`
-
-## Funcionárias pré-cadastradas
-
-- Alana
-- Keise
-- Luciana
-- Viviane
-- Zenaide
-- Marineida
-- Ivonete
+Em produção, altere a senha administrativa.
 
 ## Configuração local
-
-O projeto já contém um `.env` local para desenvolvimento. Se precisar ajustar, use também `.env.example` como referência.
-
-### Variáveis principais
 
 ```env
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/ifc_fiscaliza?schema=public"
@@ -74,71 +80,61 @@ ADMIN_EMAIL="admin@ifcfiscaliza.local"
 ADMIN_PASSWORD="Admin@12345"
 ```
 
-## Banco de dados
+O projeto pode usar um PostgreSQL existente. Docker não é obrigatório.
 
-Existe um `docker-compose.yml` pronto para PostgreSQL local. Se Docker estiver disponível na máquina:
-
-```bash
-docker compose up -d
-npm run db:push
-npm run db:seed
-```
-
-Se preferir usar um PostgreSQL já existente, ajuste apenas a `DATABASE_URL`.
-
-## Scripts
+## Primeiro uso
 
 ```bash
-npm run dev
-npm run build
-npm run start
-npm run lint
+npm install
 npm run db:generate
 npm run db:push
 npm run db:seed
-npm run db:studio
-```
-
-## Execução
-
-Depois do banco estar disponível e do schema aplicado:
-
-```bash
 npm run dev
 ```
 
-Acesse:
+Acesse `http://localhost:3000/login`.
 
-- `http://localhost:3000/login`
-- `http://localhost:3000/dashboard`
-- `http://localhost:3000/api/health`
+Depois de entrar como administrador:
 
-## Deploy no Render
+1. Abra **Custos do Contrato**.
+2. Importe a planilha `.xlsx` de custos.
+3. Abra **Jornadas** e importe o CSV de acessos.
+4. Confira as funcionárias e batidas.
+5. Abra **Avaliações**.
+6. Escolha a competência e gere a avaliação.
+7. O sistema calculará jornada, glosa, indicadores, IMR, fator e valor final.
+8. Gere o PDF da medição.
 
-O projeto agora inclui o blueprint [render.yaml](render.yaml) para publicação no Render com PostgreSQL gerenciado.
+## Formato do CSV de jornada
 
-### O que o blueprint faz
+O importador reconhece, inclusive com acentuação:
 
-- cria um serviço web Node.js
-- cria um banco PostgreSQL no Render
-- executa `npm run db:push` e `npm run db:seed` antes do deploy
-- usa `/api/health` como health check
+```text
+NOME,DIA,ENTRADAS,SAÍDAS
+EVELIN PIRES DO PRADO,03/08/2026,"12:40:03, 15:37:58","15:33:48, 20:34:21"
+```
 
-### Variáveis que você ainda precisa conferir no Render
+Múltiplas entradas e saídas na mesma data são preservadas como eventos independentes.
 
-- `AUTH_URL`: defina com a URL pública final do serviço, por exemplo `https://ifc-fiscaliza.onrender.com`
-- `ADMIN_PASSWORD`: defina uma senha forte para o administrador inicial
+## Banco
 
-### Publicação
+Após atualizar o código:
 
-1. Suba este projeto para um repositório Git.
-2. No Render, escolha New + e depois Blueprint.
-3. Aponte para o repositório que contém este projeto.
-4. Revise as variáveis `AUTH_URL` e `ADMIN_PASSWORD` antes de concluir.
+```bash
+npx prisma generate
+npx prisma db push
+```
 
-## Observações operacionais
+Não use `--force-reset` em uma base com dados de produção.
 
-- O sistema modela cada batida como um evento individual.
-- Há suporte a múltiplas entradas e saídas na mesma data.
-- O seed importa exemplos iniciais de jornadas com base no material fornecido.
-- O sistema não calcula folha, custos ou jornada contratual: o foco é o controle dos horários de entrada e saída.
+## Render
+
+O `render.yaml` mantém o deploy com PostgreSQL gerenciado. Configure `AUTH_URL` e uma senha administrativa forte no ambiente de produção.
+
+## Arquitetura
+
+- `src/app`: páginas e APIs.
+- `src/actions`: operações server-side.
+- `src/lib`: autenticação, banco, cálculo, jornada, custos e leitor XLSX.
+- `src/components`: formulários e interface.
+- `prisma`: modelo persistente e seed.
