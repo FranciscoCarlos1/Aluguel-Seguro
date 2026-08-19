@@ -40,14 +40,10 @@ export async function createPunchAction(
     };
   }
 
-  const employee = await db.employee.findUnique({
-    where: { id: parsed.data.employeeId },
-  });
+  const employee = await db.employee.findUnique({ where: { id: parsed.data.employeeId } });
 
   if (!employee || !employee.active) {
-    return {
-      message: "Funcionária inválida ou inativa.",
-    };
+    return { message: "Funcionária inválida ou inativa." };
   }
 
   const duplicate = await db.timePunch.findFirst({
@@ -60,9 +56,7 @@ export async function createPunchAction(
   });
 
   if (duplicate) {
-    return {
-      message: "Este registro já existe para a funcionária na data informada.",
-    };
+    return { message: "Este registro já existe para a funcionária na data informada." };
   }
 
   const punch = await db.timePunch.create({
@@ -89,10 +83,73 @@ export async function createPunchAction(
   revalidatePath("/dashboard/jornadas");
   revalidatePath("/dashboard/funcionarias");
 
-  return {
-    success: true,
-    message: "Horário registrado com sucesso.",
-  };
+  return { success: true, message: "Horário registrado com sucesso." };
+}
+
+function normalizeHeader(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toUpperCase();
+}
+
+function detectDelimiter(text: string) {
+  const firstLine = text.split(/\r?\n/, 1)[0] ?? "";
+  const candidates = [",", ";", "\t"];
+  return candidates
+    .map((delimiter) => ({ delimiter, count: firstLine.split(delimiter).length }))
+    .sort((a, b) => b.count - a.count)[0]?.delimiter ?? ",";
+}
+
+function parseCsvRows(text: string) {
+  const delimiter = detectDelimiter(text);
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let cell = "";
+  let quoted = false;
+
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index];
+    const next = text[index + 1];
+
+    if (char === '"') {
+      if (quoted && next === '"') {
+        cell += '"';
+        index += 1;
+      } else {
+        quoted = !quoted;
+      }
+      continue;
+    }
+
+    if (!quoted && char === delimiter) {
+      row.push(cell.trim());
+      cell = "";
+      continue;
+    }
+
+    if (!quoted && (char === "\n" || char === "\r")) {
+      if (char === "\r" && next === "\n") index += 1;
+      row.push(cell.trim());
+      cell = "";
+      if (row.some((value) => value.length > 0)) rows.push(row);
+      row = [];
+      continue;
+    }
+
+    cell += char;
+  }
+
+  row.push(cell.trim());
+  if (row.some((value) => value.length > 0)) rows.push(row);
+  return rows;
+}
+
+function parseTimeValues(value: string) {
+  return Array.from(value.matchAll(/\b([01]\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?\b/g)).map((match) =>
+    `${match[1]}:${match[2]}${match[3] ? `:${match[3]}` : ":00"}`,
+  );
 }
 
 function inferPunchTypeByOffset(offset: number) {
@@ -100,44 +157,58 @@ function inferPunchTypeByOffset(offset: number) {
 }
 
 function parseControlCsv(csvText: string) {
-  const rows = csvText
-    .split(/\r?\n/)
-    .map((line) => line.split(","));
+  const rows = parseCsvRows(csvText);
 
-  if (rows.length < 4) {
+  if (rows.length < 2) {
     throw new Error("Arquivo CSV incompleto.");
   }
 
+  const normalizedRows = rows.map((row) => row.map(normalizeHeader));
+  const headerIndex = normalizedRows.findIndex((row) => {
+    const headers = new Set(row);
+    return headers.has("NOME") && headers.has("DIA") && (headers.has("ENTRADAS") || headers.has("ENTRADA")) && (headers.has("SAIDAS") || headers.has("SAIDA"));
+  });
+
+  if (headerIndex >= 0) {
+    const headers = normalizedRows[headerIndex];
+    const nameIndex = headers.indexOf("NOME");
+    const dateIndex = headers.indexOf("DIA");
+    const entryIndex = headers.includes("ENTRADAS") ? headers.indexOf("ENTRADAS") : headers.indexOf("ENTRADA");
+    const exitIndex = headers.includes("SAIDAS") ? headers.indexOf("SAIDAS") : headers.indexOf("SAIDA");
+
+    return rows.slice(headerIndex + 1).flatMap((row) => {
+      const employeeName = row[nameIndex]?.trim();
+      const dateCell = row[dateIndex]?.trim();
+      if (!employeeName || !dateCell || !/^\d{2}\/\d{2}\/\d{4}$/.test(dateCell)) return [];
+
+      const entries = parseTimeValues(row[entryIndex] ?? "");
+      const exits = parseTimeValues(row[exitIndex] ?? "");
+      return [
+        ...entries.map((time) => ({ employeeName, workDate: parseBrazilianDateToUtcDate(dateCell), type: PunchType.ENTRY, time })),
+        ...exits.map((time) => ({ employeeName, workDate: parseBrazilianDateToUtcDate(dateCell), type: PunchType.EXIT, time })),
+      ];
+    });
+  }
+
+  // Compatibilidade com o layout antigo do controle de acesso.
   const employeeHeader = rows[2] ?? [];
   const employeeSlots = employeeHeader
-    .map((value, index) => ({
-      index,
-      name: value.trim(),
-    }))
+    .map((value, index) => ({ index, name: value.trim() }))
     .filter((item) => item.index > 0 && item.name);
 
   if (employeeSlots.length === 0) {
-    throw new Error("Não foi possível identificar as funcionárias no cabeçalho do CSV.");
+    throw new Error("Não foi possível identificar o layout do CSV. Use as colunas NOME, DIA, ENTRADAS e SAÍDAS.");
   }
 
   return rows.slice(3).flatMap((row) => {
     const dateCell = row[0]?.trim();
-
-    if (!dateCell || !/^\d{2}\/\d{2}\/\d{4}$/.test(dateCell)) {
-      return [];
-    }
+    if (!dateCell || !/^\d{2}\/\d{2}\/\d{4}$/.test(dateCell)) return [];
 
     return employeeSlots.flatMap((slot, slotIndex) => {
       const nextStart = employeeSlots[slotIndex + 1]?.index ?? row.length;
-      const rawPunches = row.slice(slot.index, nextStart);
-
-      return rawPunches.flatMap((time, offset) => {
-        const normalizedTime = time.trim();
-
-        if (!normalizedTime || !/^([01]\d|2[0-3]):([0-5]\d)$/.test(normalizedTime)) {
-          return [];
-        }
-
+      return row.slice(slot.index, nextStart).flatMap((time, offset) => {
+        const normalizedTime = parseTimeValues(time)[0];
+        if (!normalizedTime) return [];
         return {
           employeeName: slot.name,
           workDate: parseBrazilianDateToUtcDate(dateCell),
@@ -157,73 +228,50 @@ export async function importPunchesFromCsvAction(
   const csvFile = formData.get("csvFile");
 
   if (!(csvFile instanceof File) || csvFile.size === 0) {
-    return {
-      message: "Selecione um arquivo CSV válido para importar.",
-    };
+    return { message: "Selecione um arquivo CSV válido para importar." };
   }
 
   const csvText = await csvFile.text();
-  const parsedPunches = parseControlCsv(csvText);
+  let parsedPunches: ReturnType<typeof parseControlCsv>;
 
-  if (parsedPunches.length === 0) {
-    return {
-      message: "Nenhuma batida válida foi encontrada no arquivo enviado.",
-    };
+  try {
+    parsedPunches = parseControlCsv(csvText);
+  } catch (error) {
+    return { message: error instanceof Error ? error.message : "Não foi possível ler o CSV." };
   }
 
-  const employees = await db.employee.findMany({
-    select: { id: true, name: true },
-  });
+  if (parsedPunches.length === 0) {
+    return { message: "Nenhuma batida válida foi encontrada no arquivo enviado." };
+  }
 
-  const employeeMap = new Map(
-    employees.map((employee) => [normalizePersonName(employee.name), employee]),
-  );
+  const employees = await db.employee.findMany({ select: { id: true, name: true, active: true } });
+  const employeeMap = new Map(employees.map((employee) => [normalizePersonName(employee.name), employee]));
+  const newEmployeeNames = new Set<string>();
 
-  const missingEmployees = Array.from(
-    new Set(
-      parsedPunches
-        .map((punch) => punch.employeeName)
-        .filter((name) => !employeeMap.has(normalizePersonName(name))),
-    ),
-  );
-
-  if (missingEmployees.length > 0) {
-    return {
-      message: `Funcionárias não cadastradas no sistema: ${missingEmployees.join(", ")}.`,
-    };
+  for (const punch of parsedPunches) {
+    const key = normalizePersonName(punch.employeeName);
+    if (!employeeMap.has(key)) {
+      const employee = await db.employee.create({ data: { name: punch.employeeName.trim(), active: true } });
+      employeeMap.set(key, employee);
+      newEmployeeNames.add(employee.name);
+    }
   }
 
   const existingPunches = await db.timePunch.findMany({
-    where: {
-      source: RecordSource.IMPORT,
-    },
-    select: {
-      employeeId: true,
-      workDate: true,
-      type: true,
-      time: true,
-    },
+    where: { source: RecordSource.IMPORT },
+    select: { employeeId: true, workDate: true, type: true, time: true },
   });
 
   const existingKeys = new Set(
-    existingPunches.map(
-      (punch) => `${punch.employeeId}|${punch.workDate.toISOString().slice(0, 10)}|${punch.type}|${punch.time}`,
-    ),
+    existingPunches.map((punch) => `${punch.employeeId}|${punch.workDate.toISOString().slice(0, 10)}|${punch.type}|${punch.time}`),
   );
 
   const recordsToCreate = parsedPunches.flatMap((punch) => {
     const employee = employeeMap.get(normalizePersonName(punch.employeeName));
-
-    if (!employee) {
-      return [];
-    }
+    if (!employee) return [];
 
     const key = `${employee.id}|${punch.workDate.toISOString().slice(0, 10)}|${punch.type}|${punch.time}`;
-
-    if (existingKeys.has(key)) {
-      return [];
-    }
-
+    if (existingKeys.has(key)) return [];
     existingKeys.add(key);
 
     return {
@@ -237,16 +285,9 @@ export async function importPunchesFromCsvAction(
     } satisfies Prisma.TimePunchCreateManyInput;
   });
 
-  if (recordsToCreate.length === 0) {
-    return {
-      success: true,
-      message: "O arquivo foi processado, mas não havia novos registros para importar.",
-    };
+  if (recordsToCreate.length > 0) {
+    await db.timePunch.createMany({ data: recordsToCreate });
   }
-
-  await db.timePunch.createMany({
-    data: recordsToCreate,
-  });
 
   await db.auditLog.create({
     data: {
@@ -255,7 +296,9 @@ export async function importPunchesFromCsvAction(
       entity: "time_punch",
       payload: {
         fileName: csvFile.name,
+        parsedCount: parsedPunches.length,
         importedCount: recordsToCreate.length,
+        newEmployees: Array.from(newEmployeeNames),
       },
     },
   });
@@ -263,9 +306,10 @@ export async function importPunchesFromCsvAction(
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/jornadas");
   revalidatePath("/dashboard/funcionarias");
+  revalidatePath("/dashboard/avaliacoes");
 
   return {
     success: true,
-    message: `${recordsToCreate.length} registros importados com sucesso do arquivo CSV.`,
+    message: `${recordsToCreate.length} registros importados. ${newEmployeeNames.size} funcionária(s) nova(s) cadastrada(s). Duplicidades foram ignoradas.`,
   };
 }
