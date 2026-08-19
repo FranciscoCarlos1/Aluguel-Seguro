@@ -1,9 +1,46 @@
 import { requireUser } from "@/lib/auth";
-import { CONTRACT_COST_SNAPSHOT as fallback, formatCostNumber } from "@/lib/contract-costs";
+import { formatCostNumber } from "@/lib/contract-costs";
 import { db } from "@/lib/db";
 import { CostWorkbookImportForm } from "@/components/dashboard/cost-workbook-import-form";
 
 const money = (value: number) => `R$ ${formatCostNumber(value)}`;
+
+const EMPTY_COST = {
+  contractCode: "—",
+  procurement: "—",
+  process: "—",
+  municipality: "—",
+  contractor: "—",
+  cnpj: "",
+  calculatedEmployees: 0,
+  executionMonths: 0,
+  monthlyProposed: 0,
+  annualProposed: 0,
+  thirtyMonthProposed: 0,
+  costPerEmployee: 0,
+  costPerEmployeeAlt: 0,
+  locationsArea: 0,
+  locationsDailyArea: 0,
+  laborBase: 0,
+  module2: 0,
+  module3: 0,
+  module4: 0,
+  module5: 0,
+  module6: 0,
+  materialsAnnual: 0,
+  materialsMonthly: 0,
+  equipmentMonthly: 0,
+  equipmentPerEmployeeMonthly: 0,
+  uniformsAnnual: 0,
+  uniformsMonthly: 0,
+  epiAnnual: 0,
+  epiMonthly: 0,
+  utensilsAnnual: 0,
+  utensilsMonthly: 0,
+  sourceSheets: [] as string[],
+  importedFileName: "Nenhuma planilha importada",
+  importedAt: null as Date | null,
+};
 
 export default async function CustosPage() {
   await requireUser();
@@ -49,13 +86,7 @@ export default async function CustosPage() {
         importedFileName: latest.importedFileName,
         importedAt: latest.createdAt,
       }
-    : {
-        ...fallback,
-        cnpj: "",
-        materialsMonthly: fallback.materialsPerEmployeeMonthly * fallback.calculatedEmployees,
-        importedFileName: "Base transcrita do projeto",
-        importedAt: null,
-      };
+    : EMPTY_COST;
 
   const modules = [
     ["Mão de obra / Módulo 1", c.laborBase],
@@ -82,11 +113,11 @@ export default async function CustosPage() {
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-muted">Base contratual integrada</p>
             <h1 className="mt-3 text-3xl font-bold">Custos do Contrato</h1>
             <p className="mt-3 max-w-4xl text-sm leading-7 text-muted">
-              A planilha deixa de ser apenas um arquivo externo: seus valores são armazenados no banco e utilizados como base para jornada, glosas, IMR e medição mensal.
+              Os valores desta tela vêm exclusivamente da última planilha de custos importada. O sistema não cria, completa ou substitui valores automaticamente.
             </p>
           </div>
           <div className="badge bg-accent-soft text-accent-strong">
-            {latest ? "Planilha importada do sistema" : "Base inicial do projeto"}
+            {latest ? "Planilha importada do sistema" : "Aguardando importação"}
           </div>
         </div>
 
@@ -140,7 +171,7 @@ export default async function CustosPage() {
             <div className="panel-muted p-4"><p className="text-sm text-muted">Custo por posto — cenário A</p><p className="mt-2 text-xl font-bold">{money(c.costPerEmployee)}</p></div>
             <div className="panel-muted p-4"><p className="text-sm text-muted">Custo por posto — cenário B</p><p className="mt-2 text-xl font-bold">{money(c.costPerEmployeeAlt)}</p></div>
           </div>
-          <p className="mt-4 text-sm leading-7 text-muted">Ao gerar uma avaliação mensal, o sistema pode usar o valor mensal desta última planilha importada como valor contratual de referência. A jornada gera a glosa e o IMR aplica o fator de nível de serviço antes do valor final.</p>
+          <p className="mt-4 text-sm leading-7 text-muted">Ao gerar uma avaliação mensal, o sistema pode usar o valor mensal da última planilha importada como valor contratual de referência. A jornada gera a glosa e o IMR aplica o fator de nível de serviço antes do valor final.</p>
         </article>
 
         <article className="panel p-6">
@@ -148,7 +179,7 @@ export default async function CustosPage() {
           <div className="mt-4 flex flex-wrap gap-2">{c.sourceSheets.map((sheet) => <span key={sheet} className="badge bg-accent-soft text-accent-strong">{sheet}</span>)}</div>
           <div className="mt-5 text-sm text-muted">
             <p>Arquivo: <strong className="text-foreground">{c.importedFileName}</strong></p>
-            <p className="mt-2">Última importação: <strong className="text-foreground">{c.importedAt ? c.importedAt.toLocaleString("pt-BR") : "base inicial"}</strong></p>
+            <p className="mt-2">Última importação: <strong className="text-foreground">{c.importedAt ? c.importedAt.toLocaleString("pt-BR") : "nenhuma"}</strong></p>
           </div>
         </article>
       </section>
