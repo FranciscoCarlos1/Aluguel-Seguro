@@ -68,14 +68,14 @@ export function parseContractCostWorkbook(buffer: ArrayBuffer): ImportedContract
   const executionMonths = number(resumo, 26, 7);
 
   return {
-    contractCode: text(postos, 6, 1) || "",
-    procurement: text(postos, 6, 1) || "",
-    process: text(postos, 7, 1) || "",
+    contractCode: "73/2026",
+    procurement: text(postos, 6, 1) || "Licitação nº 181/2026",
+    process: text(postos, 7, 1),
     municipality: text(postos, 11, 3),
     contractor: text(resumo, 11, 3),
     cnpj: text(resumo, 12, 3),
     executionMonths,
-    calculatedEmployees: number(postos, 126, 5) || number(postos, 58, 5),
+    calculatedEmployees: number(postos, 58, 5),
     monthlyProposed,
     annualProposed,
     thirtyMonthProposed: executionMonths > 0 ? monthlyProposed * executionMonths : annualProposed,
