@@ -24,12 +24,7 @@ import {
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 
-type AssessmentFormState =
-  | {
-      success?: boolean;
-      message?: string;
-    }
-  | undefined;
+type AssessmentFormState = { success?: boolean; message?: string } | undefined;
 
 function parseNumber(value: FormDataEntryValue | null, fallback: number) {
   const parsed = Number(String(value ?? "").replace(",", "."));
@@ -38,11 +33,7 @@ function parseNumber(value: FormDataEntryValue | null, fallback: number) {
 
 function parseOptionalNumber(value: FormDataEntryValue | null) {
   const normalized = String(value ?? "").trim().replace(",", ".");
-
-  if (!normalized) {
-    return undefined;
-  }
-
+  if (!normalized) return undefined;
   const parsed = Number(normalized);
   return Number.isFinite(parsed) ? parsed : undefined;
 }
@@ -54,11 +45,7 @@ export async function generateMonthlyAssessmentAction(
   const currentUser = await requireUser([Role.ADMIN]);
   const monthKey = String(formData.get("monthKey") || "").trim();
 
-  if (!/^\d{4}-\d{2}$/.test(monthKey)) {
-    return {
-      message: "Informe um mês válido no formato AAAA-MM.",
-    };
-  }
+  if (!/^\d{4}-\d{2}$/.test(monthKey)) return { message: "Informe um mês válido no formato AAAA-MM." };
 
   const qualityResponses = Object.fromEntries(
     QUALITY_QUESTIONS.map((question) => {
@@ -68,14 +55,35 @@ export async function generateMonthlyAssessmentAction(
     }),
   );
 
-  const contractMonthlyWithVt = parseNumber(formData.get("contractMonthlyWithVt"), DEFAULT_CONTRACT_MONTHLY_VALUE);
+  const submittedContractMonthlyWithVt = parseNumber(formData.get("contractMonthlyWithVt"), DEFAULT_CONTRACT_MONTHLY_VALUE);
+  const submittedPostMonthlyValue = parseNumber(formData.get("postMonthlyValue"), DEFAULT_POST_MONTHLY_VALUE);
+  const submittedContractPosts = parseNumber(formData.get("contractPosts"), DEFAULT_CONTRACT_POSTS);
+  const latestCost = await db.contractCostSnapshot.findFirst({
+    orderBy: { createdAt: "desc" },
+    select: { monthlyProposed: true, costPerEmployee: true, calculatedEmployees: true },
+  });
+
+  // Uma avaliação nova nasce com os valores da última planilha importada.
+  // Se o administrador já abriu uma avaliação existente e alterou manualmente o valor,
+  // o valor enviado pelo formulário é preservado.
+  const contractMonthlyWithVt =
+    submittedContractMonthlyWithVt === DEFAULT_CONTRACT_MONTHLY_VALUE && latestCost
+      ? Number(latestCost.monthlyProposed)
+      : submittedContractMonthlyWithVt;
+  const postMonthlyValue =
+    submittedPostMonthlyValue === DEFAULT_POST_MONTHLY_VALUE && latestCost
+      ? Number(latestCost.costPerEmployee)
+      : submittedPostMonthlyValue;
+  const contractPosts =
+    submittedContractPosts === DEFAULT_CONTRACT_POSTS && latestCost?.calculatedEmployees
+      ? latestCost.calculatedEmployees
+      : submittedContractPosts;
+
   const vtMonthlyDifference = parseNumber(formData.get("vtMonthlyDifference"), DEFAULT_VT_MONTHLY_DIFFERENCE);
   const expectedBusinessDays = parseNumber(formData.get("expectedBusinessDays"), DEFAULT_EXPECTED_BUSINESS_DAYS);
-  const contractPosts = parseNumber(formData.get("contractPosts"), DEFAULT_CONTRACT_POSTS);
   const rawVtDaysNotPaid = parseNumber(formData.get("vtDaysNotPaid"), 0);
   const vtDiscountAmountOverride = parseOptionalNumber(formData.get("vtDiscountAmountOverride"));
-  const exactVtDailyDifference =
-    expectedBusinessDays > 0 && contractPosts > 0 ? vtMonthlyDifference / expectedBusinessDays / contractPosts : 0;
+  const exactVtDailyDifference = expectedBusinessDays > 0 && contractPosts > 0 ? vtMonthlyDifference / expectedBusinessDays / contractPosts : 0;
   const vtDaysNotPaid =
     vtDiscountAmountOverride !== undefined && exactVtDailyDifference > 0
       ? Math.max(0, Math.round(vtDiscountAmountOverride / exactVtDailyDifference))
@@ -89,11 +97,8 @@ export async function generateMonthlyAssessmentAction(
     vtDaysNotPaid,
     crecheMonthlyDifference: parseNumber(formData.get("crecheMonthlyDifference"), DEFAULT_CRECHE_MONTHLY_DIFFERENCE),
     crechePaidAmount: parseNumber(formData.get("crechePaidAmount"), 0),
-    crecheAdditionalPercentage: parseNumber(
-      formData.get("crecheAdditionalPercentage"),
-      DEFAULT_CRECHE_ADDITIONAL_PERCENTAGE,
-    ),
-    postMonthlyValue: parseNumber(formData.get("postMonthlyValue"), DEFAULT_POST_MONTHLY_VALUE),
+    crecheAdditionalPercentage: parseNumber(formData.get("crecheAdditionalPercentage"), DEFAULT_CRECHE_ADDITIONAL_PERCENTAGE),
+    postMonthlyValue,
     expectedBusinessDays,
     minutesPerWorkDay: parseNumber(formData.get("minutesPerWorkDay"), DEFAULT_MINUTES_PER_WORKDAY),
     contractPosts,
@@ -106,126 +111,67 @@ export async function generateMonthlyAssessmentAction(
   };
 
   const { start, end } = getMonthRange(monthKey);
-
   const employees = await db.employee.findMany({
     where: { active: true },
     orderBy: { name: "asc" },
     include: {
       punches: {
-        where: {
-          workDate: {
-            gte: start,
-            lt: end,
-          },
-        },
-        select: {
-          workDate: true,
-          type: true,
-          time: true,
-        },
+        where: { workDate: { gte: start, lt: end } },
+        select: { workDate: true, type: true, time: true },
       },
     },
   });
 
-  assessmentInput.employees = employees.map((employee) => ({
-    employeeId: employee.id,
-    employeeName: employee.name,
-    punches: employee.punches,
-  }));
-
+  assessmentInput.employees = employees.map((employee) => ({ employeeId: employee.id, employeeName: employee.name, punches: employee.punches }));
   const assessment = calculateMonthlyAssessment(assessmentInput);
 
   await db.$transaction(async (tx) => {
-    const existing = await tx.monthlyAssessment.findUnique({
-      where: { monthKey },
-      select: { id: true },
-    });
+    const existing = await tx.monthlyAssessment.findUnique({ where: { monthKey }, select: { id: true } });
+    if (existing) await tx.employeeMonthlyAssessment.deleteMany({ where: { assessmentId: existing.id } });
 
-    if (existing) {
-      await tx.employeeMonthlyAssessment.deleteMany({
-        where: { assessmentId: existing.id },
-      });
-    }
+    const commonData = {
+      referenceDate: assessment.referenceDate,
+      managerName: assessment.managerName,
+      contractMonthlyValue: new Prisma.Decimal(assessment.contractMonthlyValue),
+      contractMonthlyWithVt: new Prisma.Decimal(assessment.contractMonthlyWithVt),
+      contractMonthlyWithoutVt: new Prisma.Decimal(assessment.contractMonthlyWithoutVt),
+      vtMonthlyDifference: new Prisma.Decimal(assessment.vtMonthlyDifference),
+      vtDailyDifference: new Prisma.Decimal(assessment.vtDailyDifference),
+      vtDaysNotPaid: assessment.vtDaysNotPaid,
+      vtDiscountAmount: new Prisma.Decimal(assessment.vtDiscountAmount),
+      crecheMonthlyDifference: new Prisma.Decimal(assessment.crecheMonthlyDifference),
+      crechePaidAmount: new Prisma.Decimal(assessment.crechePaidAmount),
+      crecheAdditionalPercentage: new Prisma.Decimal(assessment.crecheAdditionalPercentage),
+      crecheDiscountAmount: new Prisma.Decimal(assessment.crecheDiscountAmount),
+      postMonthlyValue: new Prisma.Decimal(assessment.postMonthlyValue),
+      minutesPerWorkDay: assessment.minutesPerWorkDay,
+      expectedBusinessDays: assessment.expectedBusinessDays,
+      totalEmployees: assessment.totalEmployees,
+      indicator1Occurrences: assessment.indicator1Occurrences,
+      indicator1Score: new Prisma.Decimal(assessment.indicator1Score),
+      indicator2Occurrences: assessment.indicator2Occurrences,
+      indicator2Score: new Prisma.Decimal(assessment.indicator2Score),
+      indicator3Occurrences: assessment.indicator3Occurrences,
+      indicator3Score: new Prisma.Decimal(assessment.indicator3Score),
+      indicator4Occurrences: assessment.indicator4Occurrences,
+      indicator4Score: new Prisma.Decimal(assessment.indicator4Score),
+      qualityResponses: assessment.qualityResponses,
+      qualityCounts: assessment.qualityCounts,
+      indicator5Score: new Prisma.Decimal(assessment.indicator5Score),
+      totalScore: new Prisma.Decimal(assessment.totalScore),
+      serviceLevelFactor: new Prisma.Decimal(assessment.serviceLevelFactor),
+      valueAfterImr: new Prisma.Decimal(assessment.valueAfterImr),
+      journeyGlosaTotal: new Prisma.Decimal(assessment.journeyGlosaTotal),
+      finalAmount: new Prisma.Decimal(assessment.finalAmount),
+      overallScore: new Prisma.Decimal(assessment.overallScore),
+      estimatedDiscount: new Prisma.Decimal(assessment.estimatedDiscount),
+      createdById: currentUser.id,
+    };
 
     const monthlyAssessment = await tx.monthlyAssessment.upsert({
       where: { monthKey },
-      update: {
-        referenceDate: assessment.referenceDate,
-        managerName: assessment.managerName,
-        contractMonthlyValue: new Prisma.Decimal(assessment.contractMonthlyValue),
-        contractMonthlyWithVt: new Prisma.Decimal(assessment.contractMonthlyWithVt),
-        contractMonthlyWithoutVt: new Prisma.Decimal(assessment.contractMonthlyWithoutVt),
-        vtMonthlyDifference: new Prisma.Decimal(assessment.vtMonthlyDifference),
-        vtDailyDifference: new Prisma.Decimal(assessment.vtDailyDifference),
-        vtDaysNotPaid: assessment.vtDaysNotPaid,
-        vtDiscountAmount: new Prisma.Decimal(assessment.vtDiscountAmount),
-        crecheMonthlyDifference: new Prisma.Decimal(assessment.crecheMonthlyDifference),
-        crechePaidAmount: new Prisma.Decimal(assessment.crechePaidAmount),
-        crecheAdditionalPercentage: new Prisma.Decimal(assessment.crecheAdditionalPercentage),
-        crecheDiscountAmount: new Prisma.Decimal(assessment.crecheDiscountAmount),
-        postMonthlyValue: new Prisma.Decimal(assessment.postMonthlyValue),
-        minutesPerWorkDay: assessment.minutesPerWorkDay,
-        expectedBusinessDays: assessment.expectedBusinessDays,
-        totalEmployees: assessment.totalEmployees,
-        indicator1Occurrences: assessment.indicator1Occurrences,
-        indicator1Score: new Prisma.Decimal(assessment.indicator1Score),
-        indicator2Occurrences: assessment.indicator2Occurrences,
-        indicator2Score: new Prisma.Decimal(assessment.indicator2Score),
-        indicator3Occurrences: assessment.indicator3Occurrences,
-        indicator3Score: new Prisma.Decimal(assessment.indicator3Score),
-        indicator4Occurrences: assessment.indicator4Occurrences,
-        indicator4Score: new Prisma.Decimal(assessment.indicator4Score),
-        qualityResponses: assessment.qualityResponses,
-        qualityCounts: assessment.qualityCounts,
-        indicator5Score: new Prisma.Decimal(assessment.indicator5Score),
-        totalScore: new Prisma.Decimal(assessment.totalScore),
-        serviceLevelFactor: new Prisma.Decimal(assessment.serviceLevelFactor),
-        valueAfterImr: new Prisma.Decimal(assessment.valueAfterImr),
-        journeyGlosaTotal: new Prisma.Decimal(assessment.journeyGlosaTotal),
-        finalAmount: new Prisma.Decimal(assessment.finalAmount),
-        overallScore: new Prisma.Decimal(assessment.overallScore),
-        estimatedDiscount: new Prisma.Decimal(assessment.estimatedDiscount),
-        createdById: currentUser.id,
-      },
-      create: {
-        monthKey: assessment.monthKey,
-        referenceDate: assessment.referenceDate,
-        managerName: assessment.managerName,
-        contractMonthlyValue: new Prisma.Decimal(assessment.contractMonthlyValue),
-        contractMonthlyWithVt: new Prisma.Decimal(assessment.contractMonthlyWithVt),
-        contractMonthlyWithoutVt: new Prisma.Decimal(assessment.contractMonthlyWithoutVt),
-        vtMonthlyDifference: new Prisma.Decimal(assessment.vtMonthlyDifference),
-        vtDailyDifference: new Prisma.Decimal(assessment.vtDailyDifference),
-        vtDaysNotPaid: assessment.vtDaysNotPaid,
-        vtDiscountAmount: new Prisma.Decimal(assessment.vtDiscountAmount),
-        crecheMonthlyDifference: new Prisma.Decimal(assessment.crecheMonthlyDifference),
-        crechePaidAmount: new Prisma.Decimal(assessment.crechePaidAmount),
-        crecheAdditionalPercentage: new Prisma.Decimal(assessment.crecheAdditionalPercentage),
-        crecheDiscountAmount: new Prisma.Decimal(assessment.crecheDiscountAmount),
-        postMonthlyValue: new Prisma.Decimal(assessment.postMonthlyValue),
-        minutesPerWorkDay: assessment.minutesPerWorkDay,
-        expectedBusinessDays: assessment.expectedBusinessDays,
-        totalEmployees: assessment.totalEmployees,
-        indicator1Occurrences: assessment.indicator1Occurrences,
-        indicator1Score: new Prisma.Decimal(assessment.indicator1Score),
-        indicator2Occurrences: assessment.indicator2Occurrences,
-        indicator2Score: new Prisma.Decimal(assessment.indicator2Score),
-        indicator3Occurrences: assessment.indicator3Occurrences,
-        indicator3Score: new Prisma.Decimal(assessment.indicator3Score),
-        indicator4Occurrences: assessment.indicator4Occurrences,
-        indicator4Score: new Prisma.Decimal(assessment.indicator4Score),
-        qualityResponses: assessment.qualityResponses,
-        qualityCounts: assessment.qualityCounts,
-        indicator5Score: new Prisma.Decimal(assessment.indicator5Score),
-        totalScore: new Prisma.Decimal(assessment.totalScore),
-        serviceLevelFactor: new Prisma.Decimal(assessment.serviceLevelFactor),
-        valueAfterImr: new Prisma.Decimal(assessment.valueAfterImr),
-        journeyGlosaTotal: new Prisma.Decimal(assessment.journeyGlosaTotal),
-        finalAmount: new Prisma.Decimal(assessment.finalAmount),
-        overallScore: new Prisma.Decimal(assessment.overallScore),
-        estimatedDiscount: new Prisma.Decimal(assessment.estimatedDiscount),
-        createdById: currentUser.id,
-      },
+      update: commonData,
+      create: { monthKey: assessment.monthKey, ...commonData },
     });
 
     await tx.employeeMonthlyAssessment.createMany({
@@ -252,13 +198,7 @@ export async function generateMonthlyAssessmentAction(
         action: "MONTHLY_ASSESSMENT_GENERATED",
         entity: "monthly_assessment",
         entityId: monthlyAssessment.id,
-        payload: {
-          monthKey,
-          totalScore: assessment.totalScore,
-          finalAmount: assessment.finalAmount,
-          valueAfterImr: assessment.valueAfterImr,
-          journeyGlosaTotal: assessment.journeyGlosaTotal,
-        },
+        payload: { monthKey, totalScore: assessment.totalScore, finalAmount: assessment.finalAmount, valueAfterImr: assessment.valueAfterImr, journeyGlosaTotal: assessment.journeyGlosaTotal },
       },
     });
   });
