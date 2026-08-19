@@ -67,8 +67,8 @@ export default async function DashboardPage() {
               <Image
                 src="/ifc-sbs-mark.svg"
                 alt="Identidade IFC SBS"
-                width={960}
-                height={320}
+                width={360}
+                height={220}
                 className="h-auto w-full rounded-2xl"
                 priority
               />
@@ -196,6 +196,9 @@ export default async function DashboardPage() {
           ))}
         </div>
       </section>
+      <p className="text-center text-sm text-muted">
+          Sistema desenvolvido por Francisco Carlos na CTI do IFC Campus São Bento do Sul.
+        </p>
     </main>
   );
 }

@@ -43,9 +43,9 @@ export default async function DashboardLayout({ children }: { children: ReactNod
           </nav>
 
           <div className="mt-auto rounded-[24px] border border-line bg-[linear-gradient(135deg,rgba(15,118,110,0.10),rgba(245,158,11,0.12))] p-4">
-            <p className="text-sm font-semibold">Segurança aplicada</p>
+            <p className="text-sm font-semibold"></p>
             <p className="mt-2 text-sm leading-6 text-muted">
-              Sessões HTTP-only, trilha de auditoria e separação de perfis administrativos e operacionais.
+             
             </p>
           </div>
 

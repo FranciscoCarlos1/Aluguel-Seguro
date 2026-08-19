@@ -79,7 +79,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         </div>
 
         <p className="text-center text-sm text-muted">
-          Sistema desenvolvido na CTI do IFC Campus São Bento do Sul.
+          Sistema desenvolvido por Francisco Carlos na CTI do IFC Campus São Bento do Sul.
         </p>
       </div>
     </main>

@@ -52,6 +52,9 @@ export default async function PrimeiroAcessoPage() {
           </div>
         </section>
       </div>
+      <p className="text-center text-sm text-muted">
+          Sistema desenvolvido por Francisco Carlos na CTI do IFC Campus São Bento do Sul.
+        </p>
     </main>
   );
 }
