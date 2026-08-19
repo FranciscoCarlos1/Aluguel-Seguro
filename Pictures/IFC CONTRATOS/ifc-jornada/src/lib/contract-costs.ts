@@ -34,13 +34,8 @@ export type ContractCostSnapshot = {
 };
 
 /**
- * Values transcribed from the supplied IFC cost workbook.
- * The workbook's formulas are preserved conceptually below:
- * - materials annual = quantity/year × unit value; monthly = unit value × delivered quantity;
- * - equipment monthly = quantity × unit value ÷ useful life;
- * - uniforms/EPI annual = quantity/year × unit value; monthly = annual ÷ 12;
- * - cost by m² = area/frequency × price per employee, consolidated into the estimated post count;
- * - monthly proposal = calculated cost by m² (Cálculo custoM²!H70).
+ * Base de contingência transcrita da Planilha de Custos - Limpeza.
+ * Quando uma nova planilha XLSX é importada, a base persistida no PostgreSQL passa a ter prioridade.
  */
 export const CONTRACT_COST_SNAPSHOT: ContractCostSnapshot = {
   contractCode: "73/2026",
@@ -49,12 +44,12 @@ export const CONTRACT_COST_SNAPSHOT: ContractCostSnapshot = {
   municipality: "São Bento do Sul",
   executionMonths: 30,
   contractor: "RGF AMBIENTAL LTDA",
-  monthlyProposed: 29677.60,
-  annualProposed: 890328 / 30 * 12,
-  thirtyMonthProposed: 890328.26,
-  costPerEmployee: 5417.26,
-  costPerEmployeeAlt: 5750.80,
-  costPerM2Total: 29677.6085580916,
+  monthlyProposed: 30210.45,
+  annualProposed: 906313.50,
+  thirtyMonthProposed: 906313.50,
+  costPerEmployee: 5514.53,
+  costPerEmployeeAlt: 5848.07,
+  costPerM2Total: 30210.45,
   calculatedEmployees: 6,
   locationsArea: 5924.80,
   locationsDailyArea: 3634.69678030303,
@@ -62,10 +57,10 @@ export const CONTRACT_COST_SNAPSHOT: ContractCostSnapshot = {
   module2: 2381.23,
   module3: 140.01937125,
   module4: 272.02911132375,
-  module5: 23.6158333333333,
-  module6: 551.067661248728,
-  materialsAnnual: 5615.90416666667,
-  materialsPerEmployeeMonthly: 0,
+  module5: 110.990833333333,
+  module6: 560.962391021197,
+  materialsAnnual: 67390.85,
+  materialsPerEmployeeMonthly: 87.375,
   equipmentMonthly: 36.01,
   equipmentPerEmployeeMonthly: 6,
   uniformsAnnual: 156.81,
@@ -74,16 +69,7 @@ export const CONTRACT_COST_SNAPSHOT: ContractCostSnapshot = {
   epiMonthly: 4.54833333333333,
   utensilsAnnual: 0,
   utensilsMonthly: 0,
-  sourceSheets: [
-    "RESUMO",
-    "Custos por posto",
-    "Cálculo custoM²",
-    "MAT.UTEN",
-    "EQU",
-    "UNI.EPI",
-    "UTE",
-    "Locais",
-  ],
+  sourceSheets: ["RESUMO", "Custos por posto", "Cálculo custoM²", "MAT.UTEN", "EQU", "UNI.EPI", "UTE", "Locais"],
 };
 
 export const IMR_MEASUREMENT_SNAPSHOT = {
