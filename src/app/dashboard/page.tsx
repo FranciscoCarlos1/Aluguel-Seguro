@@ -60,18 +60,10 @@ export default async function DashboardPage() {
             <h2 className="text-3xl font-bold sm:text-4xl">IFC FISCALIZA</h2>
             <span className="badge bg-accent-soft text-accent-strong">FISCALIZAÇÃO DE CONTRATO DE LIMPEZA</span>
             <p className="max-w-3xl text-sm leading-7 text-muted sm:text-base">
-              Controle moderno de jornada com governança de usuários, segurança por sessão,
-              PostgreSQL, trilha de auditoria e registro exclusivo de horários de entrada e saída.
+              
             </p>
             <div className="max-w-3xl overflow-hidden rounded-3xl border border-line bg-white/70 p-3">
-              <Image
-                src="/ifc-sbs-mark.svg"
-                alt="Identidade IFC SBS"
-                width={360}
-                height={220}
-                className="h-auto w-full rounded-2xl"
-                priority
-              />
+             
             </div>
           </div>
           <div className="rounded-3xl border border-line bg-white/70 px-5 py-4 text-sm text-muted">
