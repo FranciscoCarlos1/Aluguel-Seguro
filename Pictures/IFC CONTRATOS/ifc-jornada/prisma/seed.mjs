@@ -6,15 +6,7 @@ const connectionString = process.env.DATABASE_URL || "postgresql://postgres:post
 const adapter = new PrismaPg(connectionString);
 const prisma = new PrismaClient({ adapter });
 
-const employees = [
-  "Alana",
-  "Keise",
-  "Luciana",
-  "Viviane",
-  "Zenaide",
-  "Marineida",
-  "Ivonete",
-];
+const employees = ["Alana", "Keise", "Luciana", "Viviane", "Zenaide", "Marineida", "Ivonete"];
 
 const initialPunches = [
   { employee: "Alana", workDate: "2026-07-01", type: PunchType.ENTRY, time: "05:48" },
@@ -41,6 +33,44 @@ const initialPunches = [
   { employee: "Marineida", workDate: "2026-07-02", type: PunchType.ENTRY, time: "05:56" },
 ];
 
+const costSnapshot = {
+  contractCode: "73/2026",
+  procurement: "Licitação nº 181/2026",
+  process: "23821.000303/2026-10",
+  municipality: "São Bento do Sul",
+  contractor: "RGF AMBIENTAL LTDA",
+  cnpj: "24.490.730/0001-86",
+  executionMonths: 30,
+  calculatedEmployees: 6,
+  monthlyProposed: 30210.45,
+  annualProposed: 906313.50,
+  thirtyMonthProposed: 906313.50,
+  costPerEmployee: 5514.53,
+  costPerEmployeeAlt: 5848.07,
+  costPerM2Total: 30210.45,
+  locationsArea: 5924.80,
+  locationsDailyArea: 3634.69678030303,
+  laborBase: 2049.30,
+  module2: 2381.23,
+  module3: 140.01937125,
+  module4: 272.02911132375,
+  module5: 110.990833333333,
+  module6: 560.962391021197,
+  materialsAnnual: 67390.85,
+  materialsMonthly: 524.25,
+  equipmentMonthly: 36.01,
+  equipmentPerEmployeeMonthly: 6,
+  uniformsAnnual: 156.81,
+  uniformsMonthly: 13.0675,
+  epiAnnual: 54.58,
+  epiMonthly: 4.54833333333333,
+  utensilsAnnual: 0,
+  utensilsMonthly: 0,
+  sourceSheets: ["RESUMO", "Custos por posto", "Cálculo custoM²", "MAT.UTEN", "EQU", "UNI.EPI", "UTE", "Locais"],
+  workbookData: null,
+  importedFileName: "Planilha de Custos - Limpeza(2).xlsx (base inicial)",
+};
+
 async function main() {
   const adminEmail = process.env.ADMIN_EMAIL || "admin@ifcfiscaliza.local";
   const adminPassword = process.env.ADMIN_PASSWORD || "Admin@12345";
@@ -51,38 +81,18 @@ async function main() {
   const admin = await prisma.user.upsert({
     where: { email: adminEmail },
     update: {},
-    create: {
-      name: "Administrador IFC Fiscaliza",
-      email: adminEmail,
-      passwordHash,
-      role: Role.ADMIN,
-      isActive: true,
-      forcePasswordChange: false,
-    },
+    create: { name: "Administrador IFC Fiscaliza", email: adminEmail, passwordHash, role: Role.ADMIN, isActive: true, forcePasswordChange: false },
   });
 
   await prisma.user.upsert({
     where: { email: operatorEmail },
     update: {},
-    create: {
-      name: "Operação IFC Fiscaliza",
-      email: operatorEmail,
-      passwordHash: operatorHash,
-      role: Role.OPERATOR,
-      isActive: true,
-      forcePasswordChange: false,
-    },
+    create: { name: "Operação IFC Fiscaliza", email: operatorEmail, passwordHash: operatorHash, role: Role.OPERATOR, isActive: true, forcePasswordChange: false },
   });
 
   const employeeByName = {};
-
   for (const name of employees) {
-    const employee = await prisma.employee.upsert({
-      where: { name },
-      update: {},
-      create: { name, active: true },
-    });
-
+    const employee = await prisma.employee.upsert({ where: { name }, update: {}, create: { name, active: true } });
     employeeByName[name] = employee.id;
   }
 
@@ -98,26 +108,21 @@ async function main() {
     skipDuplicates: true,
   });
 
+  const existingCost = await prisma.contractCostSnapshot.findFirst({ where: { importedFileName: costSnapshot.importedFileName } });
+  if (!existingCost) {
+    await prisma.contractCostSnapshot.create({ data: { ...costSnapshot, importedById: admin.id } });
+  }
+
   await prisma.auditLog.create({
     data: {
       actorId: admin.id,
       action: "SEED_EXECUTED",
       entity: "system",
-      payload: {
-        users: 2,
-        employees: employees.length,
-        punches: initialPunches.length,
-      },
+      payload: { users: 2, employees: employees.length, punches: initialPunches.length, costSnapshot: true },
     },
   });
 }
 
 main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async (error) => {
-    console.error(error);
-    await prisma.$disconnect();
-    process.exit(1);
-  });
+  .then(async () => { await prisma.$disconnect(); })
+  .catch(async (error) => { console.error(error); await prisma.$disconnect(); process.exit(1); });
